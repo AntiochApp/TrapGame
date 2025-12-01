@@ -357,7 +357,8 @@
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
   
-  // [수정됨] 안전하게 요소 가져오기 (없으면 생성)
+  // [수정완료] 중복 선언을 제거하고 안전하게 요소 가져오기
+  // 1. buffArea 가져오기 (없으면 만들기)
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
@@ -365,11 +366,13 @@
     gameArea.appendChild(buffArea);
   }
 
+  // 2. speedLines 가져오기 (없으면 만들기)
   let speedLines = document.getElementById("speedLines");
   if (!speedLines) {
     speedLines = document.createElement("div");
     speedLines.id = "speedLines";
-    gameArea.insertBefore(speedLines, document.getElementById("ground"));
+    // 배경보단 위에, 플레이어보단 아래에 삽입
+    gameArea.insertBefore(speedLines, document.getElementById("player"));
   }
 
   let playerY  = 40;
@@ -538,7 +541,6 @@
     if (activeEffects.invincible > 0) html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
     if (activeEffects.slow > 0) html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
     
-    // [안전장치] buffArea가 있으면 내용 갱신
     if(buffArea) buffArea.innerHTML = html;
   }
 
@@ -547,7 +549,6 @@
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    // 안전하게 UI 업데이트 호출
     try {
         updateBuffUI(delta);
     } catch(e) { console.error(e); }
