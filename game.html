@@ -5,12 +5,20 @@
 <title>Disciple Run – Game</title>
 
 <style>
+  :root {
+    --hud-bg: rgba(255, 248, 235, 0.9);
+    --hud-border: #3a2513;
+    --accent: #c47a3f;
+    --accent-dark: #8b4f26;
+  }
+
+  * { box-sizing: border-box; }
+
   body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #dce7f3;
-    font-family: "Pretendard", sans-serif;
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   #gameArea {
@@ -18,16 +26,35 @@
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: linear-gradient(#a8d0f0, #f2f9ff);
+    background:
+      linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
+  }
+
+  /* 픽셀 타일 바닥 */
+  #ground {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 200%;
+    height: 80px;
+    background-image: linear-gradient(90deg, #d9b178 0 16px, #c09054 16px 32px);
+    image-rendering: pixelated;
+    animation: groundMove 0.6s linear infinite;
+  }
+
+  @keyframes groundMove {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-32px); }
   }
 
   #player {
     position: absolute;
     left: 120px;
     bottom: 40px;
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 60px;
     background: url('disciple.png') center/contain no-repeat;
+    image-rendering: pixelated;
     transition: opacity 0.2s;
   }
 
@@ -35,14 +62,24 @@
     position: absolute;
     width: 60px;
     background: #8c6239;
+    image-rendering: pixelated;
   }
 
   #hud {
     position: absolute;
-    top: 10px; left: 10px;
-    color: #333;
-    font-size: 22px;
-    font-weight: 600;
+    top: 12px; left: 12px;
+    color: #3a2513;
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--hud-bg);
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 3px solid var(--hud-border);
+  }
+
+  #hud span {
+    display: inline-block;
+    min-width: 60px;
   }
 
   #quizModal,
@@ -54,27 +91,51 @@
     background: rgba(0,0,0,0.55);
     justify-content: center;
     align-items: center;
+    padding: 16px;
   }
 
   .modal-box {
-    width: 90%;
+    width: 100%;
     max-width: 380px;
-    background: white;
-    padding: 20px;
+    background: #fffdf2;
+    padding: 22px 20px 18px;
     border-radius: 12px;
     text-align: center;
+    border: 4px solid #3a2513;
+    box-shadow:
+      0 0 0 4px #fff,
+      0 8px 0 #b79b76;
+  }
+
+  .modal-box h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
   }
 
   .quizBtn {
     width: 100%;
     padding: 12px;
-    margin-top: 12px;
-    background: #6a4a2b;
+    margin-top: 10px;
+    background: var(--accent);
     color: white;
     border-radius: 8px;
     cursor: pointer;
     border: none;
     font-size: 15px;
+    box-shadow: 0 4px 0 var(--accent-dark);
+  }
+  .quizBtn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--accent-dark);
+  }
+
+  @media (max-width: 600px) {
+    #player {
+      left: 80px;
+    }
+    #hud {
+      font-size: 16px;
+    }
   }
 </style>
 </head>
@@ -82,12 +143,13 @@
 <body>
 
 <div id="gameArea">
+  <div id="ground"></div>
   <div id="player"></div>
 
   <div id="hud">
-    ❤️ <span id="lifeText"></span><br>
-    📏 <span id="distanceText">0m</span><br>
-    ✝ Faith: <span id="faithText"></span>
+    ❤️ <span id="lifeText"></span>
+    📏 <span id="distanceText">0m</span>
+    ✝ <span id="faithText"></span>
   </div>
 </div>
 
@@ -108,7 +170,8 @@
     <h2>GAME OVER</h2>
     <p><b><span id="finalDist"></span>m</b> 달렸습니다!</p>
 
-    <input id="rankMsg" type="text" placeholder="방명록(코멘트)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
+    <input id="rankMsg" type="text" placeholder="방명록(코멘트)"
+      style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
 
     <button class="quizBtn" onclick="saveRanking()">랭킹 등록</button>
     <button class="quizBtn" onclick="goMenu()">메뉴로 돌아가기</button>
@@ -118,66 +181,38 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  // -------------------- 로그인 체크 --------------------
+  // -------------------- 기본 정보 --------------------
   const id = localStorage.getItem("run_id");
   const name = localStorage.getItem("run_name");
+  let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
   if (!id) {
     alert("로그인이 필요합니다.");
-    window.location.href = "index.html";
+    window.location.href = "/TrapGame/index.html";
   }
 
-  // -------------------- 전역 변수 --------------------
-  let saveData = {};
-  let life = 3;
-  let faith = 0;
-  let jumpPower = 8;
+  let life  = 3 + (saveData.extraLife || 0);
+  let faith = saveData.faith || 0;
+
+  document.getElementById("lifeText").innerText = life;
+  document.getElementById("faithText").innerText = faith;
+
+  // -------------------- 게임 변수 --------------------
+  const gameArea = document.getElementById("gameArea");
+  const player   = document.getElementById("player");
 
   let playerY = 40;
   let velocity = 0;
-  let gravity = -0.4;
+  let gravity  = -0.4;
+  let jumpPower = 8 + (saveData.agility || 0);
 
   let distance = 0;
   let gameSpeed = 4;
   let lastQuizPoint = 0;
 
   let obstacles = [];
-  let running = false;
+  let running = true;
   let invincible = false;
-
-  const gameArea = document.getElementById("gameArea");
-  const player = document.getElementById("player");
-
-  // -------------------- 서버에서 최신 저장 불러오기 --------------------
-  async function loadSaveData() {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ type: "getSaveData", id })
-    });
-
-    const txt = await res.text();
-    if (txt !== "fail") {
-      saveData = JSON.parse(txt);
-      localStorage.setItem("run_save", txt);
-    }
-
-    startGameInit();
-  }
-
-  // -------------------- 불러온 데이터를 기반으로 능력치 적용 --------------------
-  function startGameInit() {
-    life = 3 + (saveData.extraLife || 0);
-    faith = saveData.faith || 0;
-    jumpPower = 8 + (saveData.agility || 0);
-
-    document.getElementById("lifeText").innerText = life;
-    document.getElementById("faithText").innerText = faith;
-
-    running = true;
-    requestAnimationFrame(gameLoop);
-  }
-
-  loadSaveData();
 
   // -------------------- 점프 --------------------
   function jump() {
@@ -186,7 +221,7 @@
   }
 
   document.body.addEventListener("keydown", (e) => {
-    if (e.code === "Space") {
+    if (e.code === "Space" || e.code === "ArrowUp") {
       e.preventDefault();
       jump();
     }
@@ -237,7 +272,7 @@
     playerY += velocity;
 
     if (playerY < 0) playerY = 0;
-    if (playerY > window.innerHeight - 80) playerY = window.innerHeight - 80;
+    if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
 
     player.style.bottom = playerY + "px";
 
@@ -245,13 +280,13 @@
       const left = parseFloat(obs.style.left);
       obs.style.left = (left - gameSpeed) + "px";
 
-      if (left + 60 < 0) obs.remove();
+      if (left + 60 < 0) {
+        obs.remove();
+      }
 
       const rectP = player.getBoundingClientRect();
       const rectO = obs.getBoundingClientRect();
-
-      if (!invincible &&
-          rectP.left < rectO.right &&
+      if (rectP.left < rectO.right &&
           rectP.right > rectO.left &&
           rectP.top < rectO.bottom &&
           rectP.bottom > rectO.top) {
@@ -262,6 +297,8 @@
     requestAnimationFrame(gameLoop);
   }
 
+  requestAnimationFrame(gameLoop);
+
   // -------------------- 생명 감소 --------------------
   function damageLife() {
     if (invincible || !running) return;
@@ -271,41 +308,49 @@
 
     invincible = true;
     player.style.opacity = "0.4";
-
     setTimeout(() => {
       invincible = false;
       player.style.opacity = "1";
     }, 800);
 
-    if (life <= 0) gameOver();
+    if (life <= 0) {
+      gameOver();
+    }
   }
 
-  // -------------------- 퀴즈 --------------------
+  // -------------------- 성경 퀴즈 --------------------
   async function pauseForQuiz() {
+    if (!running) return;
+
     running = false;
 
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ type: "getQuiz" })
-    });
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "getQuiz" })
+      });
 
-    const txt = await res.text();
-    if (txt === "noquiz") {
+      const txt = await res.text();
+      if (txt === "noquiz") {
+        running = true;
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      const quiz = JSON.parse(txt);
+
+      document.getElementById("quizQuestion").innerText = quiz.question;
+      document.getElementById("btnA").innerText = "A) " + quiz.A;
+      document.getElementById("btnB").innerText = "B) " + quiz.B;
+      document.getElementById("btnC").innerText = "C) " + quiz.C;
+
+      window.correctAnswer = quiz.answer;
+
+      document.getElementById("quizModal").style.display = "flex";
+    } catch (err) {
       running = true;
       requestAnimationFrame(gameLoop);
-      return;
     }
-
-    const quiz = JSON.parse(txt);
-
-    document.getElementById("quizQuestion").innerText = quiz.question;
-    document.getElementById("btnA").innerText = "A) " + quiz.A;
-    document.getElementById("btnB").innerText = "B) " + quiz.B;
-    document.getElementById("btnC").innerText = "C) " + quiz.C;
-
-    window.correctAnswer = quiz.answer;
-
-    document.getElementById("quizModal").style.display = "flex";
   }
 
   function answerQuiz(sel) {
@@ -326,19 +371,20 @@
     }
   }
 
-  // -------------------- 저장 --------------------
+  // -------------------- saveData 저장 --------------------
   async function saveProgress() {
     try {
       await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "save", id, saveData })
       });
-    } catch (e) {}
-
+    } catch (e) {
+      console.warn("save 저장 실패:", e);
+    }
     localStorage.setItem("run_save", JSON.stringify(saveData));
   }
 
-  // -------------------- 게임 오버 --------------------
+  // -------------------- GAME OVER --------------------
   function gameOver() {
     running = false;
     invincible = true;
@@ -353,24 +399,27 @@
     const message = document.getElementById("rankMsg").value.trim();
     const dist = Math.floor(distance);
 
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "updateRanking",
-        id, name,
-        distance: dist,
-        message
-      })
-    });
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "updateRanking",
+          id, name,
+          distance: dist,
+          message
+        })
+      });
+      alert("랭킹 등록 완료!");
+    } catch (e) {
+      alert("랭킹 저장 중 오류가 발생했습니다.");
+    }
 
-    alert("랭킹 등록 완료!");
-    window.location.href = "menu.html";
+    window.location.href = "/TrapGame/menu.html";
   }
 
   function goMenu() {
-    window.location.href = "menu.html";
+    window.location.href = "/TrapGame/menu.html";
   }
-
 </script>
 
 </body>
