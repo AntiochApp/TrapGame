@@ -71,16 +71,47 @@
       background: url("disciple.png") center/contain no-repeat;
       image-rendering: pixelated;
       transition: opacity 0.2s;
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); /* 그림자 */
     }
 
-    /* 장애물 */
+    /* ------------ [디자인 수정] CSS로 그린 통나무 장애물 ------------ */
     .obstacle {
       position: absolute;
       z-index: 10;
-      width: 60px;
-      background: #8c6239;
-      image-rendering: pixelated;
+      width: 60px; /* 두께 */
+      
+      /* 통나무 질감 (CSS 패턴) */
+      background-color: #8D6E63; /* 기본 갈색 */
+      background-image: 
+        linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%),
+        linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%);
+      background-size: 8px 8px; /* 픽셀 느낌 패턴 */
+      
+      /* 나무 테두리 */
+      border-left: 4px solid #5D4037;
+      border-right: 4px solid #5D4037;
+      
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.2); /* 그림자 */
     }
+
+    /* 풀 덮개 (가상 요소로 그림) */
+    .obs-cap::after {
+        content: '';
+        position: absolute;
+        left: -10%; width: 120%; height: 24px; /* 통나무보다 약간 넓게 */
+        background-color: #66BB6A; /* 풀색 */
+        border: 4px solid #1B5E20; /* 짙은 녹색 테두리 */
+        box-sizing: border-box;
+        border-radius: 4px;
+        background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%); /* 하이라이트 */
+    }
+
+    /* 바닥 기둥 (풀이 위에 있음) */
+    .obs-ground.obs-cap::after { top: -12px; }
+
+    /* 천장 기둥 (풀이 아래에 있음) */
+    .obs-ceil.obs-cap::after { bottom: -12px; }
+
 
     /* 아이템 */
     .item {
@@ -91,9 +122,14 @@
       background-position: center;
       background-repeat: no-repeat;
       background-size: contain;
+      animation: itemFloat 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes itemFloat {
+        from { transform: translateY(0); }
+        to { transform: translateY(-8px); }
     }
 
-    /* ------------ HUD (왼쪽 상단) ------------ */
+    /* ------------ HUD ------------ */
     #hud {
       position: absolute;
       z-index: 20;
@@ -107,7 +143,7 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* ------------ [신규] 버프 상태창 (오른쪽 상단) ------------ */
+    /* 버프 상태창 */
     #buffArea {
       position: absolute;
       z-index: 20;
@@ -132,13 +168,13 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* ------------ [신규] 터보 모드 스피드 라인 효과 ------------ */
+    /* 터보 스피드 라인 */
     #speedLines {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      z-index: 15; /* 플레이어보다 위, HUD보다 아래 */
+      z-index: 15;
       background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%);
       mix-blend-mode: overlay;
       pointer-events: none;
@@ -152,7 +188,7 @@
       100% { transform: translate(0, 0); }
     }
 
-    /* ------------ [신규] 획득 이펙트 (둥실 떠오르는 글자) ------------ */
+    /* 획득 이펙트 텍스트 */
     .float-text {
       position: absolute;
       color: #ffe24f;
@@ -168,7 +204,7 @@
       100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
     }
 
-    /* ------------ 콤보 / 정답 이펙트 ------------ */
+    /* 콤보 / 정답 이펙트 */
     #comboEffect, #correctEffect {
       position: fixed;
       left: 50%; transform: translateX(-50%);
@@ -185,7 +221,7 @@
       color: #00ffcc; text-shadow: 3px 3px #006644;
     }
 
-    /* ------------ 공통 모달 ------------ */
+    /* 공통 모달 */
     .modal-bg {
       position: fixed;
       top: 0; left: 0;
@@ -344,7 +380,7 @@
   let distance  = 0;
   let obstacles = [];
   let running   = false;
-  let invincible = false; // 기본 피격 무적
+  let invincible = false;
 
   const BASE_SPEED = 170; 
   let gameSpeed    = BASE_SPEED;
@@ -367,12 +403,7 @@
   let obstacleSurviveCount = 0;
   let rankingSaved = false;
 
-  /* --- [신규] 활성화된 버프 관리 객체 --- */
-  let activeEffects = {
-    turbo: 0,      // 날개(터보) 남은 시간
-    invincible: 0, // 십자가(무적) 남은 시간
-    slow: 0        // 바람(감속) 남은 시간
-  };
+  let activeEffects = { turbo: 0, invincible: 0, slow: 0 };
 
   function getDifficulty(dist) {
     if (dist < 150) return 1;
@@ -382,7 +413,6 @@
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
   function jump() {
-    // 터보 모드일 때는 점프 불가 (자동 비행)
     if (!running || activeEffects.turbo > 0) return;
     velocity = jumpPower;
   }
@@ -392,9 +422,7 @@
   document.body.addEventListener("touchstart", jump);
 
   function scheduleNextObstacle() {
-    // 터보 모드일 때는 장애물 생성 안 함 (안전하게)
     if (activeEffects.turbo > 0) return;
-
     const d = getDifficulty(distance);
     if (d === 1) nextObstacleTime = randBetween(1.8, 2.5);
     else if (d === 2) nextObstacleTime = randBetween(1.4, 2.0);
@@ -403,7 +431,6 @@
 
   function spawnObstacle() {
     if (!running) return;
-    // 터보 모드 중엔 장애물 생성 중단
     if (activeEffects.turbo > 0) return;
 
     const difficulty = getDifficulty(distance);
@@ -432,7 +459,8 @@
 
     if (pattern.groundBox) {
       const box = document.createElement("div");
-      box.classList.add("obstacle");
+      // [수정] 클래스 추가: 기본, 뚜껑, 바닥형
+      box.classList.add("obstacle", "obs-cap", "obs-ground");
       box.style.height = pattern.height + "px";
       box.style.left = startX + "px";
       box.style.bottom = "0";
@@ -440,19 +468,22 @@
       obstacles.push(box);
       return;
     }
+
     const topHeight = pattern.top;
     const gap = pattern.gap;
     const bottomHeight = Math.max(80, screenH - topHeight - gap);
 
     const topObs = document.createElement("div");
-    topObs.classList.add("obstacle");
+    // [수정] 클래스 추가: 기본, 뚜껑, 천장형
+    topObs.classList.add("obstacle", "obs-cap", "obs-ceil");
     topObs.style.height = topHeight + "px";
     topObs.style.left = startX + "px";
     topObs.style.top = "0";
     gameArea.appendChild(topObs);
 
     const bottomObs = document.createElement("div");
-    bottomObs.classList.add("obstacle");
+    // [수정] 클래스 추가: 기본, 뚜껑, 바닥형
+    bottomObs.classList.add("obstacle", "obs-cap", "obs-ground");
     bottomObs.style.height = bottomHeight + "px";
     bottomObs.style.left = startX + "px";
     bottomObs.style.bottom = "0";
@@ -473,60 +504,39 @@
     items.push(item);
   }
 
-  /* ------------ [신규] 획득 이펙트 표시 함수 ------------ */
   function showFloatText(text) {
     const rect = player.getBoundingClientRect();
     const el = document.createElement("div");
     el.classList.add("float-text");
     el.innerText = text;
-    // 플레이어 머리 위
     el.style.left = (rect.left + 10) + "px";
     el.style.top  = (rect.top - 20) + "px";
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1000);
   }
 
-  /* ------------ [수정] 아이템 효과 적용 ------------ */
   function activateItem(type) {
     if (type === "cross") {
-      activeEffects.invincible = 10; // 10초
-      showFloatText("🛡️ 무적!");
-    }
-    else if (type === "wings") {
-      activeEffects.turbo = 5; // 5초간 터보
-      showFloatText("🚀 터보 모드!");
-    }
-    else if (type === "wind") {
-      activeEffects.slow = 10; // 10초간 감속
-      showFloatText("🍃 속도 감소");
-    }
-    else if (type === "bible") {
-      faith += 10;
-      saveData.faith = faith;
-      document.getElementById("faithText").innerText = faith;
-      showFloatText("✝ Faith +10");
-      saveProgress();
+      activeEffects.invincible = 10; showFloatText("🛡️ 무적!");
+    } else if (type === "wings") {
+      activeEffects.turbo = 5; showFloatText("🚀 터보 모드!");
+    } else if (type === "wind") {
+      activeEffects.slow = 10; showFloatText("🍃 속도 감소");
+    } else if (type === "bible") {
+      faith += 10; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
+      showFloatText("✝ Faith +10"); saveProgress();
     }
   }
 
-  /* ------------ [신규] 버프 상태창 UI 업데이트 ------------ */
   function updateBuffUI(delta) {
-    // 시간 감소
     if (activeEffects.turbo > 0) activeEffects.turbo -= delta;
     if (activeEffects.invincible > 0) activeEffects.invincible -= delta;
     if (activeEffects.slow > 0) activeEffects.slow -= delta;
 
-    // UI 다시 그리기
     let html = "";
-    if (activeEffects.turbo > 0) {
-      html += `<div class="buff-tag" style="color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
-    }
-    if (activeEffects.invincible > 0) {
-      html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
-    }
-    if (activeEffects.slow > 0) {
-      html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
-    }
+    if (activeEffects.turbo > 0) html += `<div class="buff-tag" style="color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
+    if (activeEffects.invincible > 0) html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
+    if (activeEffects.slow > 0) html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
     buffArea.innerHTML = html;
   }
 
@@ -535,63 +545,40 @@
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    // 버프 타이머 및 UI 갱신
     updateBuffUI(delta);
 
     if (!daily.run200 && distance >= 200) daily.run200 = true;
     daily.faith20 = faith;
     localStorage.setItem("dailyMission", JSON.stringify(daily));
 
-    // 터보 모드면 거리가 엄청 빨리 늘어남
     let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    /* --- [수정] 속도 계산 --- */
-    // 1. 기본 속도
     let currentSpeed = BASE_SPEED * (1 + (getDifficulty(distance) - 1) * 0.25);
-    
-    // 2. 버프 적용
-    if (activeEffects.slow > 0) currentSpeed *= 0.5; // 감속
-    if (activeEffects.turbo > 0) currentSpeed *= 3.5; // 터보 (3.5배)
-
+    if (activeEffects.slow > 0) currentSpeed *= 0.5;
+    if (activeEffects.turbo > 0) currentSpeed *= 3.5;
     gameSpeed = currentSpeed;
 
-    // Faith 획득
     if (distance >= nextFaithMilestone) {
-      faith++; saveData.faith = faith;
-      nextFaithMilestone += 100;
-      document.getElementById("faithText").innerText = faith;
-      saveProgress();
+      faith++; saveData.faith = faith; nextFaithMilestone += 100;
+      document.getElementById("faithText").innerText = faith; saveProgress();
     }
 
     quizTimer += delta;
     const quizSoon = (quizTimer >= 27 && quizTimer < 30);
-
     if (!quizSoon) {
       obstacleTimer += delta;
       if (obstacleTimer >= nextObstacleTime) {
-        spawnObstacle();
-        obstacleTimer = 0;
-        scheduleNextObstacle();
+        spawnObstacle(); obstacleTimer = 0; scheduleNextObstacle();
       }
     }
 
-    /* --- [수정] 플레이어 움직임 --- */
     if (activeEffects.turbo > 0) {
-      // 터보 모드: 플레이어를 화면 중앙으로 고정시키고 중력 무시
-      // 부드럽게 중앙(200px 정도)으로 이동
-      let targetY = 200;
-      playerY += (targetY - playerY) * 0.1; 
-      velocity = 0; // 중력 영향 X
-      
-      // 스피드 라인 켜기
+      let targetY = 200; playerY += (targetY - playerY) * 0.1; velocity = 0;
       speedLines.style.display = "block";
     } else {
-      // 일반 모드
-      velocity += gravity;
-      playerY += velocity;
-      // 스피드 라인 끄기
+      velocity += gravity; playerY += velocity;
       speedLines.style.display = "none";
     }
 
@@ -599,7 +586,6 @@
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
-    // 장애물 이동 + 충돌
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const obs  = obstacles[i];
       let left   = parseFloat(obs.style.left) || 0;
@@ -607,8 +593,7 @@
       obs.style.left = left + "px";
 
       if (left + 60 < 0) {
-        obs.remove();
-        obstacles.splice(i, 1);
+        obs.remove(); obstacles.splice(i, 1);
         obstacleSurviveCount++;
         if (obstacleSurviveCount >= 5) {
           combo++; faith++; saveData.faith = faith;
@@ -621,12 +606,7 @@
         continue;
       }
 
-      // 충돌 체크
-      // 터보 모드이거나 무적 버프 중이면 충돌 무시
-      if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible) {
-        // 무적 상태이므로 그냥 지나감
-        continue;
-      }
+      if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible) continue;
 
       const rectP = player.getBoundingClientRect();
       const rectO = obs.getBoundingClientRect();
@@ -637,17 +617,13 @@
         rectP.top + buffer < rectO.bottom - buffer &&
         rectP.bottom - buffer > rectO.top + buffer
       ) {
-        damageLife();
-        break;
+        damageLife(); break;
       }
     }
 
-    // 아이템 이동
     itemTimer += delta;
     if (itemTimer >= nextItemTime) {
-      spawnItem();
-      nextItemTime = Math.random() * 6 + 6;
-      itemTimer = 0;
+      spawnItem(); nextItemTime = Math.random() * 6 + 6; itemTimer = 0;
     }
 
     for (let i = items.length - 1; i >= 0; i--) {
@@ -655,52 +631,40 @@
       let left = parseFloat(it.style.left) || 0;
       left    -= gameSpeed * delta;
       it.style.left = left + "px";
-
-      if (left < -60) {
-        it.remove(); items.splice(i, 1); continue;
-      }
-
+      if (left < -60) { it.remove(); items.splice(i, 1); continue; }
       const rectP = player.getBoundingClientRect();
       const rectI = it.getBoundingClientRect();
       if (
         rectP.left < rectI.right && rectP.right > rectI.left &&
         rectP.top < rectI.bottom && rectP.bottom > rectI.top
       ) {
-        activateItem(it.dataset.type);
-        it.remove(); items.splice(i, 1); continue;
+        activateItem(it.dataset.type); it.remove(); items.splice(i, 1); continue;
       }
     }
 
-    // 배경 패럴랙스 (속도에 비례)
     let speedMult = (gameSpeed / BASE_SPEED); 
     bg1X = (bg1X - BG1_SPEED * speedMult * delta) % window.innerWidth;
     bg2X = (bg2X - BG2_SPEED * speedMult * delta) % window.innerWidth;
     bg3X = (bg3X - BG3_SPEED * speedMult * delta) % window.innerWidth;
-
     bg1.style.backgroundPosition = `${bg1X}px 0`;
     bg2.style.backgroundPosition = `${bg2X}px bottom`;
     bg3.style.backgroundPosition = `${bg3X}px bottom`;
 
-    if (quizTimer >= 30) {
-      quizTimer = 0; pauseForQuiz(); return;
-    }
+    if (quizTimer >= 30) { quizTimer = 0; pauseForQuiz(); return; }
     requestAnimationFrame(gameLoop);
   }
 
   function damageLife() {
     if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible || !running) return;
-    life--;
-    document.getElementById("lifeText").innerText = life;
-    invincible = true;
-    player.style.opacity = "0.4";
+    life--; document.getElementById("lifeText").innerText = life;
+    invincible = true; player.style.opacity = "0.4";
     setTimeout(() => { invincible = false; player.style.opacity = "1"; }, 800);
     if (life <= 0) gameOver();
   }
 
   async function pauseForQuiz() {
     if (!running) return;
-    running = false;
-    document.getElementById("loadingQuiz").style.display = "flex";
+    running = false; document.getElementById("loadingQuiz").style.display = "flex";
     try {
       const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getQuiz" }) });
       const txt = await res.text();
