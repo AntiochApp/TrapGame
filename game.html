@@ -44,16 +44,19 @@
   }
 
 #bgLayer1 {
-    background-image: url('https://antiochapp.github.io/TrapGame/bg_sky.png');
-}
+      background-image: url('bg_sky.png'); /* 하늘 */
+      z-index: -3;
+} 
 
 #bgLayer2 {
-    background-image: url('https://antiochapp.github.io/TrapGame/bg_mountain.png');
+       background-image: url('bg_mountain.png'); /* 산 (투명 PNG) */
+       z-index: -2;
 }
 
-#bgLayer3 {
-    background-image: url('https://antiochapp.github.io/TrapGame/bg_forest.png');
-}
+ #bgLayer3 {
+        background-image: url('bg_forest.png'); /* 숲 (투명 PNG) */
+        z-index: -1;
+ }
 
   /* 픽셀 타일 바닥 */
   #ground {
