@@ -847,32 +847,42 @@
   }
 
   /* ------------ 코멘트 저장 후 메뉴로 (수정됨: 전송 대기) ------------ */
-  async function confirmRanking() {
-    // 1. 버튼 찾아서 "전송 중" 표시 및 비활성화
+async function confirmRanking() {
     const btn = document.querySelector(".action-btn");
-    btn.innerText = "전송 중..."; 
+    const msgInput = document.getElementById("rankMsg");
+    const msg = msgInput.value.trim();
+
+    // 1. 메시지가 비어있으면 그냥 메뉴로 이동
+    if (!msg) {
+        window.location.href = "/TrapGame/menu.html";
+        return;
+    }
+
+    // 2. 전송 시작 (버튼 비활성화)
+    btn.innerText = "전송 중...";
     btn.disabled = true;
 
-    const msg = document.getElementById("rankMsg").value.trim();
+    try {
+      // 3. fetch로 데이터 전송
+      await fetch(API_URL, {
+        method: "POST",
+        // redirect: "follow", // 구글 시트 리다이렉트 대응
+        body: JSON.stringify({
+          type: "updateComment",
+          id: id,          // 변수 id
+          message: msg     // 입력한 메시지
+        })
+      });
+      
+      // 4. 전송 성공 시 알림 (테스트용, 나중에 삭제 가능)
+      alert("소감이 등록되었습니다!"); 
+      window.location.href = "/TrapGame/menu.html";
 
-    if (msg) {
-      try {
-        // await를 사용하여 전송이 완료될 때까지 기다림
-        await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            type: "updateComment",
-            id,
-            message: msg
-          })
-        });
-      } catch (e) {
-        alert("메시지 전송에 실패했습니다. (메뉴로 이동합니다)");
-      }
+    } catch (e) {
+      console.error(e);
+      alert("전송 오류가 났지만 메뉴로 이동합니다.");
+      window.location.href = "/TrapGame/menu.html";
     }
-    
-    // 2. 전송이 끝난 뒤에 페이지 이동
-    window.location.href = "/TrapGame/menu.html";
   }
 
   function goMenu() {
