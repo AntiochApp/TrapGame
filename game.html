@@ -1,296 +1,331 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Disciple Run – Game</title>
 
 <style>
-/* =================== 기본 설정 ====================== */
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: none;
-    font-family: "Pretendard", system-ui, sans-serif;
+  
+  html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
-
-:root {
+  
+  :root {
     --hud-bg: rgba(255, 248, 235, 0.9);
     --hud-border: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
-}
+  }
 
-/* =================== 게임 화면 ====================== */
-#gameArea {
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  #gameArea {
     position: relative;
+    z-index: 0;
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     overflow: hidden;
+    background:
+      linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
+  }
+
+  /* ---------------- 패럴랙스 배경 레이어 ---------------- */
+#bgLayer1, #bgLayer2, #bgLayer3 {
+  width: 300%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-repeat: repeat-x;
+  background-size: contain; /* ← 핵심! */
 }
 
-/* =================== 배경 레이어 ====================== */
-.bgLayer {
-    width: 300%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-repeat: repeat-x;
-}
-
-#bgLayer1 {
-    background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png");
-    background-size: contain;
+  #bgLayer1 {
+    background-image: url('https://antiochapp.github.io/TrapGame/bg_sky.png');
     z-index: 1;
-}
+  }
 
-#bgLayer2 {
-    background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png");
-    background-size: contain;
+  #bgLayer2 {
+    background-image: url('https://antiochapp.github.io/TrapGame/bg_mountain.png');
     z-index: 2;
-}
+  }
 
 #bgLayer3 {
-    background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png");
-    background-size: auto 120%;
-    background-position-y: 40px;
-    z-index: 3;
-}
+  background-image: url('https://antiochapp.github.io/TrapGame/bg_forest.png');
+  z-index: 3;
+  background-size: auto 120%; /* 숲이 너무 위로 올라오는 문제 해결 */
+  background-position-y: 40px; 
 
-/* =================== 플레이어 ====================== */
-#player {
+  /* 픽셀 타일 바닥 */
+  #ground {
+    position: absolute;
+    z-index: 5;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+    background-image: linear-gradient(90deg, #d9b178 0 16px, #c09054 16px 32px);
+    image-rendering: pixelated;
+    animation: groundMove 0.6s linear infinite;
+    display: none;
+  }
+
+  @keyframes groundMove {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-32px); }
+  }
+
+  #player {
     position: absolute;
     z-index: 12;
-    width: 60px;
-    height: 60px;
     left: 120px;
     bottom: 40px;
-    background: url("disciple.png") center/contain no-repeat;
+    width: 60px;
+    height: 60px;
+    background: url('disciple.png') center/contain no-repeat;
     image-rendering: pixelated;
     transition: opacity 0.2s;
-}
+  }
 
-/* =================== 장애물 ====================== */
-.obstacle {
+  .obstacle {
     position: absolute;
+    z-index: 10;
     width: 60px;
     background: #8c6239;
     image-rendering: pixelated;
-    z-index: 10;
-}
+  }
 
-/* =================== 랜덤 아이템 ====================== */
-.item {
+  #hud {
     position: absolute;
-    width: 48px;
-    height: 48px;
-    z-index: 11;
-    image-rendering: pixelated;
-}
-
-/* =================== HUD ====================== */
-#hud {
-    position: absolute;
-    top: 12px;
-    left: 12px;
     z-index: 20;
-    background: var(--hud-bg);
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 3px solid var(--hud-border);
+    top: 12px; left: 12px;
+    color: #3a2513;
     font-size: 18px;
     font-weight: 700;
-    color: var(--hud-border);
-}
+    background: var(--hud-bg);
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 3px solid var(--hud-border);
+  }
 
-/* =================== 콤보 / 보너스 효과 ====================== */
-#comboEffect,
-#correctEffect {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    font-weight: 900;
-    z-index: 9999;
-    display: none;
-}
+  #hud span {
+    display: inline-block;
+    min-width: 60px;
+  }
 
-#comboEffect {
-    top: 20%;
-    font-size: 40px;
-    color: #ffe24f;
-    text-shadow: 3px 3px #8b4f26;
-}
-
-#correctEffect {
-    top: 40%;
-    font-size: 48px;
-    color: #00ffcc;
-    text-shadow: 3px 3px #006644;
-}
-
-/* =================== 모달 공통 ====================== */
-.modal-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
+  .modal-box {
     width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.55);
+    max-width: 380px;
+    background: #fffdf2;
+    padding: 22px 20px 18px;
+    border-radius: 12px;
+    text-align: center;
+    border: 4px solid #3a2513;
+    box-shadow: 0 0 0 4px #fff, 0 8px 0 #b79b76;
+  }
+
+  #quizModal,
+  #gameOverModal {
     display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55);
     justify-content: center;
     align-items: center;
-    z-index: 9000;
-}
+    padding: 16px;
+  }
 
-.modal-box {
-    width: 90%;
-    max-width: 420px;
-    background: #fdfaf2;
-    border-radius: 14px;
-    border: 4px solid #3a2513;
-    padding: 28px 24px;
-    text-align: center;
-    box-shadow: 0 0 0 4px white, 0 10px 0 #b79b76;
-}
+  /* 랜덤 아이템 */
+  .item {
+    position: absolute;
+    z-index: 11;
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+  }
 
-.modal-title {
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 15px;
-}
+  /* COMBO 이펙트 */
+  #comboEffect {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    font-weight: 900;
+    color: #ffe24f;
+    text-shadow: 3px 3px #8b4f26;
+    display: none;
+    z-index: 9999;
+  }
 
-.modal-desc {
-    font-size: 17px;
-    line-height: 1.45;
-    margin-bottom: 20px;
-}
+  /* 정답 이펙트 */
+  #correctEffect {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 48px;
+    font-weight: 900;
+    color: #00ffcc;
+    text-shadow: 3px 3px #006644;
+    display: none;
+    z-index: 9999;
+  }
 
-/* 버튼 */
-.choice-btn, .action-btn {
-    width: 100%;
-    padding: 14px;
-    margin-top: 12px;
-    border: 0;
-    border-radius: 10px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 0 var(--accent-dark);
-}
-
-.choice-btn:active,
-.action-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--accent-dark);
-}
-
-.modal-input {
-    width: 100%;
-    padding: 14px;
-    margin-top: 10px;
-    border-radius: 8px;
-    border: 2px solid #b8a792;
-    font-size: 16px;
-}
 </style>
 </head>
 
 <body>
-
+  
 <div id="gameArea">
 
-    <!-- 패럴랙스 -->
-    <div id="bgLayer1" class="bgLayer"></div>
-    <div id="bgLayer2" class="bgLayer"></div>
-    <div id="bgLayer3" class="bgLayer"></div>
+  <!-- START GUIDE MODAL -->
+  <div id="startGuide" style="
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.55);
+    display:flex; justify-content:center; align-items:center;
+    padding:16px; z-index:9999;">
+    <div class="modal-box" style="max-width:420px;">
+      <h2>게임 방법 / How to Play</h2>
+      <p style="text-align:left; font-size:15px; line-height:1.5;">
+        • <b>Space</b> 또는 화면 터치로 점프<br>
+        • 장애물을 피해 <b>신앙 점수(Faith)</b> 획득<br>
+        • 상점에서 민첩/생명력/랜덤 뽑기 교환<br>
+        • <b>민첩:</b> 점프력 낮아짐(정교한 컨트롤)<br>
+        • <b>생명력:</b> 추가 라이프<br>
+        • <b>랜덤뽑기:</b> 기프트카드 당첨 가능<br><br>
 
-    <!-- 플레이어 -->
-    <div id="player"></div>
+        • Tap screen / press <b>Space</b> to jump<br>
+        • Avoid obstacles → Get Faith<br>
+        • Buy Agility/Life/Loot in Shop<br>
+        • <b>Agility:</b> Lower jump = finer control<br>
+        • <b>Life:</b> Extra HP<br>
+      </p>
 
-    <!-- HUD -->
-    <div id="hud">
-        ❤️ <span id="lifeText"></span>
-        📏 <span id="distanceText">0m</span>
-        ✝ <span id="faithText"></span>
+      <button class="quizBtn" onclick="startGameNow()" style="margin-top:12px;">
+        ▶ 시작하기 / Start
+      </button>
     </div>
+  </div>
+
+  <!-- 패럴랙스 배경 -->
+  <div id="bgLayer1"></div>
+  <div id="bgLayer2"></div>
+  <div id="bgLayer3"></div>
+
+  <div id="ground"></div>
+  <div id="player"></div>
+
+  <div id="hud">
+    ❤️ <span id="lifeText"></span>
+    📏 <span id="distanceText">0m</span>
+    ✝ <span id="faithText"></span>
+  </div>
 </div>
 
 <div id="comboEffect">COMBO +1!</div>
 <div id="correctEffect">+5 Faith!</div>
 
-<!-- ============= QUIZ MODAL ============== -->
-<div id="quizModal" class="modal-bg">
-    <div class="modal-box">
-        <div class="modal-title">성경 퀴즈</div>
-        <div class="modal-desc" id="quizQuestion"></div>
-
-        <button class="choice-btn" id="btnA" onclick="answerQuiz('A')"></button>
-        <button class="choice-btn" id="btnB" onclick="answerQuiz('B')"></button>
-        <button class="choice-btn" id="btnC" onclick="answerQuiz('C')"></button>
-    </div>
+<!-- QUIZ MODAL -->
+<div id="quizModal">
+  <div class="modal-box">
+    <h2>성경 퀴즈</h2>
+    <p id="quizQuestion"></p>
+    <button class="quizBtn" onclick="answerQuiz('A')" id="btnA"></button>
+    <button class="quizBtn" onclick="answerQuiz('B')" id="btnB"></button>
+    <button class="quizBtn" onclick="answerQuiz('C')" id="btnC"></button>
+  </div>
 </div>
 
-<!-- ============= GAME OVER MODAL ============== -->
-<div id="gameOverModal" class="modal-bg">
-    <div class="modal-box">
-        <div class="modal-title">GAME OVER</div>
+<!-- GAME OVER MODAL -->
+<div id="gameOverModal">
+  <div class="modal-box">
+    <h2>GAME OVER</h2>
+    <p><b><span id="finalDist"></span>m</b> 달렸습니다!</p>
 
-        <div class="modal-desc">
-            <b><span id="finalDist"></span>m</b> 달렸습니다!
-        </div>
+    <input id="rankMsg" type="text" placeholder="방명록(코멘트)"
+      style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
 
-        <input id="rankMsg" class="modal-input" placeholder="소감 입력(선택)">
-        <button class="action-btn" onclick="saveRanking()">순위 확인</button>
-        <button class="action-btn" onclick="goMenu()">메뉴로</button>
-    </div>
+    <button class="quizBtn" onclick="saveRanking()">랭킹 등록</button>
+    <button class="quizBtn" onclick="goMenu()">메뉴로 돌아가기</button>
+  </div>
 </div>
 
-<!-- ============= LOADING QUIZ ============== -->
-<div id="loadingQuiz" class="modal-bg" style="color:white; font-size:22px; font-weight:700;">
-    ⏳ 성경 문제를 불러오는 중입니다...
+<!-- LOADING MODAL -->
+<div id="loadingQuiz" style="
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6); justify-content:center; align-items:center;
+  color:white; font-size:22px; font-weight:700; backdrop-filter: blur(2px);
+  z-index: 9999;">
+  ⏳ 성경 문제를 불러오는 중입니다...
 </div>
-
 
 <script>
-/* =================== API URL ====================== */
+/* ------------------------- API -------------------------- */
 const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-/* =================== 기본 데이터 ====================== */
+/* ----------------------- 저장정보 ------------------------ */
 let id = localStorage.getItem("run_id");
 let name = localStorage.getItem("run_name");
 let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
 if (!id) {
-    alert("로그인이 필요합니다.");
-    window.location.href = "/TrapGame/index.html";
+  alert("로그인이 필요합니다.");
+  window.location.href = "/TrapGame/index.html";
 }
 
-/* =================== 게임 변수 ====================== */
+/* ---------------------- 데일리 미션 ------------------------ */
+let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
+
+function initDailyMission() {
+  return {
+    date: new Date().toDateString(),
+    run200: false,
+    quiz3: 0,
+    faith20: 0
+  };
+}
+
+if (!daily.date || daily.date !== new Date().toDateString()) {
+  daily = initDailyMission();
+  localStorage.setItem("dailyMission", JSON.stringify(daily));
+}
+
+/* ------------------------ 기본 변수 ------------------------ */
 let life = 3 + (saveData.extraLife || 0);
 let faith = saveData.faith || 0;
 
 document.getElementById("lifeText").innerText = life;
 document.getElementById("faithText").innerText = faith;
 
+const gameArea = document.getElementById("gameArea");
 const player = document.getElementById("player");
+const bg1 = document.getElementById("bgLayer1");
+const bg2 = document.getElementById("bgLayer2");
+const bg3 = document.getElementById("bgLayer3");
 
 let playerY = 40;
 let velocity = 0;
-let jumpPower = Math.max(3, 8 - (saveData.agility || 0) * 0.05);
 let gravity = -0.4;
+let agility = saveData.agility || 0;
+
+let jumpPower = 8 - agility * 0.05;
+jumpPower = Math.max(3, jumpPower);
+
 let distance = 0;
-
 let obstacles = [];
-let items = [];
-
-let running = true;
+let running = false;
 let invincible = false;
 
 const BASE_SPEED = 200;
@@ -298,298 +333,470 @@ let gameSpeed = BASE_SPEED;
 
 let lastTime = performance.now();
 let quizTimer = 0;
+let nextFaithMilestone = 100;
 
-/* =================== 패럴랙스 속도 ====================== */
-let bgX1 = 0, bgX2 = 0, bgX3 = 0;
+let obstacleTimer = 0;
+let nextObstacleTime = 1.6;
+
+let bg1X = 0, bg2X = 0, bg3X = 0;
+
 const BG1_SPEED = 20;
 const BG2_SPEED = 40;
 const BG3_SPEED = 60;
+  
+/* -------------------- 랜덤 아이템 -------------------- */
+let items = [];
+let itemTimer = 0;
+let nextItemTime = 8;
 
-/* =================== 터치 → 점프 ====================== */
-document.body.addEventListener("touchstart", () => jump());
-document.body.addEventListener("keydown", e => {
-    if (e.code === "Space" || e.code === "ArrowUp") {
-        e.preventDefault();
-        jump();
-    }
+/* -------------------- 콤보 시스템 -------------------- */
+let combo = 0;
+let obstacleSurviveCount = 0;
+
+/* -------------------- 난이도 시스템 -------------------- */
+function getDifficulty(dist) {
+  if (dist < 150) return 1;
+  if (dist < 300) return 2;
+  return 3;
+}
+
+function randBetween(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+/* ---------------------- jump ----------------------- */
+function jump() {
+  if (!running) return;
+  velocity = jumpPower;
+}
+
+document.body.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    e.preventDefault();
+    jump();
+  }
 });
 
-/* =================== 점프 ====================== */
-function jump() {
-    if (!running) return;
-    velocity = jumpPower;
+document.body.addEventListener("touchstart", jump);
+
+/* -------------------- 장애물 발생 -------------------- */
+function scheduleNextObstacle() {
+  const d = getDifficulty(distance);
+  if (d === 1) nextObstacleTime = randBetween(1.5, 2.2);
+  else if (d === 2) nextObstacleTime = randBetween(1.2, 1.8);
+  else nextObstacleTime = randBetween(0.9, 1.4);
 }
 
-/* =================== 장애물 생성 ====================== */
 function spawnObstacle() {
-    const obs = document.createElement("div");
-    obs.className = "obstacle";
-    obs.style.height = (Math.random() * 200 + 60) + "px";
-    obs.style.left = (window.innerWidth + 80) + "px";
-    obs.style.bottom = "0";
-    document.getElementById("gameArea").appendChild(obs);
-    obstacles.push(obs);
+  if (!running) return;
+  const difficulty = getDifficulty(distance);
+
+  const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
+  let pattern;
+
+  if (difficulty === 1) {
+    const easy = [
+      { top: randi(80, 160), gap: 190 },
+      { top: randi(110, 190), gap: 180 },
+      { groundBox: true, height: 70 }
+    ];
+    pattern = easy[randi(0, easy.length)];
+  } else if (difficulty === 2) {
+    const normal = [
+      { top: randi(130, 240), gap: 150 },
+      { top: randi(150, 260), gap: 140 },
+      { groundBox: true, height: 90 }
+    ];
+    pattern = normal[randi(0, normal.length)];
+  } else {
+    const hard = [
+      { top: randi(180, 320), gap: 120 },
+      { top: randi(200, 340), gap: 110 },
+      { top: randi(60, 140), gap: randi(110, 130) },
+      { groundBox: true, height: randi(90, 120) }
+    ];
+    pattern = hard[randi(0, hard.length)];
+  }
+
+  const screenH = window.innerHeight;
+  const startX = window.innerWidth + 80;
+
+  if (pattern.groundBox) {
+    const box = document.createElement("div");
+    box.classList.add("obstacle");
+    box.style.height = pattern.height + "px";
+    box.style.width = "60px";
+    box.style.left = startX + "px";
+    box.style.bottom = "0";
+    gameArea.appendChild(box);
+    obstacles.push(box);
+    return;
+  }
+
+  const topHeight = pattern.top;
+  const gap = pattern.gap;
+  const bottomHeight = Math.max(60, screenH - topHeight - gap);
+
+  const topObs = document.createElement("div");
+  topObs.classList.add("obstacle");
+  topObs.style.height = topHeight + "px";
+  topObs.style.left = startX + "px";
+  topObs.style.top = "0";
+  gameArea.appendChild(topObs);
+
+  const bottomObs = document.createElement("div");
+  bottomObs.classList.add("obstacle");
+  bottomObs.style.height = bottomHeight + "px";
+  bottomObs.style.left = startX + "px";
+  bottomObs.style.bottom = "0";
+  gameArea.appendChild(bottomObs);
+
+  obstacles.push(topObs, bottomObs);
 }
 
-/* =================== 아이템 생성 ====================== */
+/* ---------------------- 랜덤 아이템 ---------------------- */
 function spawnItem() {
-    const types = ["cross", "wind", "wings", "bible"];
-    const type = types[Math.floor(Math.random() * types.length)];
+  const types = ["cross", "wings", "wind", "bible"];
+  const type = types[Math.floor(Math.random() * types.length)];
 
-    const el = document.createElement("div");
-    el.className = "item";
-    el.dataset.type = type;
-    el.style.background = `url('https://antiochapp.github.io/TrapGame/item_${type}.png') center/contain no-repeat`;
-    el.style.left = window.innerWidth + "px";
-    el.style.bottom = (100 + Math.random() * 250) + "px";
+  const item = document.createElement("div");
+  item.classList.add("item");
+  item.dataset.type = type;
+  item.style.left = window.innerWidth + "px";
+  item.style.bottom = (Math.random() * 250 + 100) + "px";
 
-    document.getElementById("gameArea").appendChild(el);
-    items.push(el);
+  // 임시 아이템 이미지 경로 (원하면 바꿔도 됨)
+  item.style.background = `url('https://antiochapp.github.io/TrapGame/item_${type}.png') center/contain no-repeat`;
+
+  gameArea.appendChild(item);
+  items.push(item);
 }
 
-/* =================== 아이템 효과 ====================== */
+/* ----------- 아이템 효과 ----------- */
 function activateItem(type) {
-    if (type === "cross") {
-        invincible = true;
-        setTimeout(() => invincible = false, 10000);
+  if (type === "cross") {
+    invincible = true;
+    setTimeout(() => invincible = false, 10000);
+  }
+  if (type === "wings") {
+    jumpPower /= 2;
+    setTimeout(() => jumpPower *= 2, 10000);
+  }
+  if (type === "wind") {
+    gameSpeed /= 2;
+    setTimeout(() => gameSpeed *= 2, 10000);
+  }
+  if (type === "bible") {
+    faith += 10;
+    saveData.faith = faith;
+    document.getElementById("faithText").innerText = faith;
+    saveProgress();
+  }
+}
+
+/* ------------------- 메인 루프 ------------------- */
+function gameLoop(now) {
+  if (!running) return;
+
+  const delta = (now - lastTime) / 1000;
+  lastTime = now;
+
+  /* 데일리 미션 체크 */
+  if (!daily.run200 && distance >= 200) {
+    daily.run200 = true;
+  }
+  daily.faith20 = faith;
+  localStorage.setItem("dailyMission", JSON.stringify(daily));
+
+  /* 거리 증가 */
+  distance += delta * 1;
+  document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
+
+  /* 난이도별 속도 */
+  const diff = getDifficulty(distance);
+  gameSpeed = BASE_SPEED * (1 + (diff - 1) * 0.25);
+
+  /* 100m마다 Faith +1 */
+  if (distance >= nextFaithMilestone) {
+    faith++;
+    saveData.faith = faith;
+    nextFaithMilestone += 100;
+    document.getElementById("faithText").innerText = faith;
+    saveProgress();
+  }
+
+  /* 퀴즈 타이머 */
+  quizTimer += delta;
+  const quizSoon = (quizTimer >= 27 && quizTimer < 30);
+
+  /* 장애물 생성 */
+  if (!quizSoon) {
+    obstacleTimer += delta;
+    if (obstacleTimer >= nextObstacleTime) {
+      spawnObstacle();
+      obstacleTimer = 0;
+      scheduleNextObstacle();
     }
-    if (type === "wind") {
-        gameSpeed /= 2;
-        setTimeout(() => gameSpeed *= 2, 10000);
-    }
-    if (type === "wings") {
-        jumpPower /= 2;
-        setTimeout(() => jumpPower *= 2, 10000);
-    }
-    if (type === "bible") {
-        faith += 10;
+  }
+
+  /* 점프 물리 */
+  velocity += gravity;
+  playerY += velocity;
+
+  if (playerY < 0) playerY = 0;
+  if (playerY > window.innerHeight - 110)
+    playerY = window.innerHeight - 110;
+
+  player.style.bottom = playerY + "px";
+
+  /* 장애물 이동 + 충돌 */
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const obs = obstacles[i];
+
+    let left = parseFloat(obs.style.left) || 0;
+    left -= gameSpeed * delta;
+    obs.style.left = left + "px";
+
+    if (left + 60 < 0) {
+      obs.remove();
+      obstacles.splice(i, 1);
+
+      // 콤보 처리
+      obstacleSurviveCount++;
+      if (obstacleSurviveCount >= 5) {
+        combo++;
+        faith++;
         saveData.faith = faith;
-        document.getElementById("faithText").innerText = faith;
-        saveProgress();
-    }
-}
 
-/* =================== 성경 퀴즈 ====================== */
-async function pauseForQuiz() {
-    running = false;
-    document.getElementById("loadingQuiz").style.display = "flex";
-
-    try {
-        const raw = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({ type: "getQuiz" })
-        });
-        const txt = await raw.text();
-        document.getElementById("loadingQuiz").style.display = "none";
-
-        if (txt === "noquiz") {
-            running = true;
-            lastTime = performance.now();
-            requestAnimationFrame(gameLoop);
-            return;
-        }
-
-        const quiz = JSON.parse(txt);
-
-        document.getElementById("quizQuestion").innerText = quiz.question;
-        document.getElementById("btnA").innerText = "A. " + quiz.A;
-        document.getElementById("btnB").innerText = "B. " + quiz.B;
-        document.getElementById("btnC").innerText = "C. " + quiz.C;
-
-        window.correctAnswer = quiz.answer;
-
-        document.getElementById("quizModal").style.display = "flex";
-
-    } catch (e) {
-        document.getElementById("loadingQuiz").style.display = "none";
-        running = true;
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
-    }
-}
-
-function answerQuiz(s) {
-    document.getElementById("quizModal").style.display = "none";
-
-    if (s === window.correctAnswer) {
-        // 정답 효과
-        const ce = document.getElementById("correctEffect");
+        const ce = document.getElementById("comboEffect");
         ce.style.display = "block";
-        setTimeout(() => ce.style.display = "none", 800);
+        ce.innerText = `COMBO +${combo}!`;
+        setTimeout(() => ce.style.display = "none", 1000);
 
-        faith += 5;
-        saveData.faith = faith;
-        document.getElementById("faithText").innerText = faith;
+        obstacleSurviveCount = 0;
         saveProgress();
+      }
 
-    } else {
-        damageLife();
+      continue;
     }
 
-    if (life > 0) {
-        running = true;
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
+    const rectP = player.getBoundingClientRect();
+    const rectO = obs.getBoundingClientRect();
+
+    if (
+      rectP.left < rectO.right &&
+      rectP.right > rectO.left &&
+      rectP.top < rectO.bottom &&
+      rectP.bottom > rectO.top
+    ) {
+      damageLife();
     }
+  }
+
+  /* 아이템 이동 + 충돌 */
+  itemTimer += delta;
+  if (itemTimer >= nextItemTime) {
+    spawnItem();
+    nextItemTime = Math.random() * 6 + 6;
+    itemTimer = 0;
+  }
+
+  for (let i = items.length - 1; i >= 0; i--) {
+    let it = items[i];
+    let left = parseFloat(it.style.left) || 0;
+    left -= gameSpeed * delta;
+    it.style.left = left + "px";
+
+    if (left < -60) {
+      it.remove();
+      items.splice(i, 1);
+      continue;
+    }
+
+    const rectP = player.getBoundingClientRect();
+    const rectI = it.getBoundingClientRect();
+
+    if (
+      rectP.left < rectI.right &&
+      rectP.right > rectI.left &&
+      rectP.top < rectI.bottom &&
+      rectP.bottom > rectI.top
+    ) {
+      activateItem(it.dataset.type);
+      it.remove();
+      items.splice(i, 1);
+      continue;
+    }
+  }
+
+  /* 배경 패럴랙스 */
+  
+bg1X = (bg1X - BG1_SPEED * delta) % window.innerWidth;
+bg2X = (bg2X - BG2_SPEED * delta) % window.innerWidth;
+bg3X = (bg3X - BG3_SPEED * delta) % window.innerWidth;
+
+bg1.style.backgroundPosition = `${bg1X}px 0`;
+bg2.style.backgroundPosition = `${bg2X}px 0`;
+bg3.style.backgroundPosition = `${bg3X}px 0`;
+
+  /* 퀴즈 */
+  if (quizTimer >= 30) {
+    quizTimer = 0;
+    pauseForQuiz();
+    return;
+  }
+
+  requestAnimationFrame(gameLoop);
 }
 
-/* =================== 생명 감소 ====================== */
+/* -------------------- 생명 감소 -------------------- */
 function damageLife() {
-    if (invincible) return;
+  if (invincible || !running) return;
 
-    life--;
-    document.getElementById("lifeText").innerText = life;
+  life--;
+  document.getElementById("lifeText").innerText = life;
 
-    if (life <= 0) {
-        gameOver();
+  invincible = true;
+  player.style.opacity = "0.4";
+  setTimeout(() => {
+    invincible = false;
+    player.style.opacity = "1";
+  }, 800);
+
+  if (life <= 0) {
+    gameOver();
+  }
+}
+
+/* -------------------- 성경 퀴즈 -------------------- */
+async function pauseForQuiz() {
+  if (!running) return;
+  running = false;
+
+  document.getElementById("loadingQuiz").style.display = "flex";
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getQuiz" })
+    });
+
+    const txt = await res.text();
+    document.getElementById("loadingQuiz").style.display = "none";
+
+    if (txt === "noquiz") {
+      running = true;
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+      return;
     }
+
+    const quiz = JSON.parse(txt);
+    document.getElementById("quizQuestion").innerText = quiz.question;
+    document.getElementById("btnA").innerText = "A) " + quiz.A;
+    document.getElementById("btnB").innerText = "B) " + quiz.B;
+    document.getElementById("btnC").innerText = "C) " + quiz.C;
+
+    window.correctAnswer = quiz.answer;
+    document.getElementById("quizModal").style.display = "flex";
+  } catch (err) {
+    document.getElementById("loadingQuiz").style.display = "none";
+    running = true;
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+  }
 }
 
-/* =================== 게임 오버 ====================== */
-function gameOver() {
-    running = false;
+/* -------------------- 정답 처리 -------------------- */
+function answerQuiz(sel) {
+  document.getElementById("quizModal").style.display = "none";
 
-    document.getElementById("finalDist").innerText = Math.floor(distance);
+  if (sel === window.correctAnswer) {
+    const ef = document.getElementById("correctEffect");
+    ef.style.display = "block";
+    setTimeout(() => ef.style.display = "none", 800);
 
-    // 즉시 랭킹 등록
-    fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            type: "updateRanking",
-            id, name,
-            distance: Math.floor(distance),
-            message: ""
-        })
-    });
+    faith += 5;
+    saveData.faith = faith;
+    document.getElementById("faithText").innerText = faith;
 
-    document.getElementById("gameOverModal").style.display = "flex";
+    daily.quiz3++;
+    localStorage.setItem("dailyMission", JSON.stringify(daily));
+
+    saveProgress();
+  } else {
+    damageLife();
+  }
+
+  if (life > 0) {
+    running = true;
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+  }
 }
 
-/* =================== 랭킹 저장 + 소감 업데이트 ====================== */
-async function saveRanking() {
-    const msg = document.getElementById("rankMsg").value.trim();
-
+/* -------------------- 저장 -------------------- */
+async function saveProgress() {
+  try {
     await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            type: "updateRanking",
-            id, name,
-            distance: Math.floor(distance),
-            message: msg
-        })
+      method: "POST",
+      body: JSON.stringify({ type: "save", id, saveData })
     });
+  } catch (e) {}
+  localStorage.setItem("run_save", JSON.stringify(saveData));
+}
 
-    window.location.href = "/TrapGame/menu.html";
+/* -------------------- GAME Start -------------------- */
+function startGameNow() {
+  document.getElementById("startGuide").style.display = "none";
+  running = true;
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+/* -------------------- GAME OVER -------------------- */
+function gameOver() {
+  running = false;
+  invincible = true;
+  player.style.opacity = "0.4";
+
+  document.getElementById("finalDist").innerText = Math.floor(distance);
+  document.getElementById("gameOverModal").style.display = "flex";
+}
+
+/* -------------------- 랭킹 저장 -------------------- */
+async function saveRanking() {
+  const msg = document.getElementById("rankMsg").value.trim();
+  const dist = Math.floor(distance);
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "updateRanking",
+        id, name,
+        distance: dist,
+        message: msg
+      })
+    });
+    alert("랭킹 등록 완료!");
+  } catch (e) {}
+
+  window.location.href = "/TrapGame/menu.html";
 }
 
 function goMenu() {
-    window.location.href = "/TrapGame/menu.html";
+  window.location.href = "/TrapGame/menu.html";
 }
-
-/* =================== 저장 ====================== */
-async function saveProgress() {
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "save", id, saveData })
-    });
-    localStorage.setItem("run_save", JSON.stringify(saveData));
-}
-
-/* =================== 메인 루프 ====================== */
-function gameLoop(now) {
-    if (!running) return;
-
-    const delta = (now - lastTime) / 1000;
-    lastTime = now;
-
-    /* 거리 증가 */
-    distance += delta * 1;
-    document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
-
-    /* 패럴랙스 */
-    bgX1 -= BG1_SPEED * delta;
-    bgX2 -= BG2_SPEED * delta;
-    bgX3 -= BG3_SPEED * delta;
-
-    document.getElementById("bgLayer1").style.backgroundPosition = `${bgX1}px 0`;
-    document.getElementById("bgLayer2").style.backgroundPosition = `${bgX2}px 0`;
-    document.getElementById("bgLayer3").style.backgroundPosition = `${bgX3}px 0`;
-
-    /* 점프 물리 */
-    velocity += gravity;
-    playerY += velocity;
-    if (playerY < 0) playerY = 0;
-    if (playerY > window.innerHeight - 120) playerY = window.innerHeight - 120;
-    player.style.bottom = playerY + "px";
-
-    /* 장애물 생성 */
-    if (Math.random() < delta * 0.9) spawnObstacle();
-
-    /* 아이템 생성 */
-    if (Math.random() < delta * 0.2) spawnItem();
-
-    /* 장애물 이동 / 충돌 */
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        let o = obstacles[i];
-        let x = parseFloat(o.style.left);
-        x -= gameSpeed * delta;
-        o.style.left = x + "px";
-
-        if (x < -80) {
-            o.remove();
-            obstacles.splice(i, 1);
-            continue;
-        }
-
-        const r1 = player.getBoundingClientRect();
-        const r2 = o.getBoundingClientRect();
-
-        if (r1.left < r2.right && r1.right > r2.left &&
-            r1.top < r2.bottom && r1.bottom > r2.top) {
-            damageLife();
-        }
-    }
-
-    /* 아이템 이동 / 충돌 */
-    for (let i = items.length - 1; i >= 0; i--) {
-        let it = items[i];
-        let x = parseFloat(it.style.left);
-        x -= gameSpeed * delta;
-        it.style.left = x + "px";
-
-        if (x < -100) {
-            it.remove();
-            items.splice(i, 1);
-            continue;
-        }
-
-        const r1 = player.getBoundingClientRect();
-        const r2 = it.getBoundingClientRect();
-
-        if (r1.left < r2.right && r1.right > r2.left &&
-            r1.top < r2.bottom && r1.bottom > r2.top) {
-
-            activateItem(it.dataset.type);
-            it.remove();
-            items.splice(i, 1);
-        }
-    }
-
-    /* 퀴즈 타이머 */
-    quizTimer += delta;
-    if (quizTimer >= 30) {
-        quizTimer = 0;
-        pauseForQuiz();
-        return;
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-/* =================== 게임 시작 ====================== */
-lastTime = performance.now();
-requestAnimationFrame(gameLoop);
+let lastTouch = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouch < 300) {
+    e.preventDefault();
+  }
+  lastTouch = now;
+}, { passive: false });
+  
 </script>
-
 </body>
 </html>
