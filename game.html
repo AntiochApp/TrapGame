@@ -44,17 +44,17 @@
   }
 
 #bgLayer1 {
-      background-image: url('bg_sky.png'); /* 하늘 */
+      background-image: url('https://yourdomain.com/TrapGame/bg_sky.png'); /* 하늘 */
       z-index: -3;
 } 
 
 #bgLayer2 {
-       background-image: url('bg_mountain.png'); /* 산 (투명 PNG) */
+       background-image: url('https://yourdomain.com/TrapGame/bg_mountain.png'); /* 산 (투명 PNG) */
        z-index: -2;
 }
 
  #bgLayer3 {
-        background-image: url('bg_forest.png'); /* 숲 (투명 PNG) */
+        background-image: url('https://yourdomain.com/TrapGame/bg_forest.png'); /* 숲 (투명 PNG) */
         z-index: -1;
  }
 
@@ -527,12 +527,9 @@ jumpPower = Math.max(3, jumpPower);
       pauseForQuiz();
       return; // 퀴즈로 넘어가면서 이번 프레임 종료
     }
-    
+
     requestAnimationFrame(gameLoop);
-  }
-
-  requestAnimationFrame(gameLoop);
-
+}   
   // -------------------- 생명 감소 --------------------
   function damageLife() {
     if (invincible || !running) return;
@@ -596,7 +593,30 @@ jumpPower = Math.max(3, jumpPower);
     requestAnimationFrame(gameLoop);
   }
 }
+  
+// -------------------- 성경 퀴즈 정답 처리 --------------------
+function answerQuiz(sel) {
+  // 퀴즈창 닫기
+  document.getElementById("quizModal").style.display = "none";
 
+  if (sel === window.correctAnswer) {
+    // ⭐ 정답: Faith +5
+    faith += 5;
+    saveData.faith = faith;
+    document.getElementById("faithText").innerText = faith;
+    saveProgress();
+  } else {
+    // 오답 → 데미지
+    damageLife();
+  }
+
+  // 게임 재개
+  if (life > 0) {
+    running = true;
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+  }
+}
 
   // -------------------- saveData 저장 --------------------
   async function saveProgress() {
