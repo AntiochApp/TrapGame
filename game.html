@@ -38,7 +38,7 @@
         linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* ------------ 패럴랙스 배경 ------------ */
+    /* ------------ 패럴랙스 배경 공통 설정 ------------ */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute;
       left: 0;
@@ -46,24 +46,34 @@
       width: 200%;
       height: 100%;
       background-repeat: repeat-x;
-      background-position-y: bottom;
-      background-size: auto 100%;
       image-rendering: pixelated;
       pointer-events: none;
     }
 
+    /* 1. 하늘 (가장 뒤) */
     #bgLayer1 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png");
       z-index: 1;
+      background-size: auto 100%; /* 하늘은 꽉 차게 */
+      background-position: bottom left;
     }
+
+    /* 2. 산 (중간) */
     #bgLayer2 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png");
       z-index: 2;
+      background-size: auto 100%; /* 산도 꽉 차게 (필요시 줄이세요) */
+      background-position: bottom left;
     }
+
+    /* 3. 숲 (가장 앞 배경) - [수정됨] 크기 조절 */
     #bgLayer3 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png");
       z-index: 3;
-      background-position-y: 40px;
+      /* 핵심 수정: 높이를 화면의 60%로 줄임 */
+      background-size: auto 60%; 
+      /* 바닥에 붙도록 설정 */
+      background-position: bottom left; 
     }
 
     /* ------------ 바닥 ------------ */
