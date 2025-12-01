@@ -118,38 +118,66 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  // -------------------- 기본 정보 --------------------
+  // -------------------- 로그인 체크 --------------------
   const id = localStorage.getItem("run_id");
   const name = localStorage.getItem("run_name");
-  let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
   if (!id) {
     alert("로그인이 필요합니다.");
     window.location.href = "index.html";
   }
 
-  let life = 3 + (saveData.extraLife || 0);
-  let faith = saveData.faith || 0;
-
-  document.getElementById("lifeText").innerText = life;
-  document.getElementById("faithText").innerText = faith;
-
-  // -------------------- 게임 변수 --------------------
-  const gameArea = document.getElementById("gameArea");
-  const player = document.getElementById("player");
+  // -------------------- 전역 변수 --------------------
+  let saveData = {};
+  let life = 3;
+  let faith = 0;
+  let jumpPower = 8;
 
   let playerY = 40;
   let velocity = 0;
   let gravity = -0.4;
-  let jumpPower = 8 + (saveData.agility || 0);
 
   let distance = 0;
-  let gameSpeed = 4;          // 점점 빨라짐
+  let gameSpeed = 4;
   let lastQuizPoint = 0;
 
   let obstacles = [];
-  let running = true;
-  let invincible = false;     // 충돌 후 잠깐 무적
+  let running = false;
+  let invincible = false;
+
+  const gameArea = document.getElementById("gameArea");
+  const player = document.getElementById("player");
+
+  // -------------------- 서버에서 최신 저장 불러오기 --------------------
+  async function loadSaveData() {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getSaveData", id })
+    });
+
+    const txt = await res.text();
+    if (txt !== "fail") {
+      saveData = JSON.parse(txt);
+      localStorage.setItem("run_save", txt);
+    }
+
+    startGameInit();
+  }
+
+  // -------------------- 불러온 데이터를 기반으로 능력치 적용 --------------------
+  function startGameInit() {
+    life = 3 + (saveData.extraLife || 0);
+    faith = saveData.faith || 0;
+    jumpPower = 8 + (saveData.agility || 0);
+
+    document.getElementById("lifeText").innerText = life;
+    document.getElementById("faithText").innerText = faith;
+
+    running = true;
+    requestAnimationFrame(gameLoop);
+  }
+
+  loadSaveData();
 
   // -------------------- 점프 --------------------
   function jump() {
@@ -171,9 +199,8 @@
     if (!running) return;
 
     const topHeight = Math.random() * 200 + 80;
-    const gap = 160; // gap 공간
+    const gap = 160;
 
-    // 위 장애물
     const topObs = document.createElement("div");
     topObs.classList.add("obstacle");
     topObs.style.height = topHeight + "px";
@@ -181,7 +208,6 @@
     topObs.style.top = "0";
     gameArea.appendChild(topObs);
 
-    // 아래 장애물
     const bottomObs = document.createElement("div");
     bottomObs.classList.add("obstacle");
     bottomObs.style.height = (window.innerHeight - topHeight - gap) + "px";
@@ -198,18 +224,15 @@
   function gameLoop() {
     if (!running) return;
 
-    // 거리 증가 (약 1초에 1m 정도)
     distance += 0.016 * 60;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    // 50m마다 속도 증가 + 퀴즈
     if (Math.floor(distance / 50) > Math.floor(lastQuizPoint / 50)) {
       lastQuizPoint = distance;
       gameSpeed += 0.4;
       pauseForQuiz();
     }
 
-    // 캐릭터 물리
     velocity += gravity;
     playerY += velocity;
 
@@ -218,20 +241,17 @@
 
     player.style.bottom = playerY + "px";
 
-    // 장애물 이동 + 충돌 체크
     obstacles.forEach(obs => {
       const left = parseFloat(obs.style.left);
       obs.style.left = (left - gameSpeed) + "px";
 
-      // 화면 밖으로 나간 장애물은 제거
-      if (left + 60 < 0) {
-        obs.remove();
-      }
+      if (left + 60 < 0) obs.remove();
 
-      // 충돌 판정
       const rectP = player.getBoundingClientRect();
       const rectO = obs.getBoundingClientRect();
-      if (rectP.left < rectO.right &&
+
+      if (!invincible &&
+          rectP.left < rectO.right &&
           rectP.right > rectO.left &&
           rectP.top < rectO.bottom &&
           rectP.bottom > rectO.top) {
@@ -242,64 +262,50 @@
     requestAnimationFrame(gameLoop);
   }
 
-  requestAnimationFrame(gameLoop);
-
   // -------------------- 생명 감소 --------------------
   function damageLife() {
-    // 무적이거나 이미 게임이 끝난 상태이면 무시
     if (invincible || !running) return;
 
     life--;
     document.getElementById("lifeText").innerText = life;
 
-    // 잠깐 무적 & 시각효과
     invincible = true;
     player.style.opacity = "0.4";
+
     setTimeout(() => {
       invincible = false;
       player.style.opacity = "1";
     }, 800);
 
-    if (life <= 0) {
-      gameOver();
-    }
+    if (life <= 0) gameOver();
   }
 
-  // -------------------- 성경 퀴즈 --------------------
+  // -------------------- 퀴즈 --------------------
   async function pauseForQuiz() {
-    if (!running) return;
-
     running = false;
 
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "getQuiz" })
-      });
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getQuiz" })
+    });
 
-      const txt = await res.text();
-      if (txt === "noquiz") {
-        // 퀴즈가 없으면 바로 다시 진행
-        running = true;
-        requestAnimationFrame(gameLoop);
-        return;
-      }
-
-      const quiz = JSON.parse(txt);
-
-      document.getElementById("quizQuestion").innerText = quiz.question;
-      document.getElementById("btnA").innerText = "A) " + quiz.A;
-      document.getElementById("btnB").innerText = "B) " + quiz.B;
-      document.getElementById("btnC").innerText = "C) " + quiz.C;
-
-      window.correctAnswer = quiz.answer;
-
-      document.getElementById("quizModal").style.display = "flex";
-    } catch (err) {
-      // 에러가 나도 게임은 계속 진행
+    const txt = await res.text();
+    if (txt === "noquiz") {
       running = true;
       requestAnimationFrame(gameLoop);
+      return;
     }
+
+    const quiz = JSON.parse(txt);
+
+    document.getElementById("quizQuestion").innerText = quiz.question;
+    document.getElementById("btnA").innerText = "A) " + quiz.A;
+    document.getElementById("btnB").innerText = "B) " + quiz.B;
+    document.getElementById("btnC").innerText = "C) " + quiz.C;
+
+    window.correctAnswer = quiz.answer;
+
+    document.getElementById("quizModal").style.display = "flex";
   }
 
   function answerQuiz(sel) {
@@ -320,20 +326,19 @@
     }
   }
 
-  // -------------------- saveData 저장 --------------------
+  // -------------------- 저장 --------------------
   async function saveProgress() {
     try {
       await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "save", id, saveData })
       });
-    } catch (e) {
-      // 네트워크 에러시에도 로컬에는 저장
-    }
+    } catch (e) {}
+
     localStorage.setItem("run_save", JSON.stringify(saveData));
   }
 
-  // -------------------- GAME OVER --------------------
+  // -------------------- 게임 오버 --------------------
   function gameOver() {
     running = false;
     invincible = true;
@@ -348,27 +353,24 @@
     const message = document.getElementById("rankMsg").value.trim();
     const dist = Math.floor(distance);
 
-    try {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "updateRanking",
-          id, name,
-          distance: dist,
-          message
-        })
-      });
-      alert("랭킹 등록 완료!");
-    } catch (e) {
-      alert("랭킹 저장 중 오류가 발생했습니다.");
-    }
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "updateRanking",
+        id, name,
+        distance: dist,
+        message
+      })
+    });
 
+    alert("랭킹 등록 완료!");
     window.location.href = "menu.html";
   }
 
   function goMenu() {
     window.location.href = "menu.html";
   }
+
 </script>
 
 </body>
