@@ -182,7 +182,7 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
   // -------------------- 기본 정보 --------------------
-  const id = localStorage.getItem("run_id");
+  const id   = localStorage.getItem("run_id");
   const name = localStorage.getItem("run_name");
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
@@ -194,27 +194,32 @@
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
 
-  document.getElementById("lifeText").innerText = life;
+  document.getElementById("lifeText").innerText  = life;
   document.getElementById("faithText").innerText = faith;
 
   // -------------------- 게임 변수 --------------------
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
 
-  let playerY = 40;
-  let velocity = 0;
-  let gravity  = -0.4;
+  let playerY   = 40;
+  let velocity  = 0;
+  let gravity   = -0.4;                       // 점프 느낌은 그대로 유지
   let jumpPower = 8 + (saveData.agility || 0);
 
-  let distance = 0;
-  let gameSpeed = 4;
-  let lastQuizPoint = 0;
-
+  let distance  = 0;                          // m 단위
   let obstacles = [];
-  let running = true;
+  let running   = true;
   let invincible = false;
 
-  // -------------------- 점프 --------------------
+  const BASE_SPEED = 260;                     // 장애물 이동 속도(px/초)
+  let gameSpeed = BASE_SPEED;
+
+  // 시간 기반 변수
+  let lastTime = performance.now();
+  let quizTimer = 0;                          // 30초마다 퀴즈
+  let nextFaithMilestone = 100;               // 100m마다 Faith +1
+
+  // -------------------- 입력 / 점프 --------------------
   function jump() {
     if (!running) return;
     velocity = jumpPower;
@@ -229,70 +234,139 @@
 
   document.body.addEventListener("touchstart", jump);
 
+  // -------------------- 난이도 계산 --------------------
+  function getDifficulty(dist) {
+    if (dist < 150) return 1;   // easy
+    if (dist < 300) return 2;   // normal
+    return 3;                   // hard
+  }
+
   // -------------------- 장애물 생성 --------------------
   function spawnObstacle() {
     if (!running) return;
 
-    const topHeight = Math.random() * 200 + 80;
-    const gap = 160;
+    const difficulty = getDifficulty(distance);
+    const rand = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
+    let pattern;
+
+    if (difficulty === 1) {
+      const easy = [
+        { top: rand(80, 160), gap: 190 },
+        { top: rand(110, 190), gap: 180 }
+      ];
+      pattern = easy[rand(0, easy.length)];
+    } else if (difficulty === 2) {
+      const normal = [
+        { top: rand(130, 240), gap: 150 },
+        { top: rand(150, 260), gap: 140 }
+      ];
+      pattern = normal[rand(0, normal.length)];
+    } else {
+      const hard = [
+        { top: rand(180, 320), gap: 120 },
+        { top: rand(200, 340), gap: 110 },
+        { top: rand(60, 140),  gap: rand(110, 130) }
+      ];
+      pattern = hard[rand(0, hard.length)];
+    }
+
+    const topHeight = pattern.top;
+    const gap       = pattern.gap;
+    const screenH   = window.innerHeight;
+    const bottomHeight = Math.max(60, screenH - topHeight - gap);
+
+    // 화면 오른쪽 "밖"에서 등장 → 갑툭튀 방지
+    const startX = window.innerWidth + 80;
+
+    // 위 장애물
     const topObs = document.createElement("div");
     topObs.classList.add("obstacle");
     topObs.style.height = topHeight + "px";
-    topObs.style.left = "100vw";
-    topObs.style.top = "0";
+    topObs.style.left   = startX + "px";
+    topObs.style.top    = "0";
     gameArea.appendChild(topObs);
 
+    // 아래 장애물
     const bottomObs = document.createElement("div");
     bottomObs.classList.add("obstacle");
-    bottomObs.style.height = (window.innerHeight - topHeight - gap) + "px";
-    bottomObs.style.left = "100vw";
+    bottomObs.style.height = bottomHeight + "px";
+    bottomObs.style.left   = startX + "px";
     bottomObs.style.bottom = "0";
     gameArea.appendChild(bottomObs);
 
     obstacles.push(topObs, bottomObs);
   }
 
+  // 일정 간격으로 장애물 생성 (시간 기준)
   setInterval(spawnObstacle, 1800);
 
-  // -------------------- 게임 루프 --------------------
-  function gameLoop() {
+  // -------------------- 메인 게임 루프 (시간 기반) --------------------
+  function gameLoop(now) {
     if (!running) return;
 
-    distance += 0.016 * 60;
+    const delta = (now - lastTime) / 1000;    // 지난 프레임에서 지난 시간(초)
+    lastTime = now;
+
+    // 1초에 1m씩 이동
+    distance += delta * 1;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    if (Math.floor(distance / 50) > Math.floor(lastQuizPoint / 50)) {
-      lastQuizPoint = distance;
-      gameSpeed += 0.4;
+    // 100m마다 Faith +1
+    if (distance >= nextFaithMilestone) {
+      faith++;
+      saveData.faith = faith;
+      nextFaithMilestone += 100;
+      document.getElementById("faithText").innerText = faith;
+      saveProgress();
+    }
+
+    // 30초마다 퀴즈
+    quizTimer += delta;
+    if (quizTimer >= 30) {
+      quizTimer = 0;
       pauseForQuiz();
     }
 
+    // 캐릭터 물리 (기존 감각 유지)
     velocity += gravity;
-    playerY += velocity;
+    playerY  += velocity;
 
     if (playerY < 0) playerY = 0;
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
 
     player.style.bottom = playerY + "px";
 
-    obstacles.forEach(obs => {
-      const left = parseFloat(obs.style.left);
-      obs.style.left = (left - gameSpeed) + "px";
-
-      if (left + 60 < 0) {
-        obs.remove();
+    // 장애물 이동 + 충돌 체크
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const obs = obstacles[i];
+      if (!obs.isConnected) {
+        obstacles.splice(i, 1);
+        continue;
       }
 
+      let left = parseFloat(obs.style.left) || 0;
+      left -= gameSpeed * delta;
+      obs.style.left = left + "px";
+
+      // 화면 밖으로 나간 장애물 제거
+      if (left + 60 < 0) {
+        obs.remove();
+        obstacles.splice(i, 1);
+        continue;
+      }
+
+      // 충돌 판정
       const rectP = player.getBoundingClientRect();
       const rectO = obs.getBoundingClientRect();
+
       if (rectP.left < rectO.right &&
           rectP.right > rectO.left &&
           rectP.top < rectO.bottom &&
           rectP.bottom > rectO.top) {
         damageLife();
       }
-    });
+    }
 
     requestAnimationFrame(gameLoop);
   }
@@ -321,7 +395,6 @@
   // -------------------- 성경 퀴즈 --------------------
   async function pauseForQuiz() {
     if (!running) return;
-
     running = false;
 
     try {
@@ -348,6 +421,7 @@
 
       document.getElementById("quizModal").style.display = "flex";
     } catch (err) {
+      console.warn("퀴즈 불러오기 실패:", err);
       running = true;
       requestAnimationFrame(gameLoop);
     }
@@ -367,6 +441,7 @@
 
     if (life > 0) {
       running = true;
+      lastTime = performance.now();
       requestAnimationFrame(gameLoop);
     }
   }
@@ -424,3 +499,4 @@
 
 </body>
 </html>
+
