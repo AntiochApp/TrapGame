@@ -17,24 +17,25 @@
 
   * { box-sizing: border-box; }
 
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    /* (기존 배경 속성 유지) */
-    background:
-      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
-      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text-main);
-    display: flex; 
-    justify-content: center; /* 수평 중앙 정렬 */
-    align-items: center; /* 수직 중앙 정렬 */
-    /* top-bar가 fixed가 아니라면 body 상단에 붙으므로, 상단바의 높이만큼 padding-top을 줄 수 있지만, 
-       지금은 top-bar가 고정되어 있지 않아, 이렇게만 해도 container가 중앙에 옵니다. */
-}
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    /* 배경 설정 */
+    background:
+      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
+      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
+    
+    /* [수정 포인트] 화면 전체를 세로(Flex-column)로 배치 */
+    display: flex;
+    flex-direction: column; 
+  }
 
+  /* 상단바: 화면 최상단에 고정된 크기로 배치 */
   .top-bar {
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -43,6 +44,7 @@ body {
     color: #fbe8c4;
     font-size: 14px;
     border-bottom: 4px solid #1f130b;
+    flex-shrink: 0; 
   }
 
   .top-bar button {
@@ -60,18 +62,20 @@ body {
     box-shadow: 0 1px 0 var(--accent-dark);
   }
 
-.container {
-    max-width: 460px;
-    margin: auto;
-    background: var(--bg-panel);
-    padding: 28px 24px 22px;
-    border-radius: 12px;
-    border: 4px solid var(--border-dark);
-    box-shadow:
-      0 0 0 4px #fff,
-      0 8px 0 0 #b79b76,
-      0 12px 12px rgba(0,0,0,0.25);
-  }
+  /* 컨테이너: 남은 화면 공간의 정중앙에 위치하도록 margin: auto 설정 */
+  .container {
+    max-width: 460px;
+    width: 90%;
+    margin: auto; 
+    background: var(--bg-panel);
+    padding: 28px 24px 22px;
+    border-radius: 12px;
+    border: 4px solid var(--border-dark);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 8px 0 0 #b79b76,
+      0 12px 12px rgba(0,0,0,0.25);
+  }
 
   h1 {
     text-align: center;
@@ -132,7 +136,7 @@ body {
     box-shadow: 0 1px 0 #222;
   }
 
-  /* 가챠 애니메이션 */
+  /* 가챠 애니메이션 모달 */
   #gachaModal {
     display: none;
     position: fixed;
@@ -141,12 +145,18 @@ body {
     background: rgba(0,0,0,0.55);
     justify-content: center;
     align-items: center;
+    z-index: 999;
   }
 
   #gachaBox {
     width: 220px;
     height: 220px;
-    background: url('giftbox.png') center/cover no-repeat;
+    /* 이미지가 없어도 보이도록 기본 색상 지정 */
+    background-color: #c47a3f;
+    background-image: url('giftbox.png'); 
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
     image-rendering: pixelated;
     border-radius: 8px;
     border: 4px solid #2b1a0f;
@@ -162,7 +172,7 @@ body {
   #gachaResult {
     display: none;
     position: fixed;
-    top: 40%; left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     background: var(--bg-panel);
     padding: 22px 20px 18px;
@@ -170,11 +180,13 @@ body {
     text-align: center;
     box-shadow: 0 8px 12px rgba(0,0,0,0.35);
     border: 4px solid var(--border-dark);
+    z-index: 1000;
+    min-width: 300px;
   }
 
   @media (max-width: 600px) {
     .container {
-      margin: 32px 16px;
+      margin: 20px auto;
       padding: 22px 18px 18px;
     }
   }
@@ -215,21 +227,21 @@ body {
   <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
 </div>
 
-<!-- 가챠 애니메이션 -->
 <div id="gachaModal">
   <div id="gachaBox"></div>
 </div>
 
-<!-- 결과 팝업 -->
 <div id="gachaResult"></div>
 
 <script>
+  // 구글 시트 웹앱 URL (기존 코드 유지)
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
   const id = localStorage.getItem("run_id");
   const playerName = localStorage.getItem("run_name") || "";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
+  // 로그인 체크
   if (!id) {
     alert("로그인이 필요합니다.");
     window.location.href = "/TrapGame/index.html";
@@ -297,7 +309,7 @@ body {
     saveProgress();
   }
 
-  // ---------------- 가챠 ----------------
+  // ---------------- 가챠 버튼 클릭 ----------------
   function buyGacha() {
     if (saveData.faith < 15) {
       alert("신앙포인트가 부족합니다!");
@@ -307,21 +319,24 @@ body {
     saveData.faith -= 15;
     document.getElementById("faithText").innerText = saveData.faith;
 
+    // 애니메이션 모달 띄우기
     document.getElementById("gachaModal").style.display = "flex";
 
+    // 1.8초 뒤 결과 보여주기
     setTimeout(() => {
       document.getElementById("gachaModal").style.display = "none";
       rollGacha();
     }, 1800);
   }
 
-  // ---------------- 실제 뽑기 로직 ----------------
+  // ---------------- 실제 뽑기 로직 (확률 계산) ----------------
   function rollGacha() {
     const r = Math.random() * 100;
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
 
+    // 확률 로직 (기존 유지)
     if (r < 40) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
     else if (r < 80) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
     else if (r < 85) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
@@ -349,6 +364,7 @@ body {
       isSpecial = true; specialName = "QT Book";
     }
 
+    // 특별 상품 당첨 시 로그 전송
     if (isSpecial) {
       fetch(API_URL, {
         method: "POST",
@@ -361,6 +377,7 @@ body {
       });
     }
 
+    // 결과창 표시
     const box = document.getElementById("gachaResult");
     box.innerHTML = `
       <h2>🎉 뽑기 결과!</h2>
