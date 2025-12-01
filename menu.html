@@ -126,6 +126,12 @@
   const name = localStorage.getItem("run_name");
   const id = localStorage.getItem("run_id");
 
+>
+  const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
+
+  const name = localStorage.getItem("run_name");
+  const id = localStorage.getItem("run_id");
+
   if (!id) {
     alert("로그인이 필요합니다.");
     window.location.href = "index.html";
@@ -133,20 +139,33 @@
 
   document.getElementById("playerName").innerText = `👤 ${name} 님`;
 
-  function startGame() {
-    window.location.href = "game.html";
+  // ---------- 게임 이동 ----------
+  function startGame() { window.location.href = "game.html"; }
+  function openStore() { window.location.href = "store.html"; }
+  function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+  // ---------- 최신 saveData 불러오기 ----------
+  async function refreshSave() {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "getSaveData", id })
+      });
+
+      const txt = await res.text();
+
+      if (txt !== "fail") {
+        const obj = JSON.parse(txt);            // 파싱 보장
+        localStorage.setItem("run_save", JSON.stringify(obj)); // 안전 저장
+      }
+    } catch (e) {
+      console.warn("saveData 불러오기 실패:", e);
+    }
   }
 
-  function openStore() {
-    window.location.href = "store.html";
-  }
+  refreshSave(); // 페이지 로딩 시 자동 실행
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
-  }
-
-  // ---------------- 랭킹 불러오기 ----------------
+  // ---------- 랭킹 불러오기 ----------
   async function showRanking() {
     const modal = document.getElementById("rankingModal");
     modal.style.display = "flex";
@@ -170,11 +189,10 @@
         list.forEach((item, index) => {
           html += `
             <div class="rank-item">
-              <strong>${index+1}등</strong><br>
+              <strong>${index + 1}등</strong><br>
               ${item.name} — <b>${item.distance}m</b><br>
               <i>"${item.message || ""}"</i>
-            </div>
-          `;
+            </div>`;
         });
       }
 
