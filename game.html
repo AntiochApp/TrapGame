@@ -172,6 +172,42 @@
   
 <div id="gameArea">
 
+  <!-- START GUIDE MODAL -->
+<div id="startGuide" style="
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.55);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+  z-index:9999;
+">
+  <div class="modal-box" style="max-width:420px;">
+    <h2>게임 방법 / How to Play</h2>
+
+    <p style="text-align:left; font-size:15px; line-height:1.5;">
+      • <b>Space</b> 또는 화면을 터치하면 점프합니다.<br>
+      • 장애물을 피하며 <b>신앙 점수(Faith)</b>를 획득하세요.<br>
+      • 상점에서 민첩 / 생명력 / 랜덤뽑기 교환 가능<br>
+      • <b>민첩</b>: 점프력이 낮아져 정교한 컨트롤 가능<br>
+      • <b>생명력</b>: 여분의 라이프를 획득<br>
+      • <b>랜덤뽑기</b>: 확률적으로 스타벅스 / 아마존 기프트카드 당첨<br>
+      <br>
+      • Tap screen or press <b>Space</b> to jump.<br>
+      • Avoid obstacles to earn <b>Faith Points</b>.<br>
+      • Upgrade Agility / Life / Random Loots in the shop.<br>
+      • <b>Agility</b>: Lower jump = finer control.<br>
+      • <b>Life</b>: Adds extra life slot.<br>
+      • <b>Random Loot</b>: Chance to win Starbucks/Amazon Gift Cards!<br>
+    </p>
+
+    <button class="quizBtn" onclick="startGameNow()" style="margin-top:12px;">
+      ▶ 시작하기 / Start Game
+    </button>
+  </div>
+</div>
+  
   <!-- 패럴랙스 배경 -->
   <div id="bgLayer1"></div>  <!-- 하늘 -->
   <div id="bgLayer2"></div>  <!-- 산 -->
@@ -264,7 +300,7 @@ jumpPower = Math.max(3, jumpPower);
 
   let distance  = 0;                          // m 단위
   let obstacles = [];
-  let running   = true;
+  let running   = false;
   let invincible = false;
 
   // 장애물/배경 속도
@@ -491,7 +527,7 @@ jumpPower = Math.max(3, jumpPower);
       pauseForQuiz();
       return; // 퀴즈로 넘어가면서 이번 프레임 종료
     }
-
+    
     requestAnimationFrame(gameLoop);
   }
 
@@ -575,6 +611,14 @@ jumpPower = Math.max(3, jumpPower);
     localStorage.setItem("run_save", JSON.stringify(saveData));
   }
 
+ // -------------------- GAME Start --------------------
+  function startGameNow() {
+  document.getElementById("startGuide").style.display = "none";
+  running = true;
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+  
   // -------------------- GAME OVER --------------------
   function gameOver() {
     running = false;
