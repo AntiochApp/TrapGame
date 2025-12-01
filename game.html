@@ -222,7 +222,7 @@
     }
 
     .modal-input {
-      width: 85%;          /* 박스보다 짧게 85% */
+      width: 85%;           /* 박스보다 짧게 85% */
       max-width: 320px;
       padding: 12px;
       font-size: 16px;
@@ -252,7 +252,6 @@
 
 <body>
 <div id="gameArea">
-  <!-- 시작 가이드 -->
   <div id="startGuide" class="modal-bg" style="display:flex;">
     <div class="modal-box">
       <div class="modal-title">게임 방법 / How to Play</div>
@@ -274,16 +273,13 @@
     </div>
   </div>
 
-  <!-- 배경 -->
   <div id="bgLayer1"></div>
   <div id="bgLayer2"></div>
   <div id="bgLayer3"></div>
 
-  <!-- 바닥 / 플레이어 -->
   <div id="ground"></div>
   <div id="player"></div>
 
-  <!-- HUD -->
   <div id="hud">
     ❤️ <span id="lifeText"></span>
     📏 <span id="distanceText">0m</span>
@@ -291,11 +287,9 @@
   </div>
 </div>
 
-<!-- 콤보 / 정답 이펙트 -->
 <div id="comboEffect">COMBO +1!</div>
 <div id="correctEffect">+5 Faith!</div>
 
-<!-- 퀴즈 모달 -->
 <div id="quizModal" class="modal-bg">
   <div class="modal-box">
     <div class="modal-title">성경 퀴즈</div>
@@ -306,7 +300,6 @@
   </div>
 </div>
 
-<!-- 게임 오버 모달 -->
 <div id="gameOverModal" class="modal-bg">
   <div class="modal-box">
     <div class="modal-title">GAME OVER</div>
@@ -317,12 +310,10 @@
     <input id="rankMsg" class="modal-input"
            type="text" placeholder="소감 입력(선택)" />
 
-    <button class="action-btn" onclick="confirmRanking()">순위 확인</button>
-    <button class="action-btn" onclick="goMenu()">메뉴</button>
+    <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
   </div>
 </div>
 
-<!-- 퀴즈 로딩 -->
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중입니다...</div>
 
 <script>
@@ -489,8 +480,8 @@
     }
 
     // 위아래 기둥
-    const topHeight    = pattern.top;
-    const gap          = pattern.gap;
+    const topHeight     = pattern.top;
+    const gap           = pattern.gap;
     const bottomHeight = Math.max(80, screenH - topHeight - gap);
 
     const topObs = document.createElement("div");
