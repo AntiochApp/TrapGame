@@ -28,6 +28,7 @@
     width: 55px;
     height: 55px;
     background: url('disciple.png') center/contain no-repeat;
+    transition: opacity 0.2s;
   }
 
   .obstacle {
@@ -72,6 +73,8 @@
     color: white;
     border-radius: 8px;
     cursor: pointer;
+    border: none;
+    font-size: 15px;
   }
 </style>
 </head>
@@ -103,7 +106,7 @@
 <div id="gameOverModal">
   <div class="modal-box">
     <h2>GAME OVER</h2>
-    <p><b><span id='finalDist'></span>m</b> 달렸습니다!</p>
+    <p><b><span id="finalDist"></span>m</b> 달렸습니다!</p>
 
     <input id="rankMsg" type="text" placeholder="방명록(코멘트)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
 
@@ -146,20 +149,27 @@
 
   let obstacles = [];
   let running = true;
+  let invincible = false;     // 충돌 후 잠깐 무적
 
   // -------------------- 점프 --------------------
   function jump() {
+    if (!running) return;
     velocity = jumpPower;
   }
 
   document.body.addEventListener("keydown", (e) => {
-    if (e.code === "Space") jump();
+    if (e.code === "Space") {
+      e.preventDefault();
+      jump();
+    }
   });
 
   document.body.addEventListener("touchstart", jump);
 
   // -------------------- 장애물 생성 --------------------
   function spawnObstacle() {
+    if (!running) return;
+
     const topHeight = Math.random() * 200 + 80;
     const gap = 160; // gap 공간
 
@@ -188,13 +198,13 @@
   function gameLoop() {
     if (!running) return;
 
-    // 거리 증가
-    distance += 0.016 * 60; // 약 1초에 1m
+    // 거리 증가 (약 1초에 1m 정도)
+    distance += 0.016 * 60;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    // 속도 증가 (50m 단위)
-    if (Math.floor(distance) % 50 === 0 && Math.floor(distance) !== lastQuizPoint) {
-      lastQuizPoint = Math.floor(distance);
+    // 50m마다 속도 증가 + 퀴즈
+    if (Math.floor(distance / 50) > Math.floor(lastQuizPoint / 50)) {
+      lastQuizPoint = distance;
       gameSpeed += 0.4;
       pauseForQuiz();
     }
@@ -208,10 +218,15 @@
 
     player.style.bottom = playerY + "px";
 
-    // 장애물 이동
+    // 장애물 이동 + 충돌 체크
     obstacles.forEach(obs => {
       const left = parseFloat(obs.style.left);
       obs.style.left = (left - gameSpeed) + "px";
+
+      // 화면 밖으로 나간 장애물은 제거
+      if (left + 60 < 0) {
+        obs.remove();
+      }
 
       // 충돌 판정
       const rectP = player.getBoundingClientRect();
@@ -220,7 +235,7 @@
           rectP.right > rectO.left &&
           rectP.top < rectO.bottom &&
           rectP.bottom > rectO.top) {
-            damageLife();
+        damageLife();
       }
     });
 
@@ -231,8 +246,20 @@
 
   // -------------------- 생명 감소 --------------------
   function damageLife() {
+    // 무적이거나 이미 게임이 끝난 상태이면 무시
+    if (invincible || !running) return;
+
     life--;
     document.getElementById("lifeText").innerText = life;
+
+    // 잠깐 무적 & 시각효과
+    invincible = true;
+    player.style.opacity = "0.4";
+    setTimeout(() => {
+      invincible = false;
+      player.style.opacity = "1";
+    }, 800);
+
     if (life <= 0) {
       gameOver();
     }
@@ -240,24 +267,39 @@
 
   // -------------------- 성경 퀴즈 --------------------
   async function pauseForQuiz() {
+    if (!running) return;
+
     running = false;
 
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ type: "getQuiz" })
-    });
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "getQuiz" })
+      });
 
-    const txt = await res.text();
-    const quiz = JSON.parse(txt);
+      const txt = await res.text();
+      if (txt === "noquiz") {
+        // 퀴즈가 없으면 바로 다시 진행
+        running = true;
+        requestAnimationFrame(gameLoop);
+        return;
+      }
 
-    document.getElementById("quizQuestion").innerText = quiz.question;
-    document.getElementById("btnA").innerText = "A) " + quiz.A;
-    document.getElementById("btnB").innerText = "B) " + quiz.B;
-    document.getElementById("btnC").innerText = "C) " + quiz.C;
+      const quiz = JSON.parse(txt);
 
-    window.correctAnswer = quiz.answer;
+      document.getElementById("quizQuestion").innerText = quiz.question;
+      document.getElementById("btnA").innerText = "A) " + quiz.A;
+      document.getElementById("btnB").innerText = "B) " + quiz.B;
+      document.getElementById("btnC").innerText = "C) " + quiz.C;
 
-    document.getElementById("quizModal").style.display = "flex";
+      window.correctAnswer = quiz.answer;
+
+      document.getElementById("quizModal").style.display = "flex";
+    } catch (err) {
+      // 에러가 나도 게임은 계속 진행
+      running = true;
+      requestAnimationFrame(gameLoop);
+    }
   }
 
   function answerQuiz(sel) {
@@ -272,22 +314,31 @@
       damageLife();
     }
 
-    running = true;
-    requestAnimationFrame(gameLoop);
+    if (life > 0) {
+      running = true;
+      requestAnimationFrame(gameLoop);
+    }
   }
 
   // -------------------- saveData 저장 --------------------
   async function saveProgress() {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ type: "save", id, saveData })
-    });
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "save", id, saveData })
+      });
+    } catch (e) {
+      // 네트워크 에러시에도 로컬에는 저장
+    }
     localStorage.setItem("run_save", JSON.stringify(saveData));
   }
 
   // -------------------- GAME OVER --------------------
   function gameOver() {
     running = false;
+    invincible = true;
+    player.style.opacity = "0.4";
+
     document.getElementById("finalDist").innerText = Math.floor(distance);
     document.getElementById("gameOverModal").style.display = "flex";
   }
@@ -297,17 +348,21 @@
     const message = document.getElementById("rankMsg").value.trim();
     const dist = Math.floor(distance);
 
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "updateRanking",
-        id, name,
-        distance: dist,
-        message
-      })
-    });
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "updateRanking",
+          id, name,
+          distance: dist,
+          message
+        })
+      });
+      alert("랭킹 등록 완료!");
+    } catch (e) {
+      alert("랭킹 저장 중 오류가 발생했습니다.");
+    }
 
-    alert("랭킹 등록 완료!");
     window.location.href = "menu.html";
   }
 
