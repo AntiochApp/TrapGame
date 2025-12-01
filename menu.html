@@ -5,56 +5,114 @@
 <title>Disciple Run – Menu</title>
 
 <style>
+  :root {
+    --bg-main: #f4f0e4;
+    --bg-panel: #fdfaf2;
+    --border-dark: #3a2513;
+    --accent: #c47a3f;
+    --accent-dark: #8b4f26;
+    --accent-light: #ffe1a8;
+    --text-main: #3a2513;
+  }
+
+  * { box-sizing: border-box; }
+
   body {
     margin: 0;
     padding: 0;
-    background: #f3efe7;
-    font-family: "Pretendard", sans-serif;
+    min-height: 100vh;
+    background:
+      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
+      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
   }
 
   .top-bar {
-    padding: 15px;
-    background: #6a4a2b;
-    color: white;
-    font-size: 18px;
-    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #3b2614;
+    color: #fbe8c4;
+    font-size: 14px;
+    border-bottom: 4px solid #1f130b;
   }
 
-  .top-bar span {
-    margin-right: 15px;
+  .game-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+
+  .logo-pixel {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: #f7cf70;
+    border: 3px solid #1f130b;
+    image-rendering: pixelated;
+    background-image: url("pixel_cross.png");
+    background-size: cover;
+    background-position: center;
+  }
+
+  .player-label {
+    font-size: 13px;
+    opacity: 0.9;
   }
 
   .container {
-    max-width: 450px;
-    margin: 60px auto;
-    background: white;
-    padding: 35px;
+    max-width: 460px;
+    margin: 80px auto 40px;
+    padding: 32px 30px 28px;
+    background: var(--bg-panel);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 4px solid var(--border-dark);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 8px 0 0 #b79b76,
+      0 12px 12px rgba(0,0,0,0.25);
     text-align: center;
   }
 
   h1 {
-    font-size: 30px;
-    font-weight: 700;
-    color: #4b2e12;
-    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
   }
 
-  button {
+  .sub {
+    font-size: 13px;
+    color: #7d6a4c;
+    margin-bottom: 22px;
+  }
+
+  .pixel-btn {
     width: 100%;
     padding: 15px;
     font-size: 17px;
-    margin-top: 15px;
-    border: none;
+    margin-top: 14px;
+    border: 0;
     border-radius: 10px;
-    background: #7c5734;
-    color: white;
+    background: var(--accent);
+    color: #fff;
     cursor: pointer;
+    box-shadow: 0 4px 0 var(--accent-dark);
+    font-weight: 700;
   }
 
-  button:hover {
-    background: #5e4328;
+  .pixel-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--accent-dark);
+  }
+
+  .version {
+    margin-top: 20px;
+    font-size: 11px;
+    color: #9a8970;
   }
 
   /* Ranking Modal */
@@ -63,34 +121,60 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.55);
     justify-content: center;
     align-items: center;
+    padding: 16px;
   }
 
   .modal {
-    width: 90%;
+    width: 100%;
     max-width: 420px;
-    background: white;
-    padding: 25px;
+    background: var(--bg-panel);
+    padding: 22px 20px 18px;
     border-radius: 12px;
+    border: 4px solid var(--border-dark);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 10px 0 #b79b76;
     text-align: center;
   }
 
+  .modal h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+  }
+
   .rank-item {
-    margin: 10px 0;
-    padding: 10px;
+    margin: 8px 0;
+    padding: 8px 10px;
     background: #f2efe9;
     border-radius: 8px;
+    border: 2px solid #c9b79c;
+    font-size: 13px;
   }
 
   .close-btn {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: #7c5734;
-    color: white;
+    margin-top: 14px;
+    padding: 9px 18px;
+    background: var(--accent);
+    color: #fff;
     border-radius: 8px;
     cursor: pointer;
+    border: 0;
+    box-shadow: 0 3px 0 var(--accent-dark);
+    font-size: 13px;
+  }
+  .close-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--accent-dark);
+  }
+
+  @media (max-width: 600px) {
+    .container {
+      margin: 40px 16px 24px;
+      padding: 26px 18px 22px;
+    }
   }
 </style>
 </head>
@@ -98,16 +182,22 @@
 <body>
 
 <div class="top-bar">
-  <span id="playerName"></span>
-  <button style="padding:7px 12px; font-size:13px;" onclick="logout()">로그아웃</button>
+  <div class="game-logo">
+    <div class="logo-pixel"></div>
+    <span>Disciple Run</span>
+  </div>
+  <div class="player-label" id="playerName"></div>
 </div>
 
 <div class="container">
-  <h1>Disciple Run</h1>
+  <h1>메인 메뉴</h1>
+  <div class="sub">픽셀 제자들과 함께 광야를 달려요!</div>
 
-  <button onclick="startGame()">게임 시작</button>
-  <button onclick="openStore()">상점</button>
-  <button onclick="showRanking()">랭킹 보기</button>
+  <button class="pixel-btn" onclick="startGame()">▶ 게임 시작</button>
+  <button class="pixel-btn" onclick="openStore()">🛒 상점</button>
+  <button class="pixel-btn" onclick="showRanking()">🏆 랭킹 보기</button>
+
+  <div class="version">v1.0 · Antioch Youth</div>
 </div>
 
 <!-- Ranking Modal -->
@@ -115,18 +205,11 @@
   <div class="modal">
     <h2>🏆 TOP 10 랭킹</h2>
     <div id="rankingList"></div>
-    <div class="close-btn" onclick="closeRanking()">닫기</div>
+    <button class="close-btn" onclick="closeRanking()">닫기</button>
   </div>
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec"; // 배포된 Web App URL로 교체하세요
-
-  // 로그인 정보 불러오기
-  const name = localStorage.getItem("run_name");
-  const id = localStorage.getItem("run_id");
-
->
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
   const name = localStorage.getItem("run_name");
@@ -134,38 +217,42 @@
 
   if (!id) {
     alert("로그인이 필요합니다.");
-    window.location.href = "index.html";
+    window.location.href = "/TrapGame/index.html";
   }
 
-  document.getElementById("playerName").innerText = `👤 ${name} 님`;
+  document.getElementById("playerName").innerText = name ? `Player: ${name}` : "Guest";
 
-  // ---------- 게임 이동 ----------
-  function startGame() { window.location.href = "game.html"; }
-  function openStore() { window.location.href = "store.html"; }
-  function logout() { localStorage.clear(); window.location.href = "index.html"; }
+  function startGame() {
+    window.location.href = "/TrapGame/game.html";
+  }
 
-  // ---------- 최신 saveData 불러오기 ----------
+  function openStore() {
+    window.location.href = "/TrapGame/store.html";
+  }
+
+  // 서버의 최신 saveData를 한번 동기화 (메뉴 입장시)
   async function refreshSave() {
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "getSaveData", id })
       });
-
       const txt = await res.text();
-
       if (txt !== "fail") {
-        const obj = JSON.parse(txt);            // 파싱 보장
-        localStorage.setItem("run_save", JSON.stringify(obj)); // 안전 저장
+        try {
+          const obj = JSON.parse(txt);
+          localStorage.setItem("run_save", JSON.stringify(obj));
+        } catch (e) {
+          console.warn("saveData 파싱 실패:", e);
+        }
       }
     } catch (e) {
-      console.warn("saveData 불러오기 실패:", e);
+      console.warn("saveData 동기화 실패:", e);
     }
   }
+  refreshSave();
 
-  refreshSave(); // 페이지 로딩 시 자동 실행
-
-  // ---------- 랭킹 불러오기 ----------
+  // ---------------- 랭킹 불러오기 ----------------
   async function showRanking() {
     const modal = document.getElementById("rankingModal");
     modal.style.display = "flex";
@@ -192,12 +279,12 @@
               <strong>${index + 1}등</strong><br>
               ${item.name} — <b>${item.distance}m</b><br>
               <i>"${item.message || ""}"</i>
-            </div>`;
+            </div>
+          `;
         });
       }
 
       listDiv.innerHTML = html;
-
     } catch (e) {
       listDiv.innerHTML = "<p>랭킹을 불러오지 못했습니다.</p>";
     }
