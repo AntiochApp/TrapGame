@@ -44,7 +44,7 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 300%;
+    width: 1000%;
     height: 100%;
     image-rendering: pixelated;
     pointer-events: none;
@@ -625,9 +625,13 @@ function gameLoop(now) {
   }
 
   /* 배경 패럴랙스 */
-  bg1.style.backgroundPosition = `${(now / 50) % 300}px 0`;
-  bg2.style.backgroundPosition = `${(now / 30) % 300}px 0`;
-  bg3.style.backgroundPosition = `${(now / 20) % 300}px 0`;
+bg1X = (bg1X - BG1_SPEED * delta) % window.innerWidth;
+bg2X = (bg2X - BG2_SPEED * delta) % window.innerWidth;
+bg3X = (bg3X - BG3_SPEED * delta) % window.innerWidth;
+
+bg1.style.backgroundPosition = `${bg1X}px 0`;
+bg2.style.backgroundPosition = `${bg2X}px 0`;
+bg3.style.backgroundPosition = `${bg3X}px 0`;
 
   /* 퀴즈 */
   if (quizTimer >= 30) {
