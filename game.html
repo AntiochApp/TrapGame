@@ -30,6 +30,34 @@
       linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
   }
 
+  /* ---------------- 패럴랙스 배경 레이어 ---------------- */
+  #bgLayer1, #bgLayer2, #bgLayer3 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 300%; /* 반복 자연스럽게 보이도록 넉넉히 */
+    height: 100%;
+    image-rendering: pixelated;
+    pointer-events: none;
+    background-repeat: repeat-x;
+    background-position: 0 0;
+  }
+
+  #bgLayer1 {
+    background-image: url('/TrapGame/bg_sky.png');      /* 하늘 */
+    z-index: -3;
+  }
+
+  #bgLayer2 {
+    background-image: url('/TrapGame/bg_mountain.png'); /* 산 (투명 PNG) */
+    z-index: -2;
+  }
+
+  #bgLayer3 {
+    background-image: url('/TrapGame/bg_forest.png');   /* 숲 (투명 PNG) */
+    z-index: -1;
+  }
+
   /* 픽셀 타일 바닥 */
   #ground {
     position: absolute;
@@ -137,44 +165,6 @@
       font-size: 16px;
     }
   }
-    /* -------------------- 패럴랙스 배경 레이어 -------------------- */
-
-#bgLayer1, #bgLayer2, #bgLayer3 {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 300%;      /* 반복 자연스럽게 보이도록 */
-  height: 100%;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
-#bgLayer1 {
-  background: url('bg_sky.png') repeat-x;
-  background-size: cover;
-  z-index: -3;
-  animation: bg1move 60s linear infinite;
-}
-
-#bgLayer2 {
-  background: url('bg_mountain.png') repeat-x;
-  background-size: contain;
-  z-index: -2;
-  animation: bg2move 40s linear infinite;
-}
-
-#bgLayer3 {
-  background: url('bg_forest.png') repeat-x;
-  background-size: contain;
-  z-index: -1;
-  animation: bg3move 20s linear infinite;
-}
-
-/* 움직임 속도 차이 */
-@keyframes bg1move { from { transform: translateX(0); } to { transform: translateX(-33%); } }
-@keyframes bg2move { from { transform: translateX(0); } to { transform: translateX(-66%); } }
-@keyframes bg3move { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-
 </style>
 </head>
 
@@ -244,6 +234,9 @@
   // -------------------- 게임 변수 --------------------
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
+  const bg1      = document.getElementById("bgLayer1");
+  const bg2      = document.getElementById("bgLayer2");
+  const bg3      = document.getElementById("bgLayer3");
 
   let playerY   = 40;
   let velocity  = 0;
@@ -255,13 +248,24 @@
   let running   = true;
   let invincible = false;
 
-  const BASE_SPEED = 260;                     // 장애물 이동 속도(px/초)
+  // 장애물/배경 속도
+  const BASE_SPEED = 200;                     // 장애물 이동 속도(px/초) 약간 느리게
   let gameSpeed = BASE_SPEED;
 
   // 시간 기반 변수
   let lastTime = performance.now();
   let quizTimer = 0;                          // 30초마다 퀴즈
   let nextFaithMilestone = 100;               // 100m마다 Faith +1
+
+  // 장애물 타이머 (프레임 기반 생성)
+  let obstacleTimer = 0;
+  let nextObstacleTime = 1.6;                 // 첫 장애물 등장까지 시간(초)
+
+  // 패럴랙스 배경 위치
+  let bg1X = 0, bg2X = 0, bg3X = 0;
+  const BG1_SPEED = 12;                       // 가장 먼 배경
+  const BG2_SPEED = 30;                       // 산
+  const BG3_SPEED = 70;                       // 숲
 
   // -------------------- 입력 / 점프 --------------------
   function jump() {
@@ -285,45 +289,76 @@
     return 3;                   // hard
   }
 
+  // 난이도별 장애물 간격(초) 결정
+  function getSpawnInterval() {
+    const d = getDifficulty(distance);
+    if (d === 1) return randBetween(1.5, 2.2);
+    if (d === 2) return randBetween(1.2, 1.8);
+    return randBetween(0.9, 1.4);
+  }
+
+  function randBetween(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function scheduleNextObstacle() {
+    nextObstacleTime = getSpawnInterval();
+  }
+
   // -------------------- 장애물 생성 --------------------
   function spawnObstacle() {
     if (!running) return;
 
     const difficulty = getDifficulty(distance);
-    const rand = (min, max) => Math.floor(Math.random() * (max - min)) + min;
+    const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
     let pattern;
 
     if (difficulty === 1) {
       const easy = [
-        { top: rand(80, 160), gap: 190 },
-        { top: rand(110, 190), gap: 180 }
+        { top: randi(80, 160), gap: 190 },   // 넓은 갭
+        { top: randi(110, 190), gap: 180 },
+        { groundBox: true, height: 70 }      // 땅에 박스 하나
       ];
-      pattern = easy[rand(0, easy.length)];
+      pattern = easy[randi(0, easy.length)];
     } else if (difficulty === 2) {
       const normal = [
-        { top: rand(130, 240), gap: 150 },
-        { top: rand(150, 260), gap: 140 }
+        { top: randi(130, 240), gap: 150 },
+        { top: randi(150, 260), gap: 140 },
+        { groundBox: true, height: 90 },     // 조금 높은 땅 박스
       ];
-      pattern = normal[rand(0, normal.length)];
+      pattern = normal[randi(0, normal.length)];
     } else {
       const hard = [
-        { top: rand(180, 320), gap: 120 },
-        { top: rand(200, 340), gap: 110 },
-        { top: rand(60, 140),  gap: rand(110, 130) }
+        { top: randi(180, 320), gap: 120 },
+        { top: randi(200, 340), gap: 110 },
+        { top: randi(60, 140),  gap: randi(110, 130) },
+        { groundBox: true, height: randi(90, 120) }  // 꽤 높은 땅 박스
       ];
-      pattern = hard[rand(0, hard.length)];
+      pattern = hard[randi(0, hard.length)];
     }
 
-    const topHeight = pattern.top;
-    const gap       = pattern.gap;
     const screenH   = window.innerHeight;
+    const startX    = window.innerWidth + 80;  // 화면 오른쪽 밖에서부터 등장
+
+    // 단일 바닥 박스 패턴
+    if (pattern.groundBox) {
+      const box = document.createElement("div");
+      box.classList.add("obstacle");
+      box.style.height = pattern.height + "px";
+      box.style.width  = "60px";
+      box.style.left   = startX + "px";
+      box.style.bottom = "0";
+      gameArea.appendChild(box);
+      obstacles.push(box);
+      return;
+    }
+
+    // 위/아래 기둥 패턴
+    const topHeight    = pattern.top;
+    const gap          = pattern.gap;
     const bottomHeight = Math.max(60, screenH - topHeight - gap);
 
-    // 화면 오른쪽 "밖"에서 등장 → 갑툭튀 방지
-    const startX = window.innerWidth + 80;
-
-    // 위 장애물
     const topObs = document.createElement("div");
     topObs.classList.add("obstacle");
     topObs.style.height = topHeight + "px";
@@ -331,7 +366,6 @@
     topObs.style.top    = "0";
     gameArea.appendChild(topObs);
 
-    // 아래 장애물
     const bottomObs = document.createElement("div");
     bottomObs.classList.add("obstacle");
     bottomObs.style.height = bottomHeight + "px";
@@ -342,9 +376,6 @@
     obstacles.push(topObs, bottomObs);
   }
 
-  // 일정 간격으로 장애물 생성 (시간 기준)
-  setInterval(spawnObstacle, 1800);
-
   // -------------------- 메인 게임 루프 (시간 기반) --------------------
   function gameLoop(now) {
     if (!running) return;
@@ -352,11 +383,15 @@
     const delta = (now - lastTime) / 1000;    // 지난 프레임에서 지난 시간(초)
     lastTime = now;
 
-    // 1초에 1m씩 이동
+    // 1) 거리 증가: 1초에 1m
     distance += delta * 1;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    // 100m마다 Faith +1
+    // 2) 난이도에 따라 속도 약간 증가(너무 심하지 않게)
+    const diff = getDifficulty(distance);
+    gameSpeed = BASE_SPEED * (1 + (diff - 1) * 0.25); // easy=1.0, normal=1.25, hard=1.5배
+
+    // 3) 100m마다 Faith +1
     if (distance >= nextFaithMilestone) {
       faith++;
       saveData.faith = faith;
@@ -365,14 +400,23 @@
       saveProgress();
     }
 
-    // 30초마다 퀴즈
+    // 4) 퀴즈 타이머 (30초마다)
     quizTimer += delta;
-    if (quizTimer >= 30) {
-      quizTimer = 0;
-      pauseForQuiz();
+
+    // 퀴즈 직전 3초는 새로운 장애물 생성 막기 → 안전구간
+    const quizSoon = (quizTimer >= 27 && quizTimer < 30);
+
+    // 5) 장애물 생성 (프레임 기반, 퀴즈 직전에는 생성 안 함)
+    if (!quizSoon) {
+      obstacleTimer += delta;
+      if (obstacleTimer >= nextObstacleTime) {
+        spawnObstacle();
+        obstacleTimer = 0;
+        scheduleNextObstacle();
+      }
     }
 
-    // 캐릭터 물리 (기존 감각 유지)
+    // 6) 캐릭터 물리
     velocity += gravity;
     playerY  += velocity;
 
@@ -381,7 +425,7 @@
 
     player.style.bottom = playerY + "px";
 
-    // 장애물 이동 + 충돌 체크
+    // 7) 장애물 이동 + 충돌 체크
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const obs = obstacles[i];
       if (!obs.isConnected) {
@@ -410,6 +454,23 @@
           rectP.bottom > rectO.top) {
         damageLife();
       }
+    }
+
+    // 8) 패럴랙스 배경 이동 (게임 속도에 비례)
+    const speedFactor = gameSpeed / BASE_SPEED;
+    bg1X -= BG1_SPEED * speedFactor * delta;
+    bg2X -= BG2_SPEED * speedFactor * delta;
+    bg3X -= BG3_SPEED * speedFactor * delta;
+
+    bg1.style.backgroundPosition = `${bg1X}px 0`;
+    bg2.style.backgroundPosition = `${bg2X}px 0`;
+    bg3.style.backgroundPosition = `${bg3X}px 0`;
+
+    // 9) 퀴즈 실제 호출 시점
+    if (quizTimer >= 30) {
+      quizTimer = 0;
+      pauseForQuiz();
+      return; // 퀴즈로 넘어가면서 이번 프레임 종료
     }
 
     requestAnimationFrame(gameLoop);
@@ -450,6 +511,7 @@
       const txt = await res.text();
       if (txt === "noquiz") {
         running = true;
+        lastTime = performance.now();
         requestAnimationFrame(gameLoop);
         return;
       }
@@ -467,6 +529,7 @@
     } catch (err) {
       console.warn("퀴즈 불러오기 실패:", err);
       running = true;
+      lastTime = performance.now();
       requestAnimationFrame(gameLoop);
     }
   }
@@ -539,9 +602,7 @@
   function goMenu() {
     window.location.href = "/TrapGame/menu.html";
   }
-
 </script>
 
 </body>
 </html>
-
