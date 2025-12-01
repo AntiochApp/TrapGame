@@ -266,17 +266,17 @@
     }
 
     // 특별 당첨 시 서버 기록
-    if (isSpecial) {
-        fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            type: "rewardLog",
-            id: id,
-            name: playerName,
-            reward: specialName
-          })
-        });
-    }
+if (isSpecial) {
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "rewardLog",
+      id: id,
+      name: playerName,
+      reward: specialName
+    })
+  });
+}
 
     // 결과 팝업
     const box = document.getElementById("gachaResult");
