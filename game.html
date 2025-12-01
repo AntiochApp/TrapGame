@@ -42,12 +42,12 @@
   /* ---------------- 패럴랙스 배경 레이어 ---------------- */
 #bgLayer1, #bgLayer2, #bgLayer3 {
   width: 300%;
-  height: 120%;
+  height: 100%;
   position: absolute;
   left: 0;
-  top: -20px;
+  top: 0;
   background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-size: contain; /* ← 핵심! */
 }
 
   #bgLayer1 {
@@ -63,11 +63,8 @@
 #bgLayer3 {
   background-image: url('https://antiochapp.github.io/TrapGame/bg_forest.png');
   z-index: 3;
-  width: 300%;
-  height: 140%;
-  top: -20%;
-  background-position-y: 120px;
-}
+  background-size: auto 120%; /* 숲이 너무 위로 올라오는 문제 해결 */
+  background-position-y: 40px; 
 
   /* 픽셀 타일 바닥 */
   #ground {
