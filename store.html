@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Disciple Run – Store</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f2ede5;
+    font-family: "Pretendard", sans-serif;
+  }
+
+  .top-bar {
+    padding: 15px;
+    background: #6a4a2b;
+    color: white;
+    font-size: 18px;
+    text-align: right;
+  }
+
+  .top-bar span {
+    margin-right: 15px;
+  }
+
+  .container {
+    max-width: 450px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    text-align: center;
+    color: #4b2e12;
+    margin-bottom: 25px;
+  }
+
+  .item {
+    border: 1px solid #d2c3b1;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    background: #faf8f3;
+  }
+
+  .item h2 {
+    font-size: 20px;
+    margin: 0 0 10px;
+  }
+
+  .item p {
+    margin: 6px 0;
+    color: #4b3b2a;
+  }
+
+  .buy-btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: #7b5734;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .buy-btn:hover {
+    background: #5f4126;
+  }
+
+  .back-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 18px;
+    background: #444;
+    color: white;
+    font-size: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* === 가챠 애니메이션 === */
+  #gachaModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55);
+    justify-content: center;
+    align-items: center;
+  }
+
+  #gachaBox {
+    width: 260px;
+    height: 260px;
+    background: url('giftbox.png') center/cover no-repeat;
+    animation: spin 1.2s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* 결과 팝업 */
+  #gachaResult {
+    display: none;
+    position: fixed;
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <span>Faith: <b id="faithText"></b></span>
+  <button onclick="goMenu()" style="padding:7px 14px; font-size:13px;">메뉴</button>
+</div>
+
+<div class="container">
+  <h1>상점</h1>
+
+  <div class="item">
+    <h2>⚡ 민첩성 +1</h2>
+    <p>점프 반응 속도가 증가합니다.</p>
+    <p><b>가격: 10 Faith</b></p>
+    <button class="buy-btn" onclick="buyAgility()">구매하기</button>
+  </div>
+
+  <div class="item">
+    <h2>❤️ 라이프 +1</h2>
+    <p>게임 시작 시 +1 생명력.</p>
+    <p><b>가격: 20 Faith</b></p>
+    <button class="buy-btn" onclick="buyLife()">구매하기</button>
+  </div>
+
+  <div class="item">
+    <h2>🎁 랜덤 뽑기</h2>
+    <p>Faith 15로 특별한 보상을 얻어보세요!</p>
+    <button class="buy-btn" onclick="buyGacha()">뽑기 시작</button>
+  </div>
+
+  <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
+</div>
+
+<!-- 가챠 애니메이션 -->
+<div id="gachaModal">
+  <div id="gachaBox"></div>
+</div>
+
+<!-- 결과 팝업 -->
+<div id="gachaResult"></div>
+
+<script>
+  const API_URL = "YOUR_SCRIPT_URL";
+
+  const id = localStorage.getItem("run_id");
+  let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
+
+  if (!id) {
+    alert("로그인이 필요합니다.");
+    window.location.href = "index.html";
+  }
+
+  let faith = saveData.faith || 0;
+  document.getElementById("faithText").innerText = faith;
+
+  // ---------------- 저장하기 ----------------
+  async function saveProgress() {
+    localStorage.setItem("run_save", JSON.stringify(saveData));
+
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "save",
+        id,
+        saveData
+      })
+    });
+
+    document.getElementById("faithText").innerText = saveData.faith;
+  }
+
+  // ---------------- 민첩성 구매 ----------------
+  function buyAgility() {
+    if (saveData.faith < 10) { alert("신앙포인트가 부족합니다!"); return; }
+    saveData.faith -= 10;
+    saveData.agility = (saveData.agility || 0) + 1;
+    alert("민첩성 +1 증가!");
+    saveProgress();
+  }
+
+  // ---------------- 라이프 구매 ----------------
+  function buyLife() {
+    if (saveData.faith < 20) { alert("신앙포인트가 부족합니다!"); return; }
+    saveData.faith -= 20;
+    saveData.extraLife = (saveData.extraLife || 0) + 1;
+    alert("라이프 +1 증가!");
+    saveProgress();
+  }
+
+  // ---------------- 가챠 ----------------
+  function buyGacha() {
+    if (saveData.faith < 15) {
+      alert("신앙포인트가 부족합니다!");
+      return;
+    }
+
+    saveData.faith -= 15;
+    document.getElementById("faithText").innerText = saveData.faith;
+
+    // 애니메이션 시작
+    document.getElementById("gachaModal").style.display = "flex";
+
+    setTimeout(() => {
+      document.getElementById("gachaModal").style.display = "none";
+      rollGacha();
+    }, 1800);
+  }
+
+  // ---------------- 실제 뽑기 로직 ----------------
+  function rollGacha() {
+    const r = Math.random() * 100;
+    let prizeText = "";
+
+    if (r < 40) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
+    else if (r < 80) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
+    else if (r < 85) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
+    else if (r < 90) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
+    else if (r < 92.45) { saveData.agility += 3; prizeText = "⚡ 민첩성 +3"; }
+    else if (r < 94.9) { saveData.extraLife += 3; prizeText = "❤️ 생명력 +3"; }
+    else if (r < 94.91) prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
+    else if (r < 94.92) prizeText = "🎁 스타벅스 $10 기프트카드 당첨!";
+    else if (r < 94.93) prizeText = "🎁 아마존 $5 기프트카드 당첨!";
+    else if (r < 94.94) prizeText = "🎁 아마존 $10 기프트카드 당첨!";
+    else prizeText = "📘 생명의 삶 QT 책 당첨!";
+
+    // 결과 팝업
+    const box = document.getElementById("gachaResult");
+    box.innerHTML = `
+      <h2>🎉 뽑기 결과!</h2>
+      <p style="font-size:20px;"><b>${prizeText}</b></p>
+      <button onclick="closeResult()" class="buy-btn">확인</button>
+    `;
+    box.style.display = "block";
+
+    saveProgress();
+  }
+
+  function closeResult() {
+    document.getElementById("gachaResult").style.display = "none";
+  }
+
+  function goMenu() {
+    window.location.href = "menu.html";
+  }
+</script>
+
+</body>
+</html>
