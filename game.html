@@ -45,7 +45,7 @@
 
 #bgLayer1 {
       background-image: url('https://antiochapp.github.io/TrapGame/bg_sky.png'); /* 하늘 */
-      z-index: 3;
+      z-index: 1;
 } 
 
 #bgLayer2 {
@@ -55,7 +55,7 @@
 
  #bgLayer3 {
         background-image: url('https://antiochapp.github.io/TrapGame/bg_forest.png'); /* 숲 (투명 PNG) */
-        z-index: 1;
+        z-index: 3;
  }
 
   /* 픽셀 타일 바닥 */
@@ -84,6 +84,7 @@
     background: url('disciple.png') center/contain no-repeat;
     image-rendering: pixelated;
     transition: opacity 0.2s;
+    z-index: 5;
   }
 
   .obstacle {
