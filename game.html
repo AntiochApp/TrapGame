@@ -71,47 +71,37 @@
       background: url("disciple.png") center/contain no-repeat;
       image-rendering: pixelated;
       transition: opacity 0.2s;
-      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); /* 그림자 */
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* ------------ [디자인 수정] CSS로 그린 통나무 장애물 ------------ */
+    /* ------------ CSS로 그린 통나무 장애물 ------------ */
     .obstacle {
       position: absolute;
       z-index: 10;
-      width: 60px; /* 두께 */
-      
-      /* 통나무 질감 (CSS 패턴) */
-      background-color: #8D6E63; /* 기본 갈색 */
+      width: 60px; 
+      background-color: #8D6E63; 
       background-image: 
         linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%),
         linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%);
-      background-size: 8px 8px; /* 픽셀 느낌 패턴 */
-      
-      /* 나무 테두리 */
+      background-size: 8px 8px; 
       border-left: 4px solid #5D4037;
       border-right: 4px solid #5D4037;
-      
-      box-shadow: 4px 4px 0 rgba(0,0,0,0.2); /* 그림자 */
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
     }
 
-    /* 풀 덮개 (가상 요소로 그림) */
+    /* 풀 덮개 */
     .obs-cap::after {
         content: '';
         position: absolute;
-        left: -10%; width: 120%; height: 24px; /* 통나무보다 약간 넓게 */
-        background-color: #66BB6A; /* 풀색 */
-        border: 4px solid #1B5E20; /* 짙은 녹색 테두리 */
+        left: -10%; width: 120%; height: 24px; 
+        background-color: #66BB6A; 
+        border: 4px solid #1B5E20; 
         box-sizing: border-box;
         border-radius: 4px;
-        background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%); /* 하이라이트 */
+        background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%);
     }
-
-    /* 바닥 기둥 (풀이 위에 있음) */
     .obs-ground.obs-cap::after { top: -12px; }
-
-    /* 천장 기둥 (풀이 아래에 있음) */
     .obs-ceil.obs-cap::after { bottom: -12px; }
-
 
     /* 아이템 */
     .item {
@@ -366,8 +356,21 @@
 
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
-  const buffArea = document.getElementById("buffArea");
-  const speedLines = document.getElementById("speedLines");
+  
+  // [수정됨] 안전하게 요소 가져오기 (없으면 생성)
+  let buffArea = document.getElementById("buffArea");
+  if (!buffArea) {
+    buffArea = document.createElement("div");
+    buffArea.id = "buffArea";
+    gameArea.appendChild(buffArea);
+  }
+
+  let speedLines = document.getElementById("speedLines");
+  if (!speedLines) {
+    speedLines = document.createElement("div");
+    speedLines.id = "speedLines";
+    gameArea.insertBefore(speedLines, document.getElementById("ground"));
+  }
 
   let playerY  = 40;
   let velocity = 0;
@@ -459,7 +462,6 @@
 
     if (pattern.groundBox) {
       const box = document.createElement("div");
-      // [수정] 클래스 추가: 기본, 뚜껑, 바닥형
       box.classList.add("obstacle", "obs-cap", "obs-ground");
       box.style.height = pattern.height + "px";
       box.style.left = startX + "px";
@@ -474,7 +476,6 @@
     const bottomHeight = Math.max(80, screenH - topHeight - gap);
 
     const topObs = document.createElement("div");
-    // [수정] 클래스 추가: 기본, 뚜껑, 천장형
     topObs.classList.add("obstacle", "obs-cap", "obs-ceil");
     topObs.style.height = topHeight + "px";
     topObs.style.left = startX + "px";
@@ -482,7 +483,6 @@
     gameArea.appendChild(topObs);
 
     const bottomObs = document.createElement("div");
-    // [수정] 클래스 추가: 기본, 뚜껑, 바닥형
     bottomObs.classList.add("obstacle", "obs-cap", "obs-ground");
     bottomObs.style.height = bottomHeight + "px";
     bottomObs.style.left = startX + "px";
@@ -537,7 +537,9 @@
     if (activeEffects.turbo > 0) html += `<div class="buff-tag" style="color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
     if (activeEffects.invincible > 0) html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
     if (activeEffects.slow > 0) html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
-    buffArea.innerHTML = html;
+    
+    // [안전장치] buffArea가 있으면 내용 갱신
+    if(buffArea) buffArea.innerHTML = html;
   }
 
   function gameLoop(now) {
@@ -545,7 +547,10 @@
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    updateBuffUI(delta);
+    // 안전하게 UI 업데이트 호출
+    try {
+        updateBuffUI(delta);
+    } catch(e) { console.error(e); }
 
     if (!daily.run200 && distance >= 200) daily.run200 = true;
     daily.faith20 = faith;
@@ -576,10 +581,10 @@
 
     if (activeEffects.turbo > 0) {
       let targetY = 200; playerY += (targetY - playerY) * 0.1; velocity = 0;
-      speedLines.style.display = "block";
+      if(speedLines) speedLines.style.display = "block";
     } else {
       velocity += gravity; playerY += velocity;
-      speedLines.style.display = "none";
+      if(speedLines) speedLines.style.display = "none";
     }
 
     if (playerY < 0) playerY = 0;
