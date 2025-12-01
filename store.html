@@ -4,88 +4,129 @@
 <meta charset="UTF-8">
 <title>Disciple Run – Store</title>
 
-
 <style>
+  :root {
+    --bg-main: #f4f0e4;
+    --bg-panel: #fdfaf2;
+    --border-dark: #3a2513;
+    --accent: #c47a3f;
+    --accent-dark: #8b4f26;
+    --accent-light: #ffe1a8;
+    --text-main: #3a2513;
+  }
+
+  * { box-sizing: border-box; }
+
   body {
     margin: 0;
     padding: 0;
-    background: #f2ede5;
-    font-family: "Pretendard", sans-serif;
+    min-height: 100vh;
+    background:
+      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
+      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
   }
 
   .top-bar {
-    padding: 15px;
-    background: #6a4a2b;
-    color: white;
-    font-size: 18px;
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    background: #3b2614;
+    color: #fbe8c4;
+    font-size: 14px;
+    border-bottom: 4px solid #1f130b;
   }
 
-  .top-bar span {
-    margin-right: 15px;
+  .top-bar button {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 8px;
+    border: 0;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 0 var(--accent-dark);
+  }
+  .top-bar button:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--accent-dark);
   }
 
   .container {
-    max-width: 450px;
-    margin: 40px auto;
-    background: white;
-    padding: 30px;
+    max-width: 460px;
+    margin: 50px auto 40px;
+    background: var(--bg-panel);
+    padding: 28px 24px 22px;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 4px solid var(--border-dark);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 8px 0 0 #b79b76,
+      0 12px 12px rgba(0,0,0,0.25);
   }
 
   h1 {
     text-align: center;
     color: #4b2e12;
-    margin-bottom: 25px;
+    margin-bottom: 18px;
   }
 
   .item {
-    border: 1px solid #d2c3b1;
-    padding: 15px;
+    border: 3px solid #cfb99a;
+    padding: 14px;
     border-radius: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     background: #faf8f3;
   }
 
   .item h2 {
-    font-size: 20px;
-    margin: 0 0 10px;
+    font-size: 18px;
+    margin: 0 0 6px;
   }
 
   .item p {
-    margin: 6px 0;
+    margin: 5px 0;
     color: #4b3b2a;
+    font-size: 13px;
   }
 
   .buy-btn {
     width: 100%;
-    padding: 13px;
+    padding: 11px;
     border: none;
-    border-radius: 10px;
-    background: #7b5734;
+    border-radius: 9px;
+    background: var(--accent);
     color: white;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
+    box-shadow: 0 3px 0 var(--accent-dark);
   }
-
-  .buy-btn:hover {
-    background: #5f4126;
+  .buy-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--accent-dark);
   }
 
   .back-btn {
     width: 100%;
-    padding: 14px;
-    margin-top: 18px;
+    padding: 12px;
+    margin-top: 10px;
     background: #444;
     color: white;
-    font-size: 15px;
-    border-radius: 10px;
+    font-size: 14px;
+    border-radius: 9px;
     cursor: pointer;
+    border: 0;
+    box-shadow: 0 3px 0 #222;
+  }
+  .back-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #222;
   }
 
-  /* === 가챠 애니메이션 === */
+  /* 가챠 애니메이션 */
   #gachaModal {
     display: none;
     position: fixed;
@@ -97,10 +138,13 @@
   }
 
   #gachaBox {
-    width: 260px;
-    height: 260px;
+    width: 220px;
+    height: 220px;
     background: url('giftbox.png') center/cover no-repeat;
-    animation: spin 1.2s linear infinite;
+    image-rendering: pixelated;
+    border-radius: 8px;
+    border: 4px solid #2b1a0f;
+    animation: spin 1.2s steps(8) infinite;
   }
 
   @keyframes spin {
@@ -114,11 +158,19 @@
     position: fixed;
     top: 40%; left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
-    padding: 25px;
+    background: var(--bg-panel);
+    padding: 22px 20px 18px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.35);
+    border: 4px solid var(--border-dark);
+  }
+
+  @media (max-width: 600px) {
+    .container {
+      margin: 32px 16px;
+      padding: 22px 18px 18px;
+    }
   }
 </style>
 </head>
@@ -127,7 +179,7 @@
 
 <div class="top-bar">
   <span>Faith: <b id="faithText"></b></span>
-  <button onclick="goMenu()" style="padding:7px 14px; font-size:13px;">메뉴</button>
+  <button onclick="goMenu()">← 메뉴</button>
 </div>
 
 <div class="container">
@@ -135,21 +187,22 @@
 
   <div class="item">
     <h2>⚡ 민첩성 +1</h2>
-    <p>점프 반응 속도가 증가합니다.</p>
+    <p>점프 반응 속도가 조금 더 빨라집니다.</p>
     <p><b>가격: 10 Faith</b></p>
     <button class="buy-btn" onclick="buyAgility()">구매하기</button>
   </div>
 
   <div class="item">
     <h2>❤️ 라이프 +1</h2>
-    <p>게임 시작 시 +1 생명력.</p>
+    <p>게임 시작 시 기본 생명력이 +1 증가합니다.</p>
     <p><b>가격: 20 Faith</b></p>
     <button class="buy-btn" onclick="buyLife()">구매하기</button>
   </div>
 
   <div class="item">
     <h2>🎁 랜덤 뽑기</h2>
-    <p>Faith 15로 특별한 보상을 얻어보세요!</p>
+    <p>Faith 15로 특별한 보상을 뽑아 보세요!</p>
+    <p style="font-size:12px; color:#8a735a;">(특별 당첨은 교역자님이 따로 알려줍니다 😊)</p>
     <button class="buy-btn" onclick="buyGacha()">뽑기 시작</button>
   </div>
 
@@ -173,51 +226,52 @@
 
   if (!id) {
     alert("로그인이 필요합니다.");
-    window.location.href = "index.html";
+    window.location.href = "/TrapGame/index.html";
   }
 
   let faith = saveData.faith || 0;
   document.getElementById("faithText").innerText = faith;
 
-  // ---------------- 저장하기 ----------------
+  // 서버에서 최신 saveData 동기화
   async function loadLatestSave() {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ type: "getSaveData", id })
-    });
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "getSaveData", id })
+      });
 
-    const txt = await res.text();
-    if (txt !== "fail") {
-      saveData = JSON.parse(txt);
-      localStorage.setItem("run_save", txt);
-      faith = saveData.faith;
-      document.getElementById("faithText").innerText = faith;
+      const txt = await res.text();
+      if (txt !== "fail") {
+        saveData = JSON.parse(txt);
+        localStorage.setItem("run_save", JSON.stringify(saveData));
+        faith = saveData.faith || 0;
+        document.getElementById("faithText").innerText = faith;
+      }
+    } catch (e) {
+      console.warn("saveData 불러오기 실패:", e);
     }
   }
-
-  async function saveProgress() {
-  // 1) 먼저 로컬에 저장 (빠름)
-  localStorage.setItem("run_save", JSON.stringify(saveData));
-
-  // 2) 서버에도 저장 (네트워크 오류 대비)
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "save",
-        id,
-        saveData
-      })
-    });
-  } catch (e) {
-    console.warn("서버 저장 실패 — 로컬 데이터로 유지됩니다.");
-  }
-
-  // 3) UI 최신화
-  document.getElementById("faithText").innerText = saveData.faith;
-}
-  // 페이지 로드시 즉시 실행
   loadLatestSave();
+
+  // ---------------- 저장하기 ----------------
+  async function saveProgress() {
+    localStorage.setItem("run_save", JSON.stringify(saveData));
+
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "save",
+          id,
+          saveData
+        })
+      });
+    } catch (e) {
+      console.warn("서버 저장 실패:", e);
+    }
+
+    document.getElementById("faithText").innerText = saveData.faith;
+  }
 
   // ---------------- 민첩성 구매 ----------------
   function buyAgility() {
@@ -247,7 +301,6 @@
     saveData.faith -= 15;
     document.getElementById("faithText").innerText = saveData.faith;
 
-    // 애니메이션 시작
     document.getElementById("gachaModal").style.display = "flex";
 
     setTimeout(() => {
@@ -269,41 +322,39 @@
     else if (r < 90) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
     else if (r < 92.45) { saveData.agility += 3; prizeText = "⚡ 민첩성 +3"; }
     else if (r < 94.9) { saveData.extraLife += 3; prizeText = "❤️ 생명력 +3"; }
-    else if (r < 94.91) { 
+    else if (r < 94.91) {
       prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
       isSpecial = true; specialName = "Starbucks $5 Gift Card";
     }
-    else if (r < 94.92) { 
+    else if (r < 94.92) {
       prizeText = "🎁 스타벅스 $10 기프트카드 당첨!";
       isSpecial = true; specialName = "Starbucks $10 Gift Card";
     }
-    else if (r < 94.93) { 
+    else if (r < 94.93) {
       prizeText = "🎁 아마존 $5 기프트카드 당첨!";
       isSpecial = true; specialName = "Amazon $5 Gift Card";
     }
-    else if (r < 94.94) { 
+    else if (r < 94.94) {
       prizeText = "🎁 아마존 $10 기프트카드 당첨!";
       isSpecial = true; specialName = "Amazon $10 Gift Card";
     }
-    else { 
+    else {
       prizeText = "📘 생명의 삶 QT 책 당첨!";
       isSpecial = true; specialName = "QT Book";
     }
 
-    // 특별 당첨 시 서버 기록
-if (isSpecial) {
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      type: "rewardLog",
-      id: id,
-      name: playerName,
-      reward: specialName
-    })
-  });
-}
+    if (isSpecial) {
+      fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "rewardLog",
+          id: id,
+          name: playerName,
+          reward: specialName
+        })
+      });
+    }
 
-    // 결과 팝업
     const box = document.getElementById("gachaResult");
     box.innerHTML = `
       <h2>🎉 뽑기 결과!</h2>
@@ -313,14 +364,14 @@ if (isSpecial) {
     box.style.display = "block";
 
     saveProgress();
-}
+  }
 
   function closeResult() {
     document.getElementById("gachaResult").style.display = "none";
   }
 
   function goMenu() {
-    window.location.href = "menu.html";
+    window.location.href = "/TrapGame/menu.html";
   }
 </script>
 
