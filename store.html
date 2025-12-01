@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Disciple Run – Store</title>
 
+
 <style>
   body {
     margin: 0;
@@ -179,9 +180,27 @@
   document.getElementById("faithText").innerText = faith;
 
   // ---------------- 저장하기 ----------------
-  async function saveProgress() {
-    localStorage.setItem("run_save", JSON.stringify(saveData));
+  async function loadLatestSave() {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getSaveData", id })
+    });
 
+    const txt = await res.text();
+    if (txt !== "fail") {
+      saveData = JSON.parse(txt);
+      localStorage.setItem("run_save", txt);
+      faith = saveData.faith;
+      document.getElementById("faithText").innerText = faith;
+    }
+  }
+
+  async function saveProgress() {
+  // 1) 먼저 로컬에 저장 (빠름)
+  localStorage.setItem("run_save", JSON.stringify(saveData));
+
+  // 2) 서버에도 저장 (네트워크 오류 대비)
+  try {
     await fetch(API_URL, {
       method: "POST",
       body: JSON.stringify({
@@ -190,9 +209,15 @@
         saveData
       })
     });
-
-    document.getElementById("faithText").innerText = saveData.faith;
+  } catch (e) {
+    console.warn("서버 저장 실패 — 로컬 데이터로 유지됩니다.");
   }
+
+  // 3) UI 최신화
+  document.getElementById("faithText").innerText = saveData.faith;
+}
+  // 페이지 로드시 즉시 실행
+  loadLatestSave();
 
   // ---------------- 민첩성 구매 ----------------
   function buyAgility() {
@@ -267,7 +292,7 @@
 
     // 특별 당첨 시 서버 기록
 if (isSpecial) {
-  await fetch(API_URL, {
+  fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       type: "rewardLog",
