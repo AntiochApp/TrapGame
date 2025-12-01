@@ -50,29 +50,27 @@
       pointer-events: none;
     }
 
-    /* 1. 하늘 (가장 뒤) */
+    /* 1. 하늘 */
     #bgLayer1 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png");
       z-index: 1;
-      background-size: auto 100%; /* 하늘은 꽉 차게 */
+      background-size: auto 100%; 
       background-position: bottom left;
     }
 
-    /* 2. 산 (중간) */
+    /* 2. 산 */
     #bgLayer2 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png");
       z-index: 2;
-      background-size: auto 100%; /* 산도 꽉 차게 (필요시 줄이세요) */
+      background-size: auto 100%;
       background-position: bottom left;
     }
 
-    /* 3. 숲 (가장 앞 배경) - [수정됨] 크기 조절 */
+    /* 3. 숲 (높이 60%) */
     #bgLayer3 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png");
       z-index: 3;
-      /* 핵심 수정: 높이를 화면의 60%로 줄임 */
       background-size: auto 60%; 
-      /* 바닥에 붙도록 설정 */
       background-position: bottom left; 
     }
 
@@ -230,9 +228,14 @@
       transform: translateY(2px);
       box-shadow: 0 2px 0 var(--accent-dark);
     }
+    .action-btn:disabled {
+        background: #999;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
 
     .modal-input {
-      width: 85%;           /* 박스보다 짧게 85% */
+      width: 85%;
       max-width: 320px;
       padding: 12px;
       font-size: 16px;
@@ -686,14 +689,14 @@
       }
     }
 
-    // 배경 패럴랙스
+    // 배경 패럴랙스 (수정됨: Y값을 bottom으로 강제)
     bg1X = (bg1X - BG1_SPEED * delta) % window.innerWidth;
     bg2X = (bg2X - BG2_SPEED * delta) % window.innerWidth;
     bg3X = (bg3X - BG3_SPEED * delta) % window.innerWidth;
 
-    bg1.style.backgroundPosition = `${bg1X}px 0`;
-    bg2.style.backgroundPosition = `${bg2X}px 0`;
-    bg3.style.backgroundPosition = `${bg3X}px 0`;
+    bg1.style.backgroundPosition = `${bg1X}px 0`;      // 하늘은 위
+    bg2.style.backgroundPosition = `${bg2X}px bottom`; // 산은 바닥
+    bg3.style.backgroundPosition = `${bg3X}px bottom`; // 숲은 바닥 (이게 핵심!)
 
     // 퀴즈 호출
     if (quizTimer >= 30) {
@@ -841,8 +844,13 @@
     rankingSaved = true;
   }
 
-  /* ------------ 코멘트 저장 후 메뉴로 ------------ */
+  /* ------------ 코멘트 저장 후 메뉴로 (수정됨) ------------ */
   async function confirmRanking() {
+    // 1. 버튼 찾아서 "전송 중" 표시 및 비활성화
+    const btn = document.querySelector(".action-btn");
+    btn.innerText = "전송 중..."; 
+    btn.disabled = true;
+
     const msg = document.getElementById("rankMsg").value.trim();
 
     if (msg) {
@@ -856,9 +864,11 @@
           })
         });
       } catch (e) {
-        // 실패해도 일단 메뉴 이동
+        alert("메시지 전송에 실패했습니다. (메뉴로 이동합니다)");
       }
     }
+    
+    // 2. 전송이 끝난 뒤에 페이지 이동
     window.location.href = "/TrapGame/menu.html";
   }
 
