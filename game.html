@@ -120,9 +120,9 @@
         to { transform: translateY(-8px); }
     }
 
-    /* ------------ HUD ------------ */
+    /* ------------ HUD (좌상단 고정) ------------ */
     #hud {
-      position: absolute;
+      position: fixed; /* absolute -> fixed 변경 */
       z-index: 20;
       top: 12px; left: 12px;
       color: #3a2513;
@@ -134,28 +134,28 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* ------------ [수정됨] 버프 상태창 (오른쪽 하단) ------------ */
+    /* ------------ [핵심 수정] 버프 상태창 (화면에 고정) ------------ */
     #buffArea {
-      position: absolute;
-      z-index: 9999; /* 제일 위에 표시 */
-      bottom: 20px; /* 화면 아래쪽 */
-      right: 12px;  /* 화면 오른쪽 */
+      position: fixed; /* absolute -> fixed (화면 스크롤 영향 안 받음) */
+      z-index: 10000;  /* 최상위 레이어 */
+      bottom: 20px;    /* 화면 아래에서 20px 위 */
+      right: 15px;     /* 화면 오른쪽에서 15px 안쪽 */
       display: flex;
-      flex-direction: column-reverse; /* 아래에서 위로 쌓이게 */
+      flex-direction: column-reverse; /* 아래에서 위로 쌓임 */
       align-items: flex-end;
       gap: 8px;
-      pointer-events: none; /* 터치 방해 안 함 */
+      pointer-events: none; /* 터치 통과 */
     }
     .buff-tag {
-      background: rgba(0, 0, 0, 0.8); /* 진한 배경 */
+      background: rgba(0, 0, 0, 0.85);
       color: #fff;
       padding: 8px 14px;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 16px; /* 글자 크기 키움 */
       font-weight: 700;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border-left: 4px solid; /* 색상 강조선 */
+      border-left: 5px solid; /* 강조선 두껍게 */
     }
     @keyframes popIn {
       from { transform: scale(0.5); opacity: 0; }
@@ -363,17 +363,16 @@
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
   
-  // 배경 변수
   const bg1 = document.getElementById("bgLayer1");
   const bg2 = document.getElementById("bgLayer2");
   const bg3 = document.getElementById("bgLayer3");
 
-  // UI 요소 생성 (없으면 자동 생성)
+  // [수정됨] 요소를 안전하게 가져오되, 위치를 body로 이동시켜서 게임 화면 영향 안받게 함
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
     buffArea.id = "buffArea";
-    gameArea.appendChild(buffArea);
+    document.body.appendChild(buffArea); // gameArea 밖으로 꺼냄
   }
 
   let speedLines = document.getElementById("speedLines");
@@ -430,27 +429,29 @@
   });
   document.body.addEventListener("touchstart", jump);
 
-  // [수정됨] 난이도별 장애물 간격 조정 (속도 비례)
+  // [수정됨] 장애물 간격 조정 (속도 15배를 고려하여 훨씬 짧게)
   function scheduleNextObstacle(speedMultiplier) {
     if (activeEffects.turbo > 0) return;
     
-    // 속도가 빠를수록 장애물이 더 빨리 나와야 간격이 유지됨
-    // 1배속일 때 2초 -> 5배속일 때 약 0.5초
+    // 기본 2초 내외
     let baseTime = randBetween(1.8, 2.6);
-    // speedMultiplier가 커질수록(5배) 대기시간은 줄어듦
-    nextObstacleTime = baseTime / (1 + (speedMultiplier - 1) * 0.7); 
+    
+    // 속도가 빨라지면 생성 간격을 파격적으로 줄임
+    // 15배속일 때는 장애물이 거의 0.1~0.2초마다 나와야 함
+    nextObstacleTime = baseTime / (speedMultiplier * 0.8); 
+    
+    // 너무 겹치지 않게 최소 시간 제한
+    if (nextObstacleTime < 0.25) nextObstacleTime = 0.25;
   }
 
   function spawnObstacle() {
     if (!running) return;
     if (activeEffects.turbo > 0) return;
 
-    // 랜덤 패턴 (기존 유지)
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
     const useGroundBox = Math.random() < 0.5;
 
-    // 난이도 대신 거리에 따라 높이 변화를 좀 줄 수 있지만, 일단 랜덤 유지
     if (useGroundBox) {
       pattern = { groundBox: true, height: randi(90, 220) };
     } else {
@@ -556,18 +557,18 @@
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    /* ------------ [수정됨] 거리 비례 속도 증가 로직 ------------ */
+    /* ------------ [수정됨] 3000m 도달 시 15배속 ------------ */
     // 0m ~ 3000m 사이의 진행도 (0.0 ~ 1.0)
     let progress = Math.min(distance / 3000, 1);
     
-    // 속도 배수: 1배 ~ 5배 (선형 증가)
-    let speedMultiplier = 1 + (progress * 4); 
+    // 속도 배수: 1배 ~ 15배 (선형 증가)
+    let speedMultiplier = 1 + (progress * 14); 
     
     let currentSpeed = BASE_SPEED * speedMultiplier;
 
     // 아이템 효과 적용
     if (activeEffects.slow > 0) currentSpeed *= 0.5;
-    if (activeEffects.turbo > 0) currentSpeed *= 2.0; // 터보는 기본속도 * 2배로 더 빠르게
+    if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
 
     gameSpeed = currentSpeed;
 
@@ -583,7 +584,7 @@
       if (obstacleTimer >= nextObstacleTime) {
         spawnObstacle(); 
         obstacleTimer = 0; 
-        scheduleNextObstacle(speedMultiplier); // 속도에 맞춰 다음 장애물 시간 예약
+        scheduleNextObstacle(speedMultiplier); 
       }
     }
 
@@ -655,9 +656,7 @@
       }
     }
 
-    /* ------------ [수정됨] 배경 패럴랙스 (끊김 없이 무한 스크롤) ------------ */
     let speedMult = (gameSpeed / BASE_SPEED); 
-    // % 연산자 대신 계속 감소시켜서 CSS의 repeat 속성을 활용
     bg1X -= BG1_SPEED * speedMult * delta;
     bg2X -= BG2_SPEED * speedMult * delta;
     bg3X -= BG3_SPEED * speedMult * delta;
