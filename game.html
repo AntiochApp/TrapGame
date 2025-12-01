@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta charset="UTF-8">
 <title>Disciple Run – Game</title>
 
 <style>
+  
+  html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+  
   :root {
     --hud-bg: rgba(255, 248, 235, 0.9);
     --hud-border: #3a2513;
@@ -80,7 +88,7 @@
 
   #player {
     position: absolute;
-    z-index: 7;
+    z-index: 12;
     left: 120px;
     bottom: 40px;
     width: 60px;
@@ -92,7 +100,7 @@
 
   .obstacle {
     position: absolute;
-    z-index: 4;
+    z-index: 10;
     width: 60px;
     background: #8c6239;
     image-rendering: pixelated;
@@ -100,6 +108,7 @@
 
   #hud {
     position: absolute;
+    z-index: 20;
     top: 12px; left: 12px;
     color: #3a2513;
     font-size: 18px;
@@ -141,7 +150,7 @@
   /* 랜덤 아이템 */
   .item {
     position: absolute;
-    z-index: 6;
+    z-index: 11;
     width: 48px;
     height: 48px;
     image-rendering: pixelated;
@@ -769,7 +778,15 @@ async function saveRanking() {
 function goMenu() {
   window.location.href = "/TrapGame/menu.html";
 }
-
+let lastTouch = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouch < 300) {
+    e.preventDefault();
+  }
+  lastTouch = now;
+}, { passive: false });
+  
 </script>
 </body>
 </html>
