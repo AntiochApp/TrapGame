@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Disciple Run – Game</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #dce7f3;
+    font-family: "Pretendard", sans-serif;
+  }
+
+  #gameArea {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(#a8d0f0, #f2f9ff);
+  }
+
+  #player {
+    position: absolute;
+    left: 120px;
+    bottom: 40px;
+    width: 55px;
+    height: 55px;
+    background: url('disciple.png') center/contain no-repeat;
+  }
+
+  .obstacle {
+    position: absolute;
+    width: 60px;
+    background: #8c6239;
+  }
+
+  #hud {
+    position: absolute;
+    top: 10px; left: 10px;
+    color: #333;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  #quizModal,
+  #gameOverModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-box {
+    width: 90%;
+    max-width: 380px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .quizBtn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    background: #6a4a2b;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="gameArea">
+  <div id="player"></div>
+
+  <div id="hud">
+    ❤️ <span id="lifeText"></span><br>
+    📏 <span id="distanceText">0m</span><br>
+    ✝ Faith: <span id="faithText"></span>
+  </div>
+</div>
+
+<!-- QUIZ MODAL -->
+<div id="quizModal">
+  <div class="modal-box">
+    <h2>성경 퀴즈</h2>
+    <p id="quizQuestion"></p>
+    <button class="quizBtn" onclick="answerQuiz('A')" id="btnA"></button>
+    <button class="quizBtn" onclick="answerQuiz('B')" id="btnB"></button>
+    <button class="quizBtn" onclick="answerQuiz('C')" id="btnC"></button>
+  </div>
+</div>
+
+<!-- GAME OVER MODAL -->
+<div id="gameOverModal">
+  <div class="modal-box">
+    <h2>GAME OVER</h2>
+    <p><b><span id='finalDist'></span>m</b> 달렸습니다!</p>
+
+    <input id="rankMsg" type="text" placeholder="방명록(코멘트)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc;">
+
+    <button class="quizBtn" onclick="saveRanking()">랭킹 등록</button>
+    <button class="quizBtn" onclick="goMenu()">메뉴로 돌아가기</button>
+  </div>
+</div>
+
+<script>
+  const API_URL = "YOUR_SCRIPT_URL";
+
+  // -------------------- 기본 정보 --------------------
+  const id = localStorage.getItem("run_id");
+  const name = localStorage.getItem("run_name");
+  let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
+
+  if (!id) {
+    alert("로그인이 필요합니다.");
+    window.location.href = "index.html";
+  }
+
+  let life = 3 + (saveData.extraLife || 0);
+  let faith = saveData.faith || 0;
+
+  document.getElementById("lifeText").innerText = life;
+  document.getElementById("faithText").innerText = faith;
+
+  // -------------------- 게임 변수 --------------------
+  const gameArea = document.getElementById("gameArea");
+  const player = document.getElementById("player");
+
+  let playerY = 40;
+  let velocity = 0;
+  let gravity = -0.4;
+  let jumpPower = 8 + (saveData.agility || 0);
+
+  let distance = 0;
+  let gameSpeed = 4;          // 점점 빨라짐
+  let lastQuizPoint = 0;
+
+  let obstacles = [];
+  let running = true;
+
+  // -------------------- 점프 --------------------
+  function jump() {
+    velocity = jumpPower;
+  }
+
+  document.body.addEventListener("keydown", (e) => {
+    if (e.code === "Space") jump();
+  });
+
+  document.body.addEventListener("touchstart", jump);
+
+  // -------------------- 장애물 생성 --------------------
+  function spawnObstacle() {
+    const topHeight = Math.random() * 200 + 80;
+    const gap = 160; // gap 공간
+
+    // 위 장애물
+    const topObs = document.createElement("div");
+    topObs.classList.add("obstacle");
+    topObs.style.height = topHeight + "px";
+    topObs.style.left = "100vw";
+    topObs.style.top = "0";
+    gameArea.appendChild(topObs);
+
+    // 아래 장애물
+    const bottomObs = document.createElement("div");
+    bottomObs.classList.add("obstacle");
+    bottomObs.style.height = (window.innerHeight - topHeight - gap) + "px";
+    bottomObs.style.left = "100vw";
+    bottomObs.style.bottom = "0";
+    gameArea.appendChild(bottomObs);
+
+    obstacles.push(topObs, bottomObs);
+  }
+
+  setInterval(spawnObstacle, 1800);
+
+  // -------------------- 게임 루프 --------------------
+  function gameLoop() {
+    if (!running) return;
+
+    // 거리 증가
+    distance += 0.016 * 60; // 약 1초에 1m
+    document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
+
+    // 속도 증가 (50m 단위)
+    if (Math.floor(distance) % 50 === 0 && Math.floor(distance) !== lastQuizPoint) {
+      lastQuizPoint = Math.floor(distance);
+      gameSpeed += 0.4;
+      pauseForQuiz();
+    }
+
+    // 캐릭터 물리
+    velocity += gravity;
+    playerY += velocity;
+
+    if (playerY < 0) playerY = 0;
+    if (playerY > window.innerHeight - 80) playerY = window.innerHeight - 80;
+
+    player.style.bottom = playerY + "px";
+
+    // 장애물 이동
+    obstacles.forEach(obs => {
+      const left = parseFloat(obs.style.left);
+      obs.style.left = (left - gameSpeed) + "px";
+
+      // 충돌 판정
+      const rectP = player.getBoundingClientRect();
+      const rectO = obs.getBoundingClientRect();
+      if (rectP.left < rectO.right &&
+          rectP.right > rectO.left &&
+          rectP.top < rectO.bottom &&
+          rectP.bottom > rectO.top) {
+            damageLife();
+      }
+    });
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  requestAnimationFrame(gameLoop);
+
+  // -------------------- 생명 감소 --------------------
+  function damageLife() {
+    life--;
+    document.getElementById("lifeText").innerText = life;
+    if (life <= 0) {
+      gameOver();
+    }
+  }
+
+  // -------------------- 성경 퀴즈 --------------------
+  async function pauseForQuiz() {
+    running = false;
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getQuiz" })
+    });
+
+    const txt = await res.text();
+    const quiz = JSON.parse(txt);
+
+    document.getElementById("quizQuestion").innerText = quiz.question;
+    document.getElementById("btnA").innerText = "A) " + quiz.A;
+    document.getElementById("btnB").innerText = "B) " + quiz.B;
+    document.getElementById("btnC").innerText = "C) " + quiz.C;
+
+    window.correctAnswer = quiz.answer;
+
+    document.getElementById("quizModal").style.display = "flex";
+  }
+
+  function answerQuiz(sel) {
+    document.getElementById("quizModal").style.display = "none";
+
+    if (sel === window.correctAnswer) {
+      faith++;
+      saveData.faith = faith;
+      document.getElementById("faithText").innerText = faith;
+      saveProgress();
+    } else {
+      damageLife();
+    }
+
+    running = true;
+    requestAnimationFrame(gameLoop);
+  }
+
+  // -------------------- saveData 저장 --------------------
+  async function saveProgress() {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "save", id, saveData })
+    });
+    localStorage.setItem("run_save", JSON.stringify(saveData));
+  }
+
+  // -------------------- GAME OVER --------------------
+  function gameOver() {
+    running = false;
+    document.getElementById("finalDist").innerText = Math.floor(distance);
+    document.getElementById("gameOverModal").style.display = "flex";
+  }
+
+  // -------------------- 랭킹 저장 --------------------
+  async function saveRanking() {
+    const message = document.getElementById("rankMsg").value.trim();
+    const dist = Math.floor(distance);
+
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "updateRanking",
+        id, name,
+        distance: dist,
+        message
+      })
+    });
+
+    alert("랭킹 등록 완료!");
+    window.location.href = "menu.html";
+  }
+
+  function goMenu() {
+    window.location.href = "menu.html";
+  }
+</script>
+
+</body>
+</html>
