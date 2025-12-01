@@ -34,79 +34,46 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background:
-        linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
+      background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* ------------ 패럴랙스 배경 공통 설정 ------------ */
+    /* ------------ 패럴랙스 배경 ------------ */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 200%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 200%; height: 100%;
       background-repeat: repeat-x;
       image-rendering: pixelated;
       pointer-events: none;
     }
-
-    /* 1. 하늘 */
     #bgLayer1 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png");
-      z-index: 1;
-      background-size: auto 100%; 
-      background-position: bottom left;
+      z-index: 1; background-size: auto 100%; background-position: bottom left;
     }
-
-    /* 2. 산 */
     #bgLayer2 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png");
-      z-index: 2;
-      background-size: auto 100%;
-      background-position: bottom left;
+      z-index: 2; background-size: auto 100%; background-position: bottom left;
     }
-
-    /* 3. 숲 (높이 60%) */
     #bgLayer3 {
       background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png");
-      z-index: 3;
-      background-size: auto 60%; 
-      background-position: bottom left; 
+      z-index: 3; background-size: auto 60%; background-position: bottom left;
     }
 
-    /* ------------ 바닥 (수정됨: 화면에서 숨김) ------------ */
-    #ground {
-      position: absolute;
-      z-index: 5;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 100px;
-      background-image: linear-gradient(90deg, #d9b178 0 16px, #c09054 16px 32px);
-      image-rendering: pixelated;
-      animation: groundMove 0.6s linear infinite;
-      /* [핵심 수정] 바닥을 보이지 않게 숨깁니다. */
-      display: none;
-    }
-    @keyframes groundMove {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-32px); }
-    }
+    /* 바닥 숨김 */
+    #ground { display: none; }
 
-    /* ------------ 플레이어 ------------ */
+    /* 플레이어 */
     #player {
       position: absolute;
       z-index: 12;
-      left: 120px;
-      bottom: 40px;
-      width: 60px;
-      height: 60px;
+      left: 120px; bottom: 40px;
+      width: 60px; height: 60px;
       background: url("disciple.png") center/contain no-repeat;
       image-rendering: pixelated;
       transition: opacity 0.2s;
     }
 
-    /* ------------ 장애물 ------------ */
+    /* 장애물 */
     .obstacle {
       position: absolute;
       z-index: 10;
@@ -115,59 +82,107 @@
       image-rendering: pixelated;
     }
 
-    /* ------------ HUD ------------ */
-    #hud {
-      position: absolute;
-      z-index: 20;
-      top: 12px;
-      left: 12px;
-      color: #3a2513;
-      font-size: 18px;
-      font-weight: 700;
-      background: var(--hud-bg);
-      border-radius: 10px;
-      padding: 8px 12px;
-      border: 3px solid var(--hud-border);
-    }
-    #hud span {
-      display: inline-block;
-      min-width: 60px;
-    }
-
-    /* ------------ 랜덤 아이템 ------------ */
+    /* 아이템 */
     .item {
       position: absolute;
       z-index: 11;
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       image-rendering: pixelated;
       background-position: center;
       background-repeat: no-repeat;
       background-size: contain;
     }
 
+    /* ------------ HUD (왼쪽 상단) ------------ */
+    #hud {
+      position: absolute;
+      z-index: 20;
+      top: 12px; left: 12px;
+      color: #3a2513;
+      font-size: 18px; font-weight: 700;
+      background: var(--hud-bg);
+      border-radius: 10px;
+      padding: 8px 12px;
+      border: 3px solid var(--hud-border);
+    }
+    #hud span { display: inline-block; min-width: 60px; }
+
+    /* ------------ [신규] 버프 상태창 (오른쪽 상단) ------------ */
+    #buffArea {
+      position: absolute;
+      z-index: 20;
+      top: 12px; right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .buff-tag {
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* ------------ [신규] 터보 모드 스피드 라인 효과 ------------ */
+    #speedLines {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 15; /* 플레이어보다 위, HUD보다 아래 */
+      background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%);
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      animation: speedShake 0.1s infinite;
+    }
+    @keyframes speedShake {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(-2px, 2px); }
+      50% { transform: translate(2px, -2px); }
+      75% { transform: translate(-2px, -2px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* ------------ [신규] 획득 이펙트 (둥실 떠오르는 글자) ------------ */
+    .float-text {
+      position: absolute;
+      color: #ffe24f;
+      font-weight: 900;
+      font-size: 20px;
+      text-shadow: 2px 2px 0 #3a2513;
+      z-index: 99;
+      pointer-events: none;
+      animation: floatUp 1s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+    }
+
     /* ------------ 콤보 / 정답 이펙트 ------------ */
     #comboEffect, #correctEffect {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 50%; transform: translateX(-50%);
       z-index: 9999;
       display: none;
       pointer-events: none;
     }
     #comboEffect {
-      top: 20%;
-      font-size: 40px;
-      font-weight: 900;
-      color: #ffe24f;
-      text-shadow: 3px 3px #8b4f26;
+      top: 20%; font-size: 40px; font-weight: 900;
+      color: #ffe24f; text-shadow: 3px 3px #8b4f26;
     }
     #correctEffect {
-      top: 40%;
-      font-size: 48px;
-      font-weight: 900;
-      color: #00ffcc;
-      text-shadow: 3px 3px #006644;
+      top: 40%; font-size: 48px; font-weight: 900;
+      color: #00ffcc; text-shadow: 3px 3px #006644;
     }
 
     /* ------------ 공통 모달 ------------ */
@@ -177,90 +192,47 @@
       width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.55);
       display: none;
-      justify-content: center;
-      align-items: center;
+      justify-content: center; align-items: center;
       padding: 16px;
       z-index: 9999;
     }
-
     .modal-box {
-      width: 90%;
-      max-width: 420px;
+      width: 90%; max-width: 420px;
       background: var(--panel-bg);
       border-radius: 14px;
       border: 4px solid #3a2513;
       padding: 28px 24px;
-      box-shadow:
-        0 0 0 4px #fff,
-        0 10px 0 #b79b76;
+      box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76;
       text-align: center;
     }
-
-    .modal-title {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 18px;
+    .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
+    .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
+    
+    .choice-btn, .action-btn, .start-btn {
+      width: 100%; padding: 14px; margin: 8px 0;
+      background: var(--accent); border: 0; border-radius: 10px;
+      color: #fff; font-size: 18px; font-weight: 700;
+      box-shadow: 0 4px 0 var(--accent-dark); cursor: pointer;
     }
-
-    .modal-desc {
-      font-size: 17px;
-      margin-bottom: 22px;
-      line-height: 1.45;
-      white-space: pre-line;
+    .choice-btn:active, .action-btn:active, .start-btn:active {
+      transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark);
     }
-
-    .choice-btn,
-    .action-btn,
-    .start-btn {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      background: var(--accent);
-      border: 0;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      box-shadow: 0 4px 0 var(--accent-dark);
-      cursor: pointer;
-    }
-    .choice-btn:active,
-    .action-btn:active,
-    .start-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 var(--accent-dark);
-    }
-    .action-btn:disabled {
-        background: #999;
-        cursor: not-allowed;
-        box-shadow: none;
-    }
-
+    .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
+    
     .modal-input {
-      width: 85%;
-      max-width: 320px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 2px solid #b8a792;
-      margin: 8px auto 18px;
-      display: block;
+      width: 85%; max-width: 320px;
+      padding: 12px; font-size: 16px;
+      border-radius: 8px; border: 2px solid #b8a792;
+      margin: 8px auto 18px; display: block;
     }
 
-    /* ------------ 로딩 모달 ------------ */
     #loadingQuiz {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
+      display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      font-size: 22px;
-      font-weight: 700;
-      backdrop-filter: blur(2px);
-      z-index: 9999;
+      justify-content: center; align-items: center;
+      color: #fff; font-size: 22px; font-weight: 700;
+      backdrop-filter: blur(2px); z-index: 9999;
     }
   </style>
 </head>
@@ -274,15 +246,12 @@
 • <b>Space</b> 또는 화면 터치로 점프
 • 장애물을 피해 <b>신앙 점수(Faith)</b> 획득
 • 상점에서 민첩/생명력/랜덤 뽑기 교환
-• <b>민첩:</b> 점프력 낮아짐(정교한 컨트롤)
-• <b>생명력:</b> 추가 라이프
-• <b>랜덤뽑기:</b> 기프트카드 당첨 가능
 
-• Tap screen / press <b>Space</b> to jump
-• Avoid obstacles → Get Faith
-• Buy Agility/Life/Loot in Shop
-• <b>Agility:</b> Lower jump = finer control
-• <b>Life:</b> Extra HP
+[아이템 효과]
+✝️ <b>십자가:</b> 무적 (10초)
+🕊️ <b>날개:</b> 터보 모드 (초고속 비행)
+🍃 <b>바람:</b> 속도 감소
+📘 <b>성경:</b> Faith +10
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -292,6 +261,8 @@
   <div id="bgLayer2"></div>
   <div id="bgLayer3"></div>
 
+  <div id="speedLines"></div>
+
   <div id="ground"></div>
   <div id="player"></div>
 
@@ -300,6 +271,8 @@
     📏 <span id="distanceText">0m</span>
     ✝ <span id="faithText"></span>
   </div>
+
+  <div id="buffArea"></div>
 </div>
 
 <div id="comboEffect">COMBO +1!</div>
@@ -321,10 +294,7 @@
     <div class="modal-desc">
       <b><span id="finalDist"></span>m</b> 달렸습니다!
     </div>
-
-    <input id="rankMsg" class="modal-input"
-           type="text" placeholder="소감 입력(선택)" />
-
+    <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
     <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
   </div>
 </div>
@@ -332,11 +302,8 @@
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중입니다...</div>
 
 <script>
-  /* ------------ API URL ------------ */
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  /* ------------ 로그인 체크 ------------ */
   let id = localStorage.getItem("run_id");
   let name = localStorage.getItem("run_name");
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
@@ -346,22 +313,15 @@
     window.location.href = "/TrapGame/index.html";
   }
 
-  /* ------------ 데일리 미션 ------------ */
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return {
-      date: new Date().toDateString(),
-      run200: false,
-      quiz3: 0,
-      faith20: 0
-    };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0 };
   }
   if (!daily.date || daily.date !== new Date().toDateString()) {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
-  /* ------------ 기본 변수 ------------ */
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
 
@@ -370,24 +330,23 @@
 
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
-  const bg1      = document.getElementById("bgLayer1");
-  const bg2      = document.getElementById("bgLayer2");
-  const bg3      = document.getElementById("bgLayer3");
+  const buffArea = document.getElementById("buffArea");
+  const speedLines = document.getElementById("speedLines");
 
   let playerY  = 40;
   let velocity = 0;
-  let gravity  = -0.4;
+  let gravity  = -0.25; 
 
   let agility   = saveData.agility || 0;
-  let jumpPower = 8 - agility * 0.05;
+  let jumpPower = 6.5 - agility * 0.05;
   jumpPower     = Math.max(3, jumpPower);
 
   let distance  = 0;
   let obstacles = [];
   let running   = false;
-  let invincible = false;
+  let invincible = false; // 기본 피격 무적
 
-  const BASE_SPEED = 200;
+  const BASE_SPEED = 170; 
   let gameSpeed    = BASE_SPEED;
 
   let lastTime            = performance.now();
@@ -395,89 +354,77 @@
   let nextFaithMilestone  = 100;
 
   let obstacleTimer   = 0;
-  let nextObstacleTime = 1.6;
+  let nextObstacleTime = 2.0; 
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
-  const BG1_SPEED = 20;
-  const BG2_SPEED = 40;
-  const BG3_SPEED = 60;
+  const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
-  /* 랜덤 아이템 */
   let items        = [];
   let itemTimer    = 0;
   let nextItemTime = 8;
 
-  /* 콤보 */
   let combo = 0;
   let obstacleSurviveCount = 0;
-
-  /* 게임 오버 시 중복 저장 방지 */
   let rankingSaved = false;
 
-  /* ------------ 난이도 ------------ */
+  /* --- [신규] 활성화된 버프 관리 객체 --- */
+  let activeEffects = {
+    turbo: 0,      // 날개(터보) 남은 시간
+    invincible: 0, // 십자가(무적) 남은 시간
+    slow: 0        // 바람(감속) 남은 시간
+  };
+
   function getDifficulty(dist) {
     if (dist < 150) return 1;
     if (dist < 300) return 2;
     return 3;
   }
-  function randBetween(min, max) {
-    return Math.random() * (max - min) + min;
-  }
+  function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
-  /* ------------ 점프 ------------ */
   function jump() {
-    if (!running) return;
+    // 터보 모드일 때는 점프 불가 (자동 비행)
+    if (!running || activeEffects.turbo > 0) return;
     velocity = jumpPower;
   }
   document.body.addEventListener("keydown", e => {
-    if (e.code === "Space" || e.code === "ArrowUp") {
-      e.preventDefault();
-      jump();
-    }
+    if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
   });
   document.body.addEventListener("touchstart", jump);
 
-  /* ------------ 장애물 타이밍 ------------ */
   function scheduleNextObstacle() {
+    // 터보 모드일 때는 장애물 생성 안 함 (안전하게)
+    if (activeEffects.turbo > 0) return;
+
     const d = getDifficulty(distance);
-    if (d === 1) nextObstacleTime = randBetween(1.6, 2.4);
-    else if (d === 2) nextObstacleTime = randBetween(1.2, 1.9);
-    else nextObstacleTime = randBetween(0.9, 1.5);
+    if (d === 1) nextObstacleTime = randBetween(1.8, 2.5);
+    else if (d === 2) nextObstacleTime = randBetween(1.4, 2.0);
+    else nextObstacleTime = randBetween(1.1, 1.7);
   }
 
-  /* ------------ 장애물 생성 (혼합 패턴) ------------ */
   function spawnObstacle() {
     if (!running) return;
+    // 터보 모드 중엔 장애물 생성 중단
+    if (activeEffects.turbo > 0) return;
+
     const difficulty = getDifficulty(distance);
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
-
-    // 패턴 50%: 지상 기둥, 50%: 위/아래 기둥
     const useGroundBox = Math.random() < 0.5;
 
     if (useGroundBox) {
-      // 지상 기둥
       let minH = difficulty === 1 ? 90 : (difficulty === 2 ? 120 : 150);
       let maxH = difficulty === 1 ? 140 : (difficulty === 2 ? 180 : 220);
       pattern = { groundBox: true, height: randi(minH, maxH) };
     } else {
-      // 위/아래 기둥
       let topRangeMin, topRangeMax, gapBase, gapVar;
       if (difficulty === 1) {
-        topRangeMin = 120; topRangeMax = 220;
-        gapBase = 190; gapVar = 25;
+        topRangeMin = 120; topRangeMax = 220; gapBase = 200; gapVar = 25;
       } else if (difficulty === 2) {
-        topRangeMin = 150; topRangeMax = 260;
-        gapBase = 160; gapVar = 25;
+        topRangeMin = 150; topRangeMax = 260; gapBase = 170; gapVar = 25;
       } else {
-        topRangeMin = 180; topRangeMax = 320;
-        gapBase = 135; gapVar = 20;
+        topRangeMin = 180; topRangeMax = 320; gapBase = 145; gapVar = 20;
       }
-      pattern = {
-        groundBox: false,
-        top: randi(topRangeMin, topRangeMax),
-        gap: randi(gapBase - gapVar, gapBase + gapVar)
-      };
+      pattern = { groundBox: false, top: randi(topRangeMin, topRangeMax), gap: randi(gapBase - gapVar, gapBase + gapVar) };
     }
 
     const screenH = window.innerHeight;
@@ -487,109 +434,140 @@
       const box = document.createElement("div");
       box.classList.add("obstacle");
       box.style.height = pattern.height + "px";
-      box.style.left   = startX + "px";
+      box.style.left = startX + "px";
       box.style.bottom = "0";
       gameArea.appendChild(box);
       obstacles.push(box);
       return;
     }
-
-    // 위아래 기둥
-    const topHeight     = pattern.top;
-    const gap           = pattern.gap;
+    const topHeight = pattern.top;
+    const gap = pattern.gap;
     const bottomHeight = Math.max(80, screenH - topHeight - gap);
 
     const topObs = document.createElement("div");
     topObs.classList.add("obstacle");
     topObs.style.height = topHeight + "px";
-    topObs.style.left   = startX + "px";
-    topObs.style.top    = "0";
+    topObs.style.left = startX + "px";
+    topObs.style.top = "0";
     gameArea.appendChild(topObs);
 
     const bottomObs = document.createElement("div");
     bottomObs.classList.add("obstacle");
     bottomObs.style.height = bottomHeight + "px";
-    bottomObs.style.left   = startX + "px";
+    bottomObs.style.left = startX + "px";
     bottomObs.style.bottom = "0";
     gameArea.appendChild(bottomObs);
-
     obstacles.push(topObs, bottomObs);
   }
 
-  /* ------------ 랜덤 아이템 생성 ------------ */
   function spawnItem() {
     const types = ["cross", "wings", "wind", "bible"];
     const type  = types[Math.floor(Math.random() * types.length)];
-
     const item  = document.createElement("div");
     item.classList.add("item");
     item.dataset.type = type;
     item.style.left   = window.innerWidth + "px";
     item.style.bottom = (Math.random() * 250 + 120) + "px";
-    item.style.backgroundImage =
-      `url('https://antiochapp.github.io/TrapGame/item_${type}.png')`;
-
+    item.style.backgroundImage = `url('https://antiochapp.github.io/TrapGame/item_${type}.png')`;
     gameArea.appendChild(item);
     items.push(item);
   }
 
-  /* ------------ 아이템 효과 ------------ */
+  /* ------------ [신규] 획득 이펙트 표시 함수 ------------ */
+  function showFloatText(text) {
+    const rect = player.getBoundingClientRect();
+    const el = document.createElement("div");
+    el.classList.add("float-text");
+    el.innerText = text;
+    // 플레이어 머리 위
+    el.style.left = (rect.left + 10) + "px";
+    el.style.top  = (rect.top - 20) + "px";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+
+  /* ------------ [수정] 아이템 효과 적용 ------------ */
   function activateItem(type) {
     if (type === "cross") {
-      invincible = true;
-      setTimeout(() => invincible = false, 10000);
+      activeEffects.invincible = 10; // 10초
+      showFloatText("🛡️ 무적!");
     }
-    if (type === "wings") {
-      jumpPower /= 2;
-      setTimeout(() => jumpPower *= 2, 10000);
+    else if (type === "wings") {
+      activeEffects.turbo = 5; // 5초간 터보
+      showFloatText("🚀 터보 모드!");
     }
-    if (type === "wind") {
-      gameSpeed /= 2;
-      setTimeout(() => gameSpeed *= 2, 10000);
+    else if (type === "wind") {
+      activeEffects.slow = 10; // 10초간 감속
+      showFloatText("🍃 속도 감소");
     }
-    if (type === "bible") {
+    else if (type === "bible") {
       faith += 10;
       saveData.faith = faith;
       document.getElementById("faithText").innerText = faith;
+      showFloatText("✝ Faith +10");
       saveProgress();
     }
   }
 
-  /* ------------ 메인 루프 ------------ */
+  /* ------------ [신규] 버프 상태창 UI 업데이트 ------------ */
+  function updateBuffUI(delta) {
+    // 시간 감소
+    if (activeEffects.turbo > 0) activeEffects.turbo -= delta;
+    if (activeEffects.invincible > 0) activeEffects.invincible -= delta;
+    if (activeEffects.slow > 0) activeEffects.slow -= delta;
+
+    // UI 다시 그리기
+    let html = "";
+    if (activeEffects.turbo > 0) {
+      html += `<div class="buff-tag" style="color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
+    }
+    if (activeEffects.invincible > 0) {
+      html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
+    }
+    if (activeEffects.slow > 0) {
+      html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
+    }
+    buffArea.innerHTML = html;
+  }
+
   function gameLoop(now) {
     if (!running) return;
-
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    // 데일리 미션
+    // 버프 타이머 및 UI 갱신
+    updateBuffUI(delta);
+
     if (!daily.run200 && distance >= 200) daily.run200 = true;
     daily.faith20 = faith;
     localStorage.setItem("dailyMission", JSON.stringify(daily));
 
-    // 거리 증가
-    distance += delta * 1;
-    document.getElementById("distanceText").innerText =
-      Math.floor(distance) + "m";
+    // 터보 모드면 거리가 엄청 빨리 늘어남
+    let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
+    distance += delta * 1 * distMultiplier;
+    document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    // 난이도별 속도
-    const diff = getDifficulty(distance);
-    gameSpeed = BASE_SPEED * (1 + (diff - 1) * 0.25);
+    /* --- [수정] 속도 계산 --- */
+    // 1. 기본 속도
+    let currentSpeed = BASE_SPEED * (1 + (getDifficulty(distance) - 1) * 0.25);
+    
+    // 2. 버프 적용
+    if (activeEffects.slow > 0) currentSpeed *= 0.5; // 감속
+    if (activeEffects.turbo > 0) currentSpeed *= 3.5; // 터보 (3.5배)
 
-    // 100m마다 Faith +1
+    gameSpeed = currentSpeed;
+
+    // Faith 획득
     if (distance >= nextFaithMilestone) {
-      faith++;
-      saveData.faith = faith;
+      faith++; saveData.faith = faith;
       nextFaithMilestone += 100;
       document.getElementById("faithText").innerText = faith;
       saveProgress();
     }
 
-    // 퀴즈 타이머
     quizTimer += delta;
     const quizSoon = (quizTimer >= 27 && quizTimer < 30);
 
-    // 장애물 생성
     if (!quizSoon) {
       obstacleTimer += delta;
       if (obstacleTimer >= nextObstacleTime) {
@@ -599,14 +577,26 @@
       }
     }
 
-    // 점프 물리
-    velocity += gravity;
-    playerY += velocity;
+    /* --- [수정] 플레이어 움직임 --- */
+    if (activeEffects.turbo > 0) {
+      // 터보 모드: 플레이어를 화면 중앙으로 고정시키고 중력 무시
+      // 부드럽게 중앙(200px 정도)으로 이동
+      let targetY = 200;
+      playerY += (targetY - playerY) * 0.1; 
+      velocity = 0; // 중력 영향 X
+      
+      // 스피드 라인 켜기
+      speedLines.style.display = "block";
+    } else {
+      // 일반 모드
+      velocity += gravity;
+      playerY += velocity;
+      // 스피드 라인 끄기
+      speedLines.style.display = "none";
+    }
 
     if (playerY < 0) playerY = 0;
-    if (playerY > window.innerHeight - 110)
-      playerY = window.innerHeight - 110;
-
+    if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
     // 장애물 이동 + 충돌
@@ -616,46 +606,43 @@
       left      -= gameSpeed * delta;
       obs.style.left = left + "px";
 
-      // 화면 밖 → 제거
       if (left + 60 < 0) {
         obs.remove();
         obstacles.splice(i, 1);
-
         obstacleSurviveCount++;
         if (obstacleSurviveCount >= 5) {
-          combo++;
-          faith++;
-          saveData.faith = faith;
+          combo++; faith++; saveData.faith = faith;
           document.getElementById("faithText").innerText = faith;
-
           const ce = document.getElementById("comboEffect");
-          ce.style.display = "block";
-          ce.innerText = `COMBO +${combo}!`;
+          ce.style.display = "block"; ce.innerText = `COMBO +${combo}!`;
           setTimeout(() => ce.style.display = "none", 1000);
-
-          obstacleSurviveCount = 0;
-          saveProgress();
+          obstacleSurviveCount = 0; saveProgress();
         }
         continue;
       }
 
       // 충돌 체크
+      // 터보 모드이거나 무적 버프 중이면 충돌 무시
+      if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible) {
+        // 무적 상태이므로 그냥 지나감
+        continue;
+      }
+
       const rectP = player.getBoundingClientRect();
       const rectO = obs.getBoundingClientRect();
-
+      const buffer = 10;
       if (
-        rectP.left < rectO.right &&
-        rectP.right > rectO.left &&
-        rectP.top < rectO.bottom &&
-        rectP.bottom > rectO.top
+        rectP.left + buffer < rectO.right - buffer &&
+        rectP.right - buffer > rectO.left + buffer &&
+        rectP.top + buffer < rectO.bottom - buffer &&
+        rectP.bottom - buffer > rectO.top + buffer
       ) {
         damageLife();
-        // 한 프레임에 여러 번 깎이지 않도록
         break;
       }
     }
 
-    // 아이템 이동 + 충돌
+    // 아이템 이동
     itemTimer += delta;
     if (itemTimer >= nextItemTime) {
       spawnItem();
@@ -670,238 +657,123 @@
       it.style.left = left + "px";
 
       if (left < -60) {
-        it.remove();
-        items.splice(i, 1);
-        continue;
+        it.remove(); items.splice(i, 1); continue;
       }
 
       const rectP = player.getBoundingClientRect();
       const rectI = it.getBoundingClientRect();
-
       if (
-        rectP.left < rectI.right &&
-        rectP.right > rectI.left &&
-        rectP.top < rectI.bottom &&
-        rectP.bottom > rectI.top
+        rectP.left < rectI.right && rectP.right > rectI.left &&
+        rectP.top < rectI.bottom && rectP.bottom > rectI.top
       ) {
         activateItem(it.dataset.type);
-        it.remove();
-        items.splice(i, 1);
-        continue;
+        it.remove(); items.splice(i, 1); continue;
       }
     }
 
-    // 배경 패럴랙스 (수정됨: Y값을 bottom으로 강제)
-    bg1X = (bg1X - BG1_SPEED * delta) % window.innerWidth;
-    bg2X = (bg2X - BG2_SPEED * delta) % window.innerWidth;
-    bg3X = (bg3X - BG3_SPEED * delta) % window.innerWidth;
+    // 배경 패럴랙스 (속도에 비례)
+    let speedMult = (gameSpeed / BASE_SPEED); 
+    bg1X = (bg1X - BG1_SPEED * speedMult * delta) % window.innerWidth;
+    bg2X = (bg2X - BG2_SPEED * speedMult * delta) % window.innerWidth;
+    bg3X = (bg3X - BG3_SPEED * speedMult * delta) % window.innerWidth;
 
-    bg1.style.backgroundPosition = `${bg1X}px 0`;      // 하늘은 위
-    bg2.style.backgroundPosition = `${bg2X}px bottom`; // 산은 바닥
-    bg3.style.backgroundPosition = `${bg3X}px bottom`; // 숲은 바닥 (이게 핵심!)
+    bg1.style.backgroundPosition = `${bg1X}px 0`;
+    bg2.style.backgroundPosition = `${bg2X}px bottom`;
+    bg3.style.backgroundPosition = `${bg3X}px bottom`;
 
-    // 퀴즈 호출
     if (quizTimer >= 30) {
-      quizTimer = 0;
-      pauseForQuiz();
-      return;
+      quizTimer = 0; pauseForQuiz(); return;
     }
-
     requestAnimationFrame(gameLoop);
   }
 
-  /* ------------ 데미지 ------------ */
   function damageLife() {
-    if (invincible || !running) return;
-
+    if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible || !running) return;
     life--;
     document.getElementById("lifeText").innerText = life;
-
     invincible = true;
     player.style.opacity = "0.4";
-    setTimeout(() => {
-      invincible = false;
-      player.style.opacity = "1";
-    }, 800);
-
-    if (life <= 0) {
-      gameOver();
-    }
+    setTimeout(() => { invincible = false; player.style.opacity = "1"; }, 800);
+    if (life <= 0) gameOver();
   }
 
-  /* ------------ 성경 퀴즈 ------------ */
   async function pauseForQuiz() {
     if (!running) return;
     running = false;
-
     document.getElementById("loadingQuiz").style.display = "flex";
-
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "getQuiz" })
-      });
-
+      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getQuiz" }) });
       const txt = await res.text();
       document.getElementById("loadingQuiz").style.display = "none";
-
-      if (txt === "noquiz") {
-        running = true;
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
-        return;
-      }
-
+      if (txt === "noquiz") { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); return; }
       const quiz = JSON.parse(txt);
       document.getElementById("quizQuestion").innerText = quiz.question;
       document.getElementById("btnA").innerText = "A) " + quiz.A;
       document.getElementById("btnB").innerText = "B) " + quiz.B;
       document.getElementById("btnC").innerText = "C) " + quiz.C;
-
       window.correctAnswer = quiz.answer;
       document.getElementById("quizModal").style.display = "flex";
     } catch (err) {
       document.getElementById("loadingQuiz").style.display = "none";
-      running = true;
-      lastTime = performance.now();
-      requestAnimationFrame(gameLoop);
+      running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
     }
   }
 
   function answerQuiz(sel) {
     document.getElementById("quizModal").style.display = "none";
-
     if (sel === window.correctAnswer) {
       const ef = document.getElementById("correctEffect");
-      ef.style.display = "block";
-      setTimeout(() => (ef.style.display = "none"), 800);
-
-      faith += 5;
-      saveData.faith = faith;
-      document.getElementById("faithText").innerText = faith;
-
-      daily.quiz3++;
-      localStorage.setItem("dailyMission", JSON.stringify(daily));
-
-      saveProgress();
-    } else {
-      damageLife();
-    }
-
-    if (life > 0) {
-      running = true;
-      lastTime = performance.now();
-      requestAnimationFrame(gameLoop);
-    }
+      ef.style.display = "block"; setTimeout(() => (ef.style.display = "none"), 800);
+      faith += 5; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
+      daily.quiz3++; localStorage.setItem("dailyMission", JSON.stringify(daily)); saveProgress();
+    } else { damageLife(); }
+    if (life > 0) { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); }
   }
 
-  /* ------------ 진행 상황 저장 ------------ */
   async function saveProgress() {
-    try {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "save", id, saveData })
-      });
-    } catch (e) {
-      // 무시
-    }
+    try { await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "save", id, saveData }) }); } catch (e) {}
     localStorage.setItem("run_save", JSON.stringify(saveData));
   }
 
-  /* ------------ 게임 시작 ------------ */
   function startGameNow() {
     document.getElementById("startGuide").style.display = "none";
-    running = true;
-    lastTime = performance.now();
-    requestAnimationFrame(gameLoop);
+    running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
   }
 
-  /* ------------ 게임 오버 ------------ */
   async function gameOver() {
-    if (rankingSaved) return; // 중복 방지
-
-    running = false;
-    invincible = true;
-    player.style.opacity = "0.4";
-
+    if (rankingSaved) return;
+    running = false; invincible = true; player.style.opacity = "0.4";
     const dist = Math.floor(distance);
     document.getElementById("finalDist").innerText = dist;
     document.getElementById("gameOverModal").style.display = "flex";
-
-    // 기록 자동 랭킹 저장 (코멘트는 나중에)
     try {
       await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "updateRanking",
-          id,
-          name,
-          distance: dist,
-          message: ""
-        })
+        method: "POST", body: JSON.stringify({ type: "updateRanking", id, name, distance: dist, message: "" })
       });
-    } catch (e) {
-      // 실패해도 일단 계속 진행
-    }
+    } catch (e) {}
     rankingSaved = true;
   }
 
-  /* ------------ 코멘트 저장 후 메뉴로 (수정됨: 전송 대기) ------------ */
-async function confirmRanking() {
+  async function confirmRanking() {
     const btn = document.querySelector(".action-btn");
     const msgInput = document.getElementById("rankMsg");
     const msg = msgInput.value.trim();
-
-    // 1. 메시지가 비어있으면 그냥 메뉴로 이동
-    if (!msg) {
-        window.location.href = "/TrapGame/menu.html";
-        return;
-    }
-
-    // 2. 전송 시작 (버튼 비활성화)
-    btn.innerText = "전송 중...";
-    btn.disabled = true;
-
+    if (!msg) { window.location.href = "/TrapGame/menu.html"; return; }
+    btn.innerText = "전송 중..."; btn.disabled = true;
     try {
-      // 3. fetch로 데이터 전송
       await fetch(API_URL, {
-        method: "POST",
-        // redirect: "follow", // 구글 시트 리다이렉트 대응
-        body: JSON.stringify({
-          type: "updateComment",
-          id: id,          // 변수 id
-          message: msg     // 입력한 메시지
-        })
+        method: "POST", body: JSON.stringify({ type: "updateComment", id: id, message: msg })
       });
-      
-      // 4. 전송 성공 시 알림 (테스트용, 나중에 삭제 가능)
-      alert("소감이 등록되었습니다!"); 
-      window.location.href = "/TrapGame/menu.html";
-
+      alert("소감이 등록되었습니다!"); window.location.href = "/TrapGame/menu.html";
     } catch (e) {
-      console.error(e);
-      alert("전송 오류가 났지만 메뉴로 이동합니다.");
-      window.location.href = "/TrapGame/menu.html";
+      alert("전송 오류가 났지만 메뉴로 이동합니다."); window.location.href = "/TrapGame/menu.html";
     }
   }
 
-  function goMenu() {
-    window.location.href = "/TrapGame/menu.html";
-  }
-
-  // 모바일 더블탭 확대 방지
   let lastTouch = 0;
-  document.addEventListener(
-    "touchend",
-    e => {
-      const now = Date.now();
-      if (now - lastTouch < 300) {
-        e.preventDefault();
-      }
-      lastTouch = now;
-    },
-    { passive: false }
-  );
+  document.addEventListener("touchend", e => {
+    const now = Date.now(); if (now - lastTouch < 300) e.preventDefault(); lastTouch = now;
+  }, { passive: false });
 </script>
 </body>
 </html>
