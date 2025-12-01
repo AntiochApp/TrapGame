@@ -45,7 +45,6 @@
       background-repeat: repeat-x;
       image-rendering: pixelated;
       pointer-events: none;
-      /* 끊김 방지를 위해 will-change 추가 */
       will-change: background-position;
     }
     #bgLayer1 {
@@ -135,30 +134,31 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* 버프 상태창 (z-index 대폭 상향) */
+    /* ------------ [수정됨] 버프 상태창 (오른쪽 하단) ------------ */
     #buffArea {
       position: absolute;
-      z-index: 100; /* 확실하게 보이도록 최상위권 배치 */
-      top: 12px; right: 12px;
+      z-index: 9999; /* 제일 위에 표시 */
+      bottom: 20px; /* 화면 아래쪽 */
+      right: 12px;  /* 화면 오른쪽 */
       display: flex;
-      flex-direction: column;
+      flex-direction: column-reverse; /* 아래에서 위로 쌓이게 */
       align-items: flex-end;
-      gap: 6px;
-      pointer-events: none; /* 클릭 방해 안 되게 */
+      gap: 8px;
+      pointer-events: none; /* 터치 방해 안 함 */
     }
     .buff-tag {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8); /* 진한 배경 */
       color: #fff;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 14px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 15px;
       font-weight: 700;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border: 2px solid rgba(255,255,255,0.2);
+      border-left: 4px solid; /* 색상 강조선 */
     }
     @keyframes popIn {
-      from { transform: scale(0); opacity: 0; }
+      from { transform: scale(0.5); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
 
@@ -363,12 +363,12 @@
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
   
-  // 배경 요소 정의
+  // 배경 변수
   const bg1 = document.getElementById("bgLayer1");
   const bg2 = document.getElementById("bgLayer2");
   const bg3 = document.getElementById("bgLayer3");
 
-  // 안전하게 요소 가져오기
+  // UI 요소 생성 (없으면 자동 생성)
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
@@ -419,11 +419,6 @@
 
   let activeEffects = { turbo: 0, invincible: 0, slow: 0 };
 
-  function getDifficulty(dist) {
-    if (dist < 150) return 1;
-    if (dist < 300) return 2;
-    return 3;
-  }
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
   function jump() {
@@ -435,37 +430,31 @@
   });
   document.body.addEventListener("touchstart", jump);
 
-  function scheduleNextObstacle() {
+  // [수정됨] 난이도별 장애물 간격 조정 (속도 비례)
+  function scheduleNextObstacle(speedMultiplier) {
     if (activeEffects.turbo > 0) return;
-    const d = getDifficulty(distance);
-    if (d === 1) nextObstacleTime = randBetween(1.8, 2.5);
-    else if (d === 2) nextObstacleTime = randBetween(1.4, 2.0);
-    else nextObstacleTime = randBetween(1.1, 1.7);
+    
+    // 속도가 빠를수록 장애물이 더 빨리 나와야 간격이 유지됨
+    // 1배속일 때 2초 -> 5배속일 때 약 0.5초
+    let baseTime = randBetween(1.8, 2.6);
+    // speedMultiplier가 커질수록(5배) 대기시간은 줄어듦
+    nextObstacleTime = baseTime / (1 + (speedMultiplier - 1) * 0.7); 
   }
 
   function spawnObstacle() {
     if (!running) return;
     if (activeEffects.turbo > 0) return;
 
-    const difficulty = getDifficulty(distance);
+    // 랜덤 패턴 (기존 유지)
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
     const useGroundBox = Math.random() < 0.5;
 
+    // 난이도 대신 거리에 따라 높이 변화를 좀 줄 수 있지만, 일단 랜덤 유지
     if (useGroundBox) {
-      let minH = difficulty === 1 ? 90 : (difficulty === 2 ? 120 : 150);
-      let maxH = difficulty === 1 ? 140 : (difficulty === 2 ? 180 : 220);
-      pattern = { groundBox: true, height: randi(minH, maxH) };
+      pattern = { groundBox: true, height: randi(90, 220) };
     } else {
-      let topRangeMin, topRangeMax, gapBase, gapVar;
-      if (difficulty === 1) {
-        topRangeMin = 120; topRangeMax = 220; gapBase = 200; gapVar = 25;
-      } else if (difficulty === 2) {
-        topRangeMin = 150; topRangeMax = 260; gapBase = 170; gapVar = 25;
-      } else {
-        topRangeMin = 180; topRangeMax = 320; gapBase = 145; gapVar = 20;
-      }
-      pattern = { groundBox: false, top: randi(topRangeMin, topRangeMax), gap: randi(gapBase - gapVar, gapBase + gapVar) };
+      pattern = { groundBox: false, top: randi(120, 260), gap: randi(160, 220) };
     }
 
     const screenH = window.innerHeight;
@@ -545,9 +534,9 @@
     if (activeEffects.slow > 0) activeEffects.slow -= delta;
 
     let html = "";
-    if (activeEffects.turbo > 0) html += `<div class="buff-tag" style="color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
-    if (activeEffects.invincible > 0) html += `<div class="buff-tag" style="color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
-    if (activeEffects.slow > 0) html += `<div class="buff-tag" style="color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
+    if (activeEffects.turbo > 0) html += `<div class="buff-tag" style="color:#00ffff; border-color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
+    if (activeEffects.invincible > 0) html += `<div class="buff-tag" style="color:#ffe24f; border-color:#ffe24f">🛡️ 무적 상태: ${Math.ceil(activeEffects.invincible)}s</div>`;
+    if (activeEffects.slow > 0) html += `<div class="buff-tag" style="color:#aaffaa; border-color:#aaffaa">🍃 속도 감소: ${Math.ceil(activeEffects.slow)}s</div>`;
     
     if(buffArea) buffArea.innerHTML = html;
   }
@@ -557,9 +546,7 @@
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    try {
-        updateBuffUI(delta);
-    } catch(e) { console.error(e); }
+    try { updateBuffUI(delta); } catch(e) {}
 
     if (!daily.run200 && distance >= 200) daily.run200 = true;
     daily.faith20 = faith;
@@ -569,9 +556,19 @@
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    let currentSpeed = BASE_SPEED * (1 + (getDifficulty(distance) - 1) * 0.25);
+    /* ------------ [수정됨] 거리 비례 속도 증가 로직 ------------ */
+    // 0m ~ 3000m 사이의 진행도 (0.0 ~ 1.0)
+    let progress = Math.min(distance / 3000, 1);
+    
+    // 속도 배수: 1배 ~ 5배 (선형 증가)
+    let speedMultiplier = 1 + (progress * 4); 
+    
+    let currentSpeed = BASE_SPEED * speedMultiplier;
+
+    // 아이템 효과 적용
     if (activeEffects.slow > 0) currentSpeed *= 0.5;
-    if (activeEffects.turbo > 0) currentSpeed *= 3.5;
+    if (activeEffects.turbo > 0) currentSpeed *= 2.0; // 터보는 기본속도 * 2배로 더 빠르게
+
     gameSpeed = currentSpeed;
 
     if (distance >= nextFaithMilestone) {
@@ -584,7 +581,9 @@
     if (!quizSoon) {
       obstacleTimer += delta;
       if (obstacleTimer >= nextObstacleTime) {
-        spawnObstacle(); obstacleTimer = 0; scheduleNextObstacle();
+        spawnObstacle(); 
+        obstacleTimer = 0; 
+        scheduleNextObstacle(speedMultiplier); // 속도에 맞춰 다음 장애물 시간 예약
       }
     }
 
@@ -656,9 +655,9 @@
       }
     }
 
+    /* ------------ [수정됨] 배경 패럴랙스 (끊김 없이 무한 스크롤) ------------ */
     let speedMult = (gameSpeed / BASE_SPEED); 
-    
-    // [수정됨] 배경 끊김 해결: 모듈러(%) 제거하고 계속 감소
+    // % 연산자 대신 계속 감소시켜서 CSS의 repeat 속성을 활용
     bg1X -= BG1_SPEED * speedMult * delta;
     bg2X -= BG2_SPEED * speedMult * delta;
     bg3X -= BG3_SPEED * speedMult * delta;
