@@ -169,7 +169,7 @@
 </head>
 
 <body>
-
+  
 <div id="gameArea">
 
   <!-- 패럴랙스 배경 -->
@@ -212,6 +212,23 @@
   </div>
 </div>
 
+  <!-- LOADING MODAL -->
+<div id="loadingQuiz" style="
+  display:none; 
+  position:fixed; 
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  color:white;
+  font-size:22px;
+  font-weight:700;
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+">
+  ⏳ 성경 문제를 불러오는 중입니다...
+</div>
+  
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
@@ -241,7 +258,9 @@
   let playerY   = 40;
   let velocity  = 0;
   let gravity   = -0.4;                       // 점프 느낌은 그대로 유지
-  let jumpPower = 8 + (saveData.agility || 0);
+  let agility = saveData.agility || 0;
+let jumpPower = 8 - agility * 0.05;
+jumpPower = Math.max(3, jumpPower);
 
   let distance  = 0;                          // m 단위
   let obstacles = [];
@@ -499,59 +518,49 @@
 
   // -------------------- 성경 퀴즈 --------------------
   async function pauseForQuiz() {
-    if (!running) return;
-    running = false;
+  if (!running) return;
+  running = false;
 
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "getQuiz" })
-      });
+  // 🔥 로딩창 표시
+  document.getElementById("loadingQuiz").style.display = "flex";
 
-      const txt = await res.text();
-      if (txt === "noquiz") {
-        running = true;
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
-        return;
-      }
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "getQuiz" })
+    });
 
-      const quiz = JSON.parse(txt);
+    const txt = await res.text();
 
-      document.getElementById("quizQuestion").innerText = quiz.question;
-      document.getElementById("btnA").innerText = "A) " + quiz.A;
-      document.getElementById("btnB").innerText = "B) " + quiz.B;
-      document.getElementById("btnC").innerText = "C) " + quiz.C;
+    // 응답 도착 → 로딩창 제거
+    document.getElementById("loadingQuiz").style.display = "none";
 
-      window.correctAnswer = quiz.answer;
-
-      document.getElementById("quizModal").style.display = "flex";
-    } catch (err) {
-      console.warn("퀴즈 불러오기 실패:", err);
+    if (txt === "noquiz") {
       running = true;
       lastTime = performance.now();
       requestAnimationFrame(gameLoop);
+      return;
     }
+
+    const quiz = JSON.parse(txt);
+
+    document.getElementById("quizQuestion").innerText = quiz.question;
+    document.getElementById("btnA").innerText = "A) " + quiz.A;
+    document.getElementById("btnB").innerText = "B) " + quiz.B;
+    document.getElementById("btnC").innerText = "C) " + quiz.C;
+
+    window.correctAnswer = quiz.answer;
+    document.getElementById("quizModal").style.display = "flex";
+
+  } catch (err) {
+    document.getElementById("loadingQuiz").style.display = "none";
+    console.warn("퀴즈 불러오기 실패:", err);
+    running = true;
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
   }
+}
 
-  function answerQuiz(sel) {
-    document.getElementById("quizModal").style.display = "none";
-
-    if (sel === window.correctAnswer) {
-      faith++;
-      saveData.faith = faith;
-      document.getElementById("faithText").innerText = faith;
-      saveProgress();
-    } else {
-      damageLife();
-    }
-
-    if (life > 0) {
-      running = true;
-      lastTime = performance.now();
-      requestAnimationFrame(gameLoop);
-    }
-  }
 
   // -------------------- saveData 저장 --------------------
   async function saveProgress() {
