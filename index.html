@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Disciple Run – Login</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f3efe7;
+    font-family: "Pretendard", sans-serif;
+  }
+
+  .wrapper {
+    max-width: 420px;
+    margin: 50px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: #4b2e12;
+    margin-bottom: 20px;
+  }
+
+  input {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #c6b49b;
+    background: #fff;
+    font-size: 15px;
+  }
+
+  button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 15px;
+    background: #805a36;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #644628;
+  }
+
+  .link-row {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .link-btn {
+    color: #4b2e12;
+    cursor: pointer;
+    text-decoration: underline;
+    margin: 0 5px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .spinner {
+    width: 26px;
+    height: 26px;
+    border: 4px solid #c6b49b;
+    border-top: 4px solid #805a36;
+    border-radius: 50%;
+    margin: 10px auto 0;
+    display: none;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .shake {
+    animation: shake 0.3s ease-in-out;
+  }
+
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="wrapper" id="loginBox">
+  <h1>Disciple Run</h1>
+  <input id="loginId" type="text" placeholder="ID">
+  <input id="loginPw" type="password" placeholder="Password">
+
+  <button onclick="login()" id="loginBtn">로그인</button>
+  <div id="loginSpinner" class="spinner"></div>
+
+  <div class="link-row">
+    <span class="link-btn" onclick="showSignup()">회원가입</span> |
+    <span class="link-btn" onclick="showFindPw()">비밀번호 찾기</span>
+  </div>
+</div>
+
+<div class="wrapper hidden" id="signupBox">
+  <h1>회원가입</h1>
+  <input id="newId" type="text" placeholder="ID">
+  <input id="newPw" type="password" placeholder="Password">
+  <input id="newName" type="text" placeholder="이름">
+  <input id="newBible" type="text" placeholder="좋아하는 인물 (예: 다윗)">
+
+  <button onclick="signup()" id="signupBtn">가입하기</button>
+  <div id="signupSpinner" class="spinner"></div>
+
+  <div class="link-row">
+    <span class="link-btn" onclick="showLogin()">로그인으로 돌아가기</span>
+  </div>
+</div>
+
+<div class="wrapper hidden" id="findPwBox">
+  <h1>비밀번호 찾기</h1>
+  <input id="findName" type="text" placeholder="이름">
+  <input id="findBible" type="text" placeholder="좋아하는 성경 인물">
+
+  <button onclick="findPw()" id="findPwBtn">찾기</button>
+  <div id="findPwSpinner" class="spinner"></div>
+
+  <div class="link-row">
+    <span class="link-btn" onclick="showLogin()">로그인으로 돌아가기</span>
+  </div>
+</div>
+
+<script>
+  const API_URL = "YOUR_SCRIPT_URL"; // 배포된 Web App URL로 교체하세요
+
+  // 화면 전환
+  function showSignup() {
+    loginBox.classList.add("hidden");
+    signupBox.classList.remove("hidden");
+    findPwBox.classList.add("hidden");
+  }
+  function showFindPw() {
+    loginBox.classList.add("hidden");
+    signupBox.classList.add("hidden");
+    findPwBox.classList.remove("hidden");
+  }
+  function showLogin() {
+    loginBox.classList.remove("hidden");
+    signupBox.classList.add("hidden");
+    findPwBox.classList.add("hidden");
+  }
+
+  // 로그인
+  async function login() {
+    const id = loginId.value.trim();
+    const pw = loginPw.value.trim();
+    const btn = loginBtn;
+    const spinner = loginSpinner;
+
+    btn.disabled = true;
+    spinner.style.display = "block";
+
+    let body = { type: "login", id, password: pw };
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+
+      const txt = await res.text();
+
+      if (txt === "fail") {
+        alert("로그인 실패! ID/PW를 확인하세요.");
+        btn.classList.add("shake");
+        setTimeout(() => btn.classList.remove("shake"), 400);
+      } else {
+        const data = JSON.parse(txt);
+
+        localStorage.setItem("run_id", id);
+        localStorage.setItem("run_name", data.name);
+        localStorage.setItem("run_bible", data.bible);
+        localStorage.setItem("run_save", JSON.stringify(data.saveData));
+
+        window.location.href = "menu.html";
+      }
+
+    } catch (e) {
+      alert("네트워크 오류!");
+    }
+
+    btn.disabled = false;
+    spinner.style.display = "none";
+  }
+
+  // 회원가입
+  async function signup() {
+    const id = newId.value.trim();
+    const pw = newPw.value.trim();
+    const name = newName.value.trim();
+    const bible = newBible.value.trim();
+
+    if (!id || !pw || !name || !bible) {
+      alert("모든 칸을 입력해주세요!");
+      return;
+    }
+
+    const btn = signupBtn;
+    const spinner = signupSpinner;
+    btn.disabled = true;
+    spinner.style.display = "block";
+
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "signup", id, password: pw, name, bible })
+      });
+
+      alert("회원가입 완료!");
+      showLogin();
+
+    } catch (e) {
+      alert("오류가 발생했습니다.");
+    }
+
+    btn.disabled = false;
+    spinner.style.display = "none";
+  }
+
+  // 비밀번호 찾기
+  async function findPw() {
+    const name = findName.value.trim();
+    const bible = findBible.value.trim();
+
+    const btn = findPwBtn;
+    const spinner = findPwSpinner;
+    btn.disabled = true;
+    spinner.style.display = "block";
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "findPw", name, bible })
+      });
+
+      const txt = await res.text();
+
+      if (txt === "notfound") {
+        alert("정보가 일치하지 않습니다!");
+      } else {
+        const data = JSON.parse(txt);
+        alert(`ID: ${data.id}\nPW: ${data.password}`);
+      }
+
+    } catch (e) {
+      alert("오류가 발생했습니다.");
+    }
+
+    btn.disabled = false;
+    spinner.style.display = "none";
+  }
+</script>
+
+</body>
+</html>
