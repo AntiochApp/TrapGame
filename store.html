@@ -164,9 +164,10 @@
 <div id="gachaResult"></div>
 
 <script>
-  const API_URL = "YOUR_SCRIPT_URL";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
   const id = localStorage.getItem("run_id");
+  const playerName = localStorage.getItem("run_name") || "";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
   if (!id) {
@@ -234,6 +235,8 @@
   function rollGacha() {
     const r = Math.random() * 100;
     let prizeText = "";
+    let isSpecial = false;
+    let specialName = "";
 
     if (r < 40) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
     else if (r < 80) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
@@ -241,11 +244,39 @@
     else if (r < 90) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
     else if (r < 92.45) { saveData.agility += 3; prizeText = "⚡ 민첩성 +3"; }
     else if (r < 94.9) { saveData.extraLife += 3; prizeText = "❤️ 생명력 +3"; }
-    else if (r < 94.91) prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
-    else if (r < 94.92) prizeText = "🎁 스타벅스 $10 기프트카드 당첨!";
-    else if (r < 94.93) prizeText = "🎁 아마존 $5 기프트카드 당첨!";
-    else if (r < 94.94) prizeText = "🎁 아마존 $10 기프트카드 당첨!";
-    else prizeText = "📘 생명의 삶 QT 책 당첨!";
+    else if (r < 94.91) { 
+      prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
+      isSpecial = true; specialName = "Starbucks $5 Gift Card";
+    }
+    else if (r < 94.92) { 
+      prizeText = "🎁 스타벅스 $10 기프트카드 당첨!";
+      isSpecial = true; specialName = "Starbucks $10 Gift Card";
+    }
+    else if (r < 94.93) { 
+      prizeText = "🎁 아마존 $5 기프트카드 당첨!";
+      isSpecial = true; specialName = "Amazon $5 Gift Card";
+    }
+    else if (r < 94.94) { 
+      prizeText = "🎁 아마존 $10 기프트카드 당첨!";
+      isSpecial = true; specialName = "Amazon $10 Gift Card";
+    }
+    else { 
+      prizeText = "📘 생명의 삶 QT 책 당첨!";
+      isSpecial = true; specialName = "QT Book";
+    }
+
+    // 특별 당첨 시 서버 기록
+    if (isSpecial) {
+        fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            type: "rewardLog",
+            id: id,
+            name: playerName,
+            reward: specialName
+          })
+        });
+    }
 
     // 결과 팝업
     const box = document.getElementById("gachaResult");
@@ -257,7 +288,7 @@
     box.style.display = "block";
 
     saveProgress();
-  }
+}
 
   function closeResult() {
     document.getElementById("gachaResult").style.display = "none";
