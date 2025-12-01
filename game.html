@@ -137,6 +137,44 @@
       font-size: 16px;
     }
   }
+    /* -------------------- 패럴랙스 배경 레이어 -------------------- */
+
+#bgLayer1, #bgLayer2, #bgLayer3 {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 300%;      /* 반복 자연스럽게 보이도록 */
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+#bgLayer1 {
+  background: url('bg_sky.png') repeat-x;
+  background-size: cover;
+  z-index: -3;
+  animation: bg1move 60s linear infinite;
+}
+
+#bgLayer2 {
+  background: url('bg_mountain.png') repeat-x;
+  background-size: contain;
+  z-index: -2;
+  animation: bg2move 40s linear infinite;
+}
+
+#bgLayer3 {
+  background: url('bg_forest.png') repeat-x;
+  background-size: contain;
+  z-index: -1;
+  animation: bg3move 20s linear infinite;
+}
+
+/* 움직임 속도 차이 */
+@keyframes bg1move { from { transform: translateX(0); } to { transform: translateX(-33%); } }
+@keyframes bg2move { from { transform: translateX(0); } to { transform: translateX(-66%); } }
+@keyframes bg3move { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
 </style>
 </head>
 
@@ -501,6 +539,7 @@
   function goMenu() {
     window.location.href = "/TrapGame/menu.html";
   }
+
 </script>
 
 </body>
