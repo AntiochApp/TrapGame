@@ -17,16 +17,25 @@
 
   * { box-sizing: border-box; }
 
-  body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background:
-      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
-      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text-main);
-  }
+  #menuWrapper {
+  flex: 1;                /* top-bar 아래 남는 공간을 전부 차지 */
+  display: flex;
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+}
+  
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
+    linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
+  font-family: "Pretendard", system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+}
 
   .top-bar {
     display: flex;
@@ -189,6 +198,7 @@
   <div class="player-label" id="playerName"></div>
 </div>
 
+<div id="menuWrapper">
 <div class="container">
   <h1>메인 메뉴</h1>
   <div class="sub">ANTIOCH HOLY SPARK RUNNING TIME!</div>
