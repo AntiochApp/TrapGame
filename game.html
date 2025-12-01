@@ -357,8 +357,13 @@
   const gameArea = document.getElementById("gameArea");
   const player   = document.getElementById("player");
   
-  // [수정완료] 중복 선언을 제거하고 안전하게 요소 가져오기
-  // 1. buffArea 가져오기 (없으면 만들기)
+  // [★ 여기부터 누락되었던 코드가 복구되었습니다!]
+  // 배경 요소들을 변수로 지정해야 움직일 수 있습니다.
+  const bg1 = document.getElementById("bgLayer1");
+  const bg2 = document.getElementById("bgLayer2");
+  const bg3 = document.getElementById("bgLayer3");
+
+  // [수정됨] 안전하게 요소 가져오기 (없으면 생성)
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
@@ -366,12 +371,10 @@
     gameArea.appendChild(buffArea);
   }
 
-  // 2. speedLines 가져오기 (없으면 만들기)
   let speedLines = document.getElementById("speedLines");
   if (!speedLines) {
     speedLines = document.createElement("div");
     speedLines.id = "speedLines";
-    // 배경보단 위에, 플레이어보단 아래에 삽입
     gameArea.insertBefore(speedLines, document.getElementById("player"));
   }
 
