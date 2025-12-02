@@ -28,7 +28,6 @@
       background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* 배경 */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute; left: 0; top: 0; width: 200%; height: 100%;
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
@@ -40,7 +39,6 @@
 
     #ground { display: none; }
 
-    /* 플레이어 */
     #player {
       position: absolute; 
       z-index: 50; 
@@ -57,7 +55,6 @@
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* 장애물 */
     .obstacle {
       position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
     }
@@ -75,7 +72,6 @@
 
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); background-size: 100% 10px; border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* 투사체 */
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; 
       border-radius: 50%; 
@@ -88,15 +84,16 @@
       background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); 
       transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); 
     }
-    .missile-style { filter: hue-rotate(220deg) brightness(1.2); }
+    
+    .missile-style {
+      filter: hue-rotate(220deg) brightness(1.2); 
+    }
 
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* 아이템 */
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    /* HUD */
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
     #hud span { display: inline-block; min-width: 60px; }
 
@@ -501,8 +498,6 @@
     
     meteor.x = startX; meteor.y = startY;
     meteor.vx = vx; meteor.vy = vy;
-    // [중요] 투사체 크기 명시
-    meteor.w = 40; meteor.h = 40;
 
     gameArea.appendChild(meteor);
     projectiles.push(meteor);
@@ -532,8 +527,6 @@
     
     missile.x = startX; missile.y = startY;
     missile.vx = vx; missile.vy = vy;
-    // [중요] 투사체 크기 명시
-    missile.w = 40; missile.h = 40;
 
     gameArea.appendChild(missile);
     projectiles.push(missile);
@@ -663,14 +656,7 @@
         }
     }
 
-    /* [최종 수정] 좌표 기반 충돌 체크 (getBoundingClientRect 제거) */
-    // 플레이어의 실제 좌표 (Top-Left 기준)
-    // CSS: bottom: playerY, height: 60, left: 120
-    const playerX = 120;
-    const playerW = 60;
-    const playerH = 60;
-    const playerTop = window.innerHeight - playerY - playerH;
-
+    /* [최종 수정] 좌표 기반 충돌 체크 (getBoundingClientRect 복구) */
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         
@@ -684,15 +670,16 @@
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
-        // 충돌 체크 (좌표 기반 - 100% 정확)
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
+            const rectP = player.getBoundingClientRect();
+            const rectM = p.getBoundingClientRect();
             
-            // AABB 충돌 (Buffer 없음 = 칼같이 닿으면 사망)
+            // [수정] 충돌 여유값 (10px 안쪽으로 들어오면 히트)
             if (
-                playerX < p.x + p.w &&
-                playerX + playerW > p.x &&
-                playerTop < p.y + p.h &&
-                playerTop + playerH > p.y
+                rectP.right > rectM.left + 10 &&
+                rectP.left < rectM.right - 10 &&
+                rectP.bottom > rectM.top + 10 &&
+                rectP.top < rectM.bottom - 10
             ) {
                 damageLife();
                 p.remove(); projectiles.splice(i, 1);
@@ -780,10 +767,6 @@
     bg1X -= BG1_SPEED * speedMult * delta;
     bg2X -= BG2_SPEED * speedMult * delta;
     bg3X -= BG3_SPEED * speedMult * delta;
-
-    bg1.style.backgroundPosition = `${bg1X}px 0`;
-    bg2.style.backgroundPosition = `${bg2X}px bottom`;
-    bg3.style.backgroundPosition = `${bg3X}px bottom`;
 
     if (quizTimer >= 30) { quizTimer = 0; pauseForQuiz(); return; }
     requestAnimationFrame(gameLoop);
