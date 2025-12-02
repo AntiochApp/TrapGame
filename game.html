@@ -63,7 +63,7 @@
 
     #player {
       position: absolute;
-      z-index: 12;
+      z-index: 50; /* 플레이어 레이어 상향 */
       left: 120px; bottom: 40px;
       width: 60px; height: 60px;
       background: url("disciple.png") center/contain no-repeat;
@@ -75,8 +75,7 @@
     /* ------------ 장애물 공통 ------------ */
     .obstacle {
       position: absolute;
-      z-index: 10;
-      width: 60px; 
+      z-index: 40;
       background-size: 8px 8px; 
       box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
     }
@@ -90,8 +89,9 @@
     .obs-ground.obs-cap::after { top: -12px; }
     .obs-ceil.obs-cap::after { bottom: -12px; }
 
-    /* [타입 1] 통나무 (기존) */
+    /* [타입 1] 세로 통나무 (기존) */
     .obs-log {
+      width: 60px; /* 기본 너비 */
       background-color: #8D6E63;
       background-image: 
         linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%),
@@ -100,14 +100,15 @@
       border-right: 4px solid #5D4037;
     }
     .obs-log.obs-cap::after {
-        background-color: #66BB6A; /* 풀색 */
+        background-color: #66BB6A; 
         border: 4px solid #1B5E20; 
         background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%);
     }
 
-    /* [타입 2] 돌기둥 (신규) */
+    /* [타입 2] 돌기둥 (기존) */
     .obs-rock {
-      background-color: #9E9E9E; /* 회색 */
+      width: 60px;
+      background-color: #9E9E9E; 
       background-image: 
         radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%),
         radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 20%);
@@ -116,22 +117,34 @@
       border-right: 4px solid #616161;
     }
     .obs-rock.obs-cap::after {
-        background-color: #BDBDBD; /* 밝은 회색 뚜껑 */
+        background-color: #BDBDBD; 
         border: 4px solid #424242; 
     }
 
-    /* ------------ [신규] 운석(Meteor) ------------ */
+    /* [타입 3] 가로 긴 통나무 (신규) */
+    .obs-long {
+      width: 110px;  /* 가로로 긺 */
+      height: 40px;  /* 높이는 낮음 */
+      background-color: #5D4037; /* 더 진한 나무색 */
+      background-image: 
+        linear-gradient(0deg, rgba(0,0,0,0.1) 50%, transparent 50%); /* 가로 결 */
+      background-size: 100% 8px;
+      border: 4px solid #3E2723;
+      border-radius: 8px;
+    }
+    /* 가로 통나무는 뚜껑(cap) 없음 */
+
+    /* ------------ 운석 ------------ */
     .meteor {
       position: absolute;
-      z-index: 15; /* 플레이어 위, HUD 아래 */
+      z-index: 60; 
       width: 40px; height: 40px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722);
       box-shadow: 0 0 10px #ff9800;
-      /* 회전 효과 */
       animation: spinMeteor 1s linear infinite;
     }
-    .meteor::before { /* 꼬리 효과 */
+    .meteor::before {
       content: '';
       position: absolute;
       top: -30px; right: -30px;
@@ -150,7 +163,7 @@
     /* 아이템 */
     .item {
       position: absolute;
-      z-index: 11;
+      z-index: 45;
       width: 48px; height: 48px;
       image-rendering: pixelated;
       background-position: center;
@@ -166,7 +179,7 @@
     /* HUD */
     #hud {
       position: fixed;
-      z-index: 20;
+      z-index: 900;
       top: 12px; left: 12px;
       color: #3a2513;
       font-size: 18px; font-weight: 700;
@@ -177,16 +190,20 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* 버프 상태창 */
+    /* ------------ [버프 상태창 수정] ------------ */
     #buffArea {
       position: fixed;
-      z-index: 10000;
-      bottom: 20px; right: 15px;
+      z-index: 2147483647; /* 최대값으로 설정하여 무조건 보이게 함 */
+      bottom: 20px; 
+      right: 15px;
       display: flex;
       flex-direction: column-reverse;
       align-items: flex-end;
       gap: 8px;
       pointer-events: none;
+      /* 모바일 GPU 렌더링 강제 (이게 핵심) */
+      transform: translateZ(0); 
+      -webkit-transform: translateZ(0);
     }
     .buff-tag {
       background: rgba(0, 0, 0, 0.85);
@@ -210,7 +227,7 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      z-index: 15;
+      z-index: 80;
       background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%);
       mix-blend-mode: overlay;
       pointer-events: none;
@@ -224,14 +241,13 @@
       100% { transform: translate(0, 0); }
     }
 
-    /* 획득 이펙트 */
     .float-text {
       position: absolute;
       color: #ffe24f;
       font-weight: 900;
       font-size: 20px;
       text-shadow: 2px 2px 0 #3a2513;
-      z-index: 99;
+      z-index: 1000;
       pointer-events: none;
       animation: floatUp 1s ease-out forwards;
     }
@@ -240,11 +256,10 @@
       100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
     }
 
-    /* 이펙트 */
     #comboEffect, #correctEffect {
       position: fixed;
       left: 50%; transform: translateX(-50%);
-      z-index: 9999;
+      z-index: 1000;
       display: none;
       pointer-events: none;
     }
@@ -260,7 +275,7 @@
       display: none;
       justify-content: center; align-items: center;
       padding: 16px;
-      z-index: 9999;
+      z-index: 20000; /* 버프창보다 더 위 */
     }
     .modal-box {
       width: 90%; max-width: 420px;
@@ -298,7 +313,7 @@
       background: rgba(0,0,0,0.6);
       justify-content: center; align-items: center;
       color: #fff; font-size: 22px; font-weight: 700;
-      backdrop-filter: blur(2px); z-index: 9999;
+      backdrop-filter: blur(2px); z-index: 20001;
     }
   </style>
 </head>
@@ -337,9 +352,9 @@
     📏 <span id="distanceText">0m</span>
     ✝ <span id="faithText"></span>
   </div>
-
-  <div id="buffArea"></div>
 </div>
+
+<div id="buffArea"></div>
 
 <div id="comboEffect">COMBO +1!</div>
 <div id="correctEffect">+5 Faith!</div>
@@ -427,7 +442,7 @@
 
   let distance  = 0;
   let obstacles = [];
-  let meteors   = []; // [신규] 운석 배열
+  let meteors   = [];
   let running   = false;
   let invincible = false;
 
@@ -441,7 +456,7 @@
   let obstacleTimer   = 0;
   let nextObstacleTime = 2.0;
   
-  let meteorTimer     = 0; // [신규] 운석 타이머
+  let meteorTimer     = 0; 
   let nextMeteorTime  = 4.0; 
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
@@ -471,20 +486,38 @@
   function scheduleNextObstacle(speedMultiplier) {
     if (activeEffects.turbo > 0) return;
     let baseTime = randBetween(1.8, 2.6);
-    nextObstacleTime = baseTime / (speedMultiplier * 0.8); 
-    if (nextObstacleTime < 0.25) nextObstacleTime = 0.25;
+    nextObstacleTime = baseTime / (1 + (speedMultiplier - 1) * 0.6); 
+    if (nextObstacleTime < 0.2) nextObstacleTime = 0.2;
   }
 
-  /* ------------ 장애물 생성 (다양성 추가) ------------ */
   function spawnObstacle() {
     if (!running) return;
     if (activeEffects.turbo > 0) return;
 
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
-    const useGroundBox = Math.random() < 0.5;
+    
+    // [수정됨] 100m 이상일 때 가로 장애물(Bar) 20% 확률 등장
+    let spawnHorizontal = (distance > 100) && (Math.random() < 0.20);
 
-    // 장애물 종류 랜덤 선택 (0: 통나무, 1: 돌기둥)
+    if (spawnHorizontal) {
+        // 가로 장애물 생성
+        const box = document.createElement("div");
+        box.classList.add("obstacle", "obs-long");
+        
+        // 바닥에 깔리거나, 살짝 떠서 점프 강요 (랜덤)
+        // 바닥형: bottom 0, 공중형: bottom 50
+        const isFlying = Math.random() < 0.5;
+        box.style.left = (window.innerWidth + 80) + "px";
+        box.style.bottom = isFlying ? "50px" : "0px"; 
+        
+        gameArea.appendChild(box);
+        obstacles.push(box);
+        return;
+    }
+
+    // 기존 세로 장애물 로직
+    const useGroundBox = Math.random() < 0.5;
     const obsTypeClass = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
 
     if (useGroundBox) {
@@ -497,7 +530,6 @@
 
     if (pattern.groundBox) {
       const box = document.createElement("div");
-      // obsTypeClass 추가
       box.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
       box.style.height = pattern.height + "px";
       box.style.left = startX + "px";
@@ -528,22 +560,16 @@
     obstacles.push(topObs, bottomObs);
   }
 
-  /* ------------ [신규] 운석 생성 ------------ */
-  function spawnMeteor() {
+  function spawnMeteor(speedMultiplier) {
     const meteor = document.createElement("div");
     meteor.classList.add("meteor");
-    
-    // 오른쪽 화면 밖 ~ 화면 안쪽 어딘가 랜덤 X
     const startX = window.innerWidth + Math.random() * 200;
-    const startY = -100; // 화면 위
-
+    const startY = -100; 
     meteor.style.left = startX + "px";
     meteor.style.top = startY + "px";
-    
-    // 속도 (거리 비례는 loop에서 처리)
     meteor.dataset.x = startX;
     meteor.dataset.y = startY;
-    
+    meteor.dataset.speed = 150 * speedMultiplier; 
     gameArea.appendChild(meteor);
     meteors.push(meteor);
   }
@@ -640,50 +666,37 @@
       }
     }
 
-    /* ------------ [신규] 운석 처리 ------------ */
     if (distance > 200 && activeEffects.turbo <= 0) {
-        // 운석 생성 타이머 (속도가 빠를수록 더 자주 생성)
         meteorTimer += delta;
-        // 200m일때는 느리게(3초), 3000m일때는 매우 빠르게(0.3초)
-        let meteorSpawnRate = 3.0 / (speedMultiplier * 0.8);
-        if (meteorSpawnRate < 0.3) meteorSpawnRate = 0.3;
-
+        let meteorSpawnRate = 3.0 / speedMultiplier;
+        if (meteorSpawnRate < 0.2) meteorSpawnRate = 0.2;
         if (meteorTimer > meteorSpawnRate) {
-            spawnMeteor();
+            spawnMeteor(speedMultiplier);
             meteorTimer = 0;
         }
     }
-
-    // 운석 이동 및 충돌
-    // 운석 속도도 게임 속도에 비례 (처음엔 천천히, 나중엔 총알같이)
-    let meteorSpeed = 150 * (1 + (progress * 14)); 
 
     for (let i = meteors.length - 1; i >= 0; i--) {
         let m = meteors[i];
         let x = parseFloat(m.dataset.x);
         let y = parseFloat(m.dataset.y);
+        let mSpeed = parseFloat(m.dataset.speed);
 
-        // 오른쪽 -> 왼쪽 대각선 낙하
-        x -= meteorSpeed * delta * 0.8; // X축 속도
-        y += meteorSpeed * delta * 1.0; // Y축 속도
+        x -= mSpeed * delta * 0.8; 
+        y += mSpeed * delta * 1.0; 
 
         m.style.left = x + "px";
         m.style.top = y + "px";
         m.dataset.x = x;
         m.dataset.y = y;
 
-        // 화면 밖으로 나가면 제거
         if (x < -100 || y > window.innerHeight + 100) {
-            m.remove();
-            meteors.splice(i, 1);
-            continue;
+            m.remove(); meteors.splice(i, 1); continue;
         }
 
-        // 충돌 체크 (무적 아닐 때만)
         if (!activeEffects.invincible && !invincible) {
             const rectP = player.getBoundingClientRect();
             const rectM = m.getBoundingClientRect();
-            // 운석은 원형에 가까우니 판정을 좀 더 작게
             const buffer = 15;
             if (
                 rectP.left + buffer < rectM.right - buffer &&
@@ -692,12 +705,10 @@
                 rectP.bottom - buffer > rectM.top + buffer
             ) {
                 damageLife();
-                m.remove(); // 충돌한 운석은 사라짐
-                meteors.splice(i, 1);
+                m.remove(); meteors.splice(i, 1);
             }
         }
     }
-
 
     if (activeEffects.turbo > 0) {
       let targetY = 200; playerY += (targetY - playerY) * 0.1; velocity = 0;
