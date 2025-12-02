@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* 스타일은 원본 그대로 유지 */
+    /* 1. 기본 설정 */
     :root {
       --hud-bg: rgba(255, 248, 235, 0.9);
       --hud-border: #3a2513;
@@ -34,9 +34,9 @@
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
       will-change: background-position;
     }
-    #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
-    #bgLayer2 { background-image: url("bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
-    #bgLayer3 { background-image: url("bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
+    #bgLayer1 { background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
+    #bgLayer2 { background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
+    #bgLayer3 { background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
 
     #ground { display: none; }
 
@@ -248,12 +248,11 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  // [추가] 사운드 시스템 초기화
+  // [복구] 사운드 시스템 (안전장치 포함)
   const sounds = {};
-  // bgm, jump, hit(피격), item, parry, clear
   ['bgm', 'jump', 'hit', 'item', 'parry', 'clear'].forEach(name => {
     sounds[name] = new Audio(`${name}.mp3`);
-    sounds[name].onerror = () => { sounds[name].loaded = false; };
+    sounds[name].onerror = () => { sounds[name].loaded = false; }; // 파일 없으면 무시
     sounds[name].oncanplaythrough = () => { sounds[name].loaded = true; };
     if(name==='bgm') sounds[name].loop = true;
   });
@@ -276,9 +275,9 @@
 
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '2.0' };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '3.0' }; // 버전 업데이트
   }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '2.0') {
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '3.0') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
@@ -348,7 +347,7 @@
   let missileTimer = 0;
 
   let itemTimer = 0;
-  let nextItemTime = 8; // [수정] 8초 간격으로 아이템 생성 시작
+  let nextItemTime = 8; // 아이템 생성 간격
   
   let skinTimer = 0;
   let abilityCD = 0;
@@ -398,7 +397,7 @@
     if (!running) return;
     if (activeEffects.turbo > 0 || activeEffects.fly > 0) return;
     velocity = jumpPower;
-    playSound('jump'); // [추가] 점프 소리
+    playSound('jump');
   }
   
   document.body.addEventListener("keydown", e => {
@@ -407,7 +406,6 @@
     if (e.code === "KeyS" && isBossBattle) useShield(); 
   });
   
-  // [수정] 버튼 클릭 시 점프 방지
   document.body.addEventListener("touchstart", (e) => {
       if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#shieldBtn')) return;
       jump();
@@ -424,7 +422,6 @@
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            // 안전한 거리 계산 (DOM 기준)
             const pRect = p.getBoundingClientRect();
             const plRect = player.getBoundingClientRect();
             const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
@@ -491,12 +488,17 @@
       <div class="mission-item ${m2}">🧠 퀴즈 3회 (${daily.quiz3}/3)</div>
       <div class="mission-item ${m3}">✝ Faith 20 (${Math.min(daily.faith20, 20)}/20)</div>
     `;
-    if(newHTML !== lastMissionHTML) { box.innerHTML = newHTML; lastMissionHTML = newHTML; }
+
+    if(newHTML !== lastMissionHTML) {
+        box.innerHTML = newHTML;
+        lastMissionHTML = newHTML;
+    }
   }
 
   function checkMissions() {
     if (daily.completed) return;
     if(distance < 5) return; 
+
     let changed = false;
     if (!daily.run200 && distance >= 200) { daily.run200 = true; changed = true; }
     if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
@@ -549,7 +551,7 @@
             updateBoss(safeDelta);
         } else {
             obstacleTimer += safeDelta;
-            // [수정] 퀴즈 2m 전 장애물 중지
+            // [수정] 퀴즈 전 2m부터 장애물 중지
             if (obstacleTimer >= nextObstacleTime && (nextQuizDistance - distance > 2)) {
                 spawnObstacle(); obstacleTimer = 0; 
                 let sm = gameSpeed / BASE_SPEED;
@@ -569,12 +571,12 @@
 
         updatePhysics(safeDelta);
         
-        /* [수정] 아이템 생성 타이머 로직 (무조건 실행되도록 위치 조정) */
+        // [복구] 아이템 생성 (무조건 생성되도록 최상위로 이동)
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
             spawnItem(); 
             itemTimer = 0; 
-            nextItemTime = 8 + Math.random() * 4; 
+            nextItemTime = 8 + Math.random() * 4; // 8~12초 랜덤
         }
 
         for (let i = items.length - 1; i >= 0; i--) {
@@ -594,6 +596,7 @@
             }
         }
         
+        // [복구] 배경 이동 (무조건 이동되도록)
         let speedMult = (gameSpeed / BASE_SPEED); 
         bg1X -= BG1_SPEED * speedMult * safeDelta;
         bg2X -= BG2_SPEED * speedMult * safeDelta;
@@ -874,9 +877,7 @@
     if(life<=0) gameOver();
   }
 
-  function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
-  
-  // [수정] 사운드 언락 기능 추가
+  // [수정] 오디오 언락 추가
   function unlockAudio() {
       for(let key in sounds) {
           sounds[key].play().then(() => {
@@ -887,20 +888,13 @@
       playSound('bgm');
   }
 
-  function startGameNow() { 
-      document.getElementById("startGuide").style.display="none"; 
-      running=true; 
-      lastTime=performance.now(); 
-      unlockAudio(); // 오디오 잠금 해제
-      requestAnimationFrame(gameLoop); 
-      updateDailyMissionUI(); 
-  }
-  
+  function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
+  function startGameNow() { document.getElementById("startGuide").style.display="none"; running=true; lastTime=performance.now(); unlockAudio(); requestAnimationFrame(gameLoop); updateDailyMissionUI(); }
   async function saveProgress() { try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"save",id,saveData})});}catch(e){} localStorage.setItem("run_save",JSON.stringify(saveData)); }
   async function gameOver() { if(rankingSaved)return; running=false; invincible=true; player.style.opacity="0.4"; document.getElementById("finalDist").innerText=Math.floor(distance); document.getElementById("gameOverModal").style.display="flex"; try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})});}catch(e){} rankingSaved=true; }
   async function confirmRanking() { const msg=document.getElementById("rankMsg").value.trim(); try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateComment",id,message:msg})}); alert("등록완료"); window.location.href="/TrapGame/menu.html";}catch(e){alert("오류"); window.location.href="/TrapGame/menu.html";} }
   
-  // [수정] 무한 대기
+  // [수정] 퀴즈 무한 대기
   async function pauseForQuiz() {
     if (!running) return;
     running = false; document.getElementById("loadingQuiz").style.display = "flex";
@@ -917,7 +911,8 @@
       window.correctAnswer = quiz.answer;
       document.getElementById("quizModal").style.display = "flex";
     } catch (err) {
-      alert("퀴즈를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.");
+      // 에러 발생 시에도 재개하지 않음
+      alert("퀴즈 로딩 실패. 인터넷 연결을 확인하세요.");
     }
   }
 
