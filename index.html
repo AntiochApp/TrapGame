@@ -3,178 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <title>안디옥 청년부 게임 – Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
 <style>
   :root {
-    --bg-main: #f4f0e4;
-    --bg-panel: #fdfaf2;
+    --bg-panel: rgba(253, 250, 242, 0.95); /* 반투명 패널 */
     --border-dark: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
-    --accent-light: #ffe1a8;
     --text-main: #3a2513;
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background:
-      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
-      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0; padding: 0; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    /* [개선] 게임과 동일한 하늘 배경 적용 */
+    background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
+    background-size: cover;
+    background-attachment: fixed; /* 배경 고정 */
+    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
     color: var(--text-main);
   }
 
+  /* 배경 오버레이 (가독성 확보) */
+  body::before {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 248, 235, 0.3); z-index: -1;
+  }
+
   .pixel-card {
-    width: 100%;
-    max-width: 420px;
-    padding: 28px 26px 24px;
+    width: 90%; max-width: 400px;
+    padding: 32px 24px;
     background: var(--bg-panel);
-    border-radius: 12px;
+    border-radius: 16px;
     border: 4px solid var(--border-dark);
-    box-shadow:
-      0 0 0 4px #fff,
-      0 8px 0 0 #b79b76,
-      0 12px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 12px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(5px);
+    transition: transform 0.3s ease;
   }
 
   .pixel-title {
-    text-align: center;
-    font-size: 26px;
-    font-weight: 800;
-    margin: 0 0 10px;
-    letter-spacing: 0.03em;
+    text-align: center; font-size: 24px; font-weight: 900;
+    margin: 0 0 8px; letter-spacing: -0.02em; color: #4b2e12;
   }
 
   .pixel-sub {
-    text-align: center;
-    font-size: 13px;
-    color: #72614b;
-    margin-bottom: 18px;
+    text-align: center; font-size: 13px; color: #8a735a; margin-bottom: 24px;
+    font-weight: 600;
   }
 
-  .avatar-row {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-
+  /* 캐릭터 아이콘 (이미지 없을 때 이모지 보이게 설정) */
+  .avatar-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
   .avatar {
-    width: 32px;
-    height: 32px;
-    background: #f8d7a2;
-    border-radius: 4px;
-    border: 3px solid var(--border-dark);
-    image-rendering: pixelated;
-    background-size: cover;
-    background-position: center;
+    width: 42px; height: 42px;
+    background: #fff; border-radius: 8px;
+    border: 3px solid #e0d8c8;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 24px; cursor: default;
+    box-shadow: 0 4px 0 #d7ccc0;
+    background-size: cover; background-position: center;
   }
-
-  /* 여기 나중에 픽셀 성경 인물 이미지 경로 넣으면 됨 */
-  .avatar.moses { background-image: url("pixel_moses.png"); }
+  
+  /* 이미지가 있으면 이모지를 덮어씀 */
+  .avatar.moses { background-image: url("pixel_moses.png"); } 
   .avatar.david { background-image: url("pixel_david.png"); }
   .avatar.peter { background-image: url("pixel_peter.png"); }
 
-  label {
-    display: block;
-    font-size: 13px;
-    margin-top: 10px;
-    margin-bottom: 4px;
-  }
+  label { display: block; font-size: 13px; margin-top: 12px; margin-bottom: 6px; font-weight: 700; color: #5d4037; }
 
   input {
-    width: 100%;
-    padding: 11px 12px;
-    border-radius: 8px;
-    border: 3px solid #c9b79c;
-    font-size: 14px;
-    background: #fffdf7;
-    outline: none;
+    width: 100%; padding: 12px 14px; border-radius: 8px;
+    border: 2px solid #c9b79c; font-size: 15px; background: #fff; outline: none;
+    transition: border 0.2s;
   }
-  input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(196, 122, 63, 0.25);
-  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196, 122, 63, 0.15); }
 
   .btn-main {
-    width: 100%;
-    padding: 13px;
-    margin-top: 18px;
-    border-radius: 10px;
-    border: 0;
-    background: var(--accent);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 0 var(--accent-dark);
+    width: 100%; padding: 14px; margin-top: 24px; border-radius: 10px; border: 0;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 800;
+    cursor: pointer; box-shadow: 0 4px 0 var(--accent-dark); transition: transform 0.1s;
   }
-  .btn-main:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--accent-dark);
-  }
+  .btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
+  .btn-main:disabled { background: #aaa; box-shadow: none; cursor: not-allowed; }
 
-  .link-row {
-    text-align: center;
-    margin-top: 14px;
-    font-size: 13px;
-  }
+  .link-row { text-align: center; margin-top: 18px; font-size: 13px; color: #888; }
   .link-btn {
-    cursor: pointer;
-    color: var(--accent-dark);
-    text-decoration: underline;
-    margin: 0 6px;
+    cursor: pointer; color: var(--accent-dark); font-weight: bold;
+    margin: 0 8px; display: inline-block; padding: 4px;
   }
+  .link-btn:hover { text-decoration: underline; }
 
-  .hidden {
-    display: none;
-  }
+  .hidden { display: none; }
 
   .spinner {
-    width: 24px;
-    height: 24px;
-    border: 4px solid #e2d5c2;
-    border-top: 4px solid var(--accent);
-    border-radius: 50%;
-    margin: 10px auto 0;
-    display: none;
-    animation: spin 0.9s linear infinite;
+    width: 24px; height: 24px; border: 4px solid #e2d5c2;
+    border-top: 4px solid var(--accent); border-radius: 50%;
+    margin: 16px auto 0; display: none; animation: spin 0.9s linear infinite;
   }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-
-  .shake {
-    animation: shake 0.3s ease-in-out;
-  }
-
+  .shake { animation: shake 0.4s ease-in-out; }
   @keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-    100% { transform: translateX(0); }
-  }
-
-  @media (max-width: 600px) {
-    .pixel-card {
-      max-width: 90%;
-      padding: 22px 18px 20px;
-    }
-    .pixel-title {
-      font-size: 22px;
-    }
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
   }
 </style>
 </head>
@@ -182,20 +116,20 @@
 <body>
 
 <div class="pixel-card" id="loginBox">
-  <h1 class="pixel-title">ANTIOCH YOUNG ADULT GROUP</h1>
-  <div class="pixel-sub">예수님을 따라가는 여정을 그렸습니다!</div>
+  <h1 class="pixel-title">Disciple Run</h1>
+  <div class="pixel-sub">안디옥 청년부 홀리 스파크 런!</div>
 
   <div class="avatar-row">
-    <div class="avatar moses"></div>
-    <div class="avatar david"></div>
-    <div class="avatar peter"></div>
+    <div class="avatar moses" title="모세">🧔‍♂️</div>
+    <div class="avatar david" title="다윗">🤴</div>
+    <div class="avatar peter" title="베드로">🐟</div>
   </div>
 
   <label for="loginId">ID</label>
-  <input id="loginId" type="text" autocomplete="username">
+  <input id="loginId" type="text" autocomplete="username" placeholder="아이디 입력">
 
   <label for="loginPw">Password</label>
-  <input id="loginPw" type="password" autocomplete="current-password">
+  <input id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호 입력" onkeypress="handleEnter(event, login)">
 
   <button class="btn-main" onclick="login()" id="loginBtn">로그인</button>
   <div id="loginSpinner" class="spinner"></div>
@@ -208,43 +142,43 @@
 
 <div class="pixel-card hidden" id="signupBox">
   <h1 class="pixel-title">회원가입</h1>
-  <div class="pixel-sub">나만의 픽셀 제자를 만들어 보세요</div>
+  <div class="pixel-sub">나만의 신앙 여정을 시작해보세요</div>
 
   <label for="newId">ID</label>
-  <input id="newId" type="text">
+  <input id="newId" type="text" placeholder="사용할 아이디">
 
   <label for="newPw">Password</label>
-  <input id="newPw" type="password">
+  <input id="newPw" type="password" placeholder="사용할 비밀번호">
 
   <label for="newName">이름</label>
-  <input id="newName" type="text">
+  <input id="newName" type="text" placeholder="본명 (랭킹 표시용)">
 
   <label for="newBible">좋아하는 성경 인물</label>
-  <input id="newBible" type="text" placeholder="예: 다윗, 바울">
+  <input id="newBible" type="text" placeholder="예: 다윗, 바울 (비밀번호 찾기 질문)">
 
   <button class="btn-main" onclick="signup()" id="signupBtn">가입하기</button>
   <div id="signupSpinner" class="spinner"></div>
 
   <div class="link-row">
-    <span class="link-btn" onclick="showLogin()">로그인으로 돌아가기</span>
+    <span class="link-btn" onclick="showLogin()">← 로그인으로 돌아가기</span>
   </div>
 </div>
 
 <div class="pixel-card hidden" id="findPwBox">
   <h1 class="pixel-title">비밀번호 찾기</h1>
-  <div class="pixel-sub">이름과 좋아하는 인물로 찾을 수 있어요</div>
+  <div class="pixel-sub">가입 시 입력한 정보를 적어주세요</div>
 
   <label for="findName">이름</label>
   <input id="findName" type="text">
 
   <label for="findBible">좋아하는 성경 인물</label>
-  <input id="findBible" type="text">
+  <input id="findBible" type="text" onkeypress="handleEnter(event, findPw)">
 
-  <button class="btn-main" onclick="findPw()" id="findPwBtn">비밀번호 찾기</button>
+  <button class="btn-main" onclick="findPw()" id="findPwBtn">찾기</button>
   <div id="findPwSpinner" class="spinner"></div>
 
   <div class="link-row">
-    <span class="link-btn" onclick="showLogin()">로그인으로 돌아가기</span>
+    <span class="link-btn" onclick="showLogin()">← 로그인으로 돌아가기</span>
   </div>
 </div>
 
@@ -255,31 +189,45 @@
   const signupBox = document.getElementById("signupBox");
   const findPwBox = document.getElementById("findPwBox");
 
+  // [신규] 엔터키 입력 시 동작 함수
+  function handleEnter(e, func) {
+    if (e.key === "Enter") func();
+  }
+
   function showSignup() {
+    clearInputs();
     loginBox.classList.add("hidden");
     signupBox.classList.remove("hidden");
     findPwBox.classList.add("hidden");
   }
   function showFindPw() {
+    clearInputs();
     loginBox.classList.add("hidden");
     signupBox.classList.add("hidden");
     findPwBox.classList.remove("hidden");
   }
   function showLogin() {
+    clearInputs();
     loginBox.classList.remove("hidden");
     signupBox.classList.add("hidden");
     findPwBox.classList.add("hidden");
   }
 
+  function clearInputs() {
+    document.querySelectorAll("input").forEach(el => el.value = "");
+  }
+
   // 로그인
   async function login() {
-    const id = loginId.value.trim();
-    const pw = loginPw.value.trim();
-    const btn = loginBtn;
-    const spinner = loginSpinner;
+    const idInput = document.getElementById("loginId");
+    const pwInput = document.getElementById("loginPw");
+    const id = idInput.value.trim();
+    const pw = pwInput.value.trim();
+    const btn = document.getElementById("loginBtn");
+    const spinner = document.getElementById("loginSpinner");
 
     if (!id || !pw) {
-      alert("ID와 비밀번호를 입력해주세요.");
+      alert("ID와 비밀번호를 모두 입력해주세요.");
       return;
     }
 
@@ -295,22 +243,23 @@
       const txt = await res.text();
 
       if (txt === "fail") {
-        alert("로그인 실패! ID/PW를 확인하세요.");
-        btn.classList.add("shake");
-        setTimeout(() => btn.classList.remove("shake"), 400);
+        alert("로그인 실패!\nID 혹은 비밀번호가 틀렸습니다.");
+        loginBox.classList.add("shake");
+        setTimeout(() => loginBox.classList.remove("shake"), 400);
       } else {
         const data = JSON.parse(txt);
-
+        // 로컬 스토리지 저장
         localStorage.setItem("run_id", id);
         localStorage.setItem("run_name", data.name);
         localStorage.setItem("run_bible", data.bible);
         localStorage.setItem("run_save", JSON.stringify(data.saveData));
 
-        // GitHub Pages 경로 맞추기
+        // 페이지 이동
         window.location.href = "/TrapGame/menu.html";
       }
     } catch (e) {
-      alert("네트워크 오류가 발생했습니다.");
+      console.error(e);
+      alert("서버 연결에 실패했습니다. 인터넷 상태를 확인해주세요.");
     }
 
     btn.disabled = false;
@@ -319,32 +268,38 @@
 
   // 회원가입
   async function signup() {
-    const id = newId.value.trim();
-    const pw = newPw.value.trim();
-    const name = newName.value.trim();
-    const bible = newBible.value.trim();
+    const id = document.getElementById("newId").value.trim();
+    const pw = document.getElementById("newPw").value.trim();
+    const name = document.getElementById("newName").value.trim();
+    const bible = document.getElementById("newBible").value.trim();
 
     if (!id || !pw || !name || !bible) {
-      alert("모든 칸을 입력해주세요!");
+      alert("모든 정보를 입력해주세요!");
       return;
     }
 
-    const btn = signupBtn;
-    const spinner = signupSpinner;
+    const btn = document.getElementById("signupBtn");
+    const spinner = document.getElementById("signupSpinner");
 
     btn.disabled = true;
     spinner.style.display = "block";
 
     try {
-      await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "signup", id, password: pw, name, bible })
       });
-
-      alert("회원가입 완료! 이제 로그인해주세요.");
-      showLogin();
+      
+      const txt = await res.text();
+      
+      if(txt === "exist") {
+        alert("이미 존재하는 ID입니다.");
+      } else {
+        alert("회원가입 환영합니다! 🎉\n이제 로그인 해주세요.");
+        showLogin();
+      }
     } catch (e) {
-      alert("회원가입 중 오류가 발생했습니다.");
+      alert("회원가입 처리 중 오류가 발생했습니다.");
     }
 
     btn.disabled = false;
@@ -353,16 +308,17 @@
 
   // 비밀번호 찾기
   async function findPw() {
-    const name = findName.value.trim();
-    const bible = findBible.value.trim();
+    const name = document.getElementById("findName").value.trim();
+    const bible = document.getElementById("findBible").value.trim();
 
     if (!name || !bible) {
       alert("이름과 좋아하는 성경 인물을 입력해주세요.");
       return;
     }
 
-    const btn = findPwBtn;
-    const spinner = findPwSpinner;
+    const btn = document.getElementById("findPwBtn");
+    const spinner = document.getElementById("findPwSpinner");
+    
     btn.disabled = true;
     spinner.style.display = "block";
 
@@ -375,13 +331,13 @@
       const txt = await res.text();
 
       if (txt === "notfound") {
-        alert("정보가 일치하지 않습니다!");
+        alert("일치하는 정보를 찾을 수 없습니다.");
       } else {
         const data = JSON.parse(txt);
-        alert(`ID: ${data.id}\nPW: ${data.password}`);
+        alert(`[정보 확인]\nID: ${data.id}\nPW: ${data.password}`);
       }
     } catch (e) {
-      alert("비밀번호 찾기 중 오류가 발생했습니다.");
+      alert("오류가 발생했습니다.");
     }
 
     btn.disabled = false;
