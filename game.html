@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Fixed Final</title>
+  <title>Disciple Run – Fixed Final V2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -31,7 +31,8 @@
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
+    /* 아이템 스타일: 이미지가 없어도 보이도록 배경색 추가 */
+    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
     .projectile { position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; }
@@ -41,13 +42,14 @@
     .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* 파티클 */
     .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
     @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
+    
+    /* [수정] 버프 표시 영역 스타일 개선 */
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
-    .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; }
+    .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 
     #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; }
@@ -100,7 +102,7 @@
         • <b>A키 / 버튼</b>: 특수능력<br>
         • <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)<br><br>
         [아이템 효과]<br>
-        ✝️ <b>십자가:</b> 무적 / 🕊️ <b>날개:</b> 터보<br>
+        ✝️ <b>십자가:</b> 무적 / 🕊️ <b>Wings:</b> 터보<br>
         🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
@@ -155,18 +157,18 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  // 사운드 시스템 [수정 완료: BGM 바로 재생을 위해 로딩체크 제거]
+  // [수정] 사운드 시스템: BGM 자동 재생 이슈 해결
   const sounds = {};
   ['bgm', 'jump', 'hit', 'item', 'parry', 'clear'].forEach(name => {
     sounds[name] = new Audio(`${name}.mp3`);
-    sounds[name].onerror = () => { sounds[name].loaded = false; };
-    sounds[name].oncanplaythrough = () => { sounds[name].loaded = true; };
-    if(name==='bgm') sounds[name].loop = true;
+    if(name==='bgm') {
+        sounds[name].loop = true;
+        sounds[name].volume = 0.5; // 배경음 볼륨 약간 줄임
+    }
   });
 
   function playSound(name) {
     if(sounds[name]) {
-        // [수정] loaded 여부 상관없이 재생 시도 (버퍼링)
         sounds[name].currentTime = 0;
         sounds[name].play().catch(()=>{});
     }
@@ -187,7 +189,6 @@
   let life = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
-  let lvlInvincible = saveData.up_invincible || 0; let lvlTurbo = saveData.up_turbo || 0; let lvlSlow = saveData.up_slow || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
   const SKIN_DATA = {
@@ -210,7 +211,7 @@
   if (currentSkin !== 'default') player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
   else player.style.backgroundImage = `url('disciple.png')`;
 
-  let buffArea = document.getElementById("buffArea") || createEl("div", "buffArea", document.body);
+  let buffArea = document.getElementById("buffArea");
   let speedLines = document.getElementById("speedLines") || createEl("div", "speedLines", gameArea, player);
 
   function createEl(tag, id, parent, before) {
@@ -234,13 +235,14 @@
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let meteorTimer = 0; let missileTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
-  let skinTimer = 0; let abilityCD = 0;
+  let abilityCD = 0;
   let missionUpdateTimer = 0;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
   let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
+  // [수정] 초기화 시 NaN 방지
   let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0 };
 
   let isBossBattle = false;
@@ -252,7 +254,6 @@
   let bossHpFill = document.getElementById('bossHpFill');
   let shieldBtn = document.getElementById('shieldBtn');
   let shieldCooldown = 0;
-  let bossLaserElem = document.getElementById('bossLaser');
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
@@ -285,7 +286,6 @@
   });
    
   document.body.addEventListener("touchstart", (e) => {
-      // 버튼 터치 시 점프 방지
       if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#shieldBtn')) return;
       jump();
   });
@@ -331,8 +331,33 @@
     abilityCD = s.cd;
   }
 
+  // [수정] 버프 시간 표시 로직 추가 (화면에 남은 초 렌더링)
   function updateBuffUI(delta) {
-    for(let k in activeEffects) if(activeEffects[k] > 0) activeEffects[k] -= delta;
+    const buffContainer = document.getElementById("buffArea");
+    buffContainer.innerHTML = ""; // 기존 내용 초기화
+
+    // 효과 감소 및 UI 렌더링
+    for(let k in activeEffects) {
+        if(activeEffects[k] > 0) {
+            activeEffects[k] -= delta;
+            // 시간이 남았을 때만 배지 표시
+            if(activeEffects[k] > 0) {
+                let color = "#fff";
+                let icon = "";
+                let label = k;
+                if(k === 'invincible') { color = "#ffd700"; icon = "🛡️"; label = "무적"; }
+                else if(k === 'turbo') { color = "#00e5ff"; icon = "🚀"; label = "터보"; }
+                else if(k === 'slow') { color = "#90ee90"; icon = "🍃"; label = "감속"; }
+                else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
+                else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
+                
+                buffContainer.innerHTML += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
+            }
+        } else {
+            activeEffects[k] = 0; // 음수나 NaN 방지
+        }
+    }
+
     if(shieldCooldown > 0) {
         shieldCooldown -= delta;
         if(shieldCooldown <= 0) shieldBtn.classList.remove('cooldown');
@@ -442,7 +467,6 @@
 
         updatePhysics(safeDelta);
         
-        // [복구 완료] 아이템 생성 로직
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
             spawnItem(); 
@@ -467,7 +491,6 @@
             }
         }
         
-        // [복구] 배경 움직임
         let speedMult = (gameSpeed / BASE_SPEED); 
         bg1X -= BG1_SPEED * speedMult * safeDelta;
         bg2X -= BG2_SPEED * speedMult * safeDelta;
@@ -481,14 +504,18 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // [추가 완료] 아이템 생성 함수 (기존에 누락됨)
+  // [수정] 아이템 생성: Wings.png 이름 반영 및 대체 색상 제공
   function spawnItem() {
     const types = ['invincible', 'turbo', 'slow', 'faith'];
     const images = { 
         'invincible': 'url("item_cross.png")', 
-        'turbo': 'url("item_wing.png")', 
+        'turbo': 'url("itme_wings.png")',  // [중요] 사용자가 언급한 파일명으로 변경
         'slow': 'url("item_wind.png")', 
         'faith': 'url("item_bible.png")' 
+    };
+    
+    const colors = {
+        'invincible': 'gold', 'turbo': 'cyan', 'slow': 'lightgreen', 'faith': 'blue'
     };
     
     const item = document.createElement("div");
@@ -496,9 +523,9 @@
     
     item.classList.add("item");
     item.dataset.type = type;
-    item.style.backgroundImage = images[type]; // 이미지 설정
+    item.style.backgroundImage = images[type]; 
+    item.style.backgroundColor = colors[type]; // 이미지가 없으면 색깔이라도 나오게 함
     
-    // 위치 설정
     item.x = window.innerWidth + 50;
     item.style.left = item.x + "px";
     item.style.top = randBetween(100, window.innerHeight - 150) + "px";
@@ -507,7 +534,6 @@
     items.push(item);
   }
 
-  // [추가 완료] 아이템 효과 발동 함수 (기존에 누락됨)
   function activateItem(type) {
     if(type === 'invincible') { activeEffects.invincible = 10; showFloatText("🛡️ 무적!"); }
     else if(type === 'turbo') { activeEffects.turbo = 5; showFloatText("🚀 터보!"); }
@@ -521,7 +547,9 @@
     bossLevel++;
     boss.maxHp = 6 + (bossLevel-1)*4;
     boss.hp = boss.maxHp;
-     
+    // [수정] 보스전 시작 시 무적 상태 초기화 (버그 방지)
+    invincible = false;
+    
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning');
     warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
@@ -538,7 +566,6 @@
 
   function updateBoss(delta) {
     if (boss.hp <= 0) return;
-     
     boss.actionTimer += delta;
     if (boss.state === 'idle') {
         boss.y += boss.vy;
@@ -559,19 +586,16 @@
     boss.state = 'dash';
     bossBody.classList.add('boss-charging');
     showFloatText("💢 돌진 준비!");
-     
     setTimeout(() => {
         bossBody.classList.remove('boss-charging');
         bossBody.classList.add('boss-dashing');
         bossContainer.style.transition = "right 0.5s ease-in";
         bossContainer.style.right = "80%"; 
-         
         setTimeout(() => {
              if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) {
                  damageLife();
              }
         }, 250);
-
         setTimeout(() => {
             bossContainer.style.right = "20px";
             bossBody.classList.remove('boss-dashing');
@@ -584,21 +608,18 @@
   function startBossLaser() {
     boss.state = 'laser';
     showFloatText("⚡ 레이저 충전!");
-     
     setTimeout(() => {
         const laser = document.createElement('div');
         laser.className = 'boss-laser';
         laser.style.top = (boss.y + 5) + "%";
         laser.style.display = 'block';
         gameArea.appendChild(laser);
-        
         let checkLaser = setInterval(() => {
             let laserH = (100 - boss.y) / 100 * window.innerHeight;
             if (Math.abs(playerY - laserH + 50) < 40 && !invincible) { 
                  damageLife();
             }
         }, 50);
-
         setTimeout(() => {
             clearInterval(checkLaser);
             laser.remove();
@@ -659,11 +680,13 @@
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
+    // [수정] 충돌 판정 로직 안전장치 추가 및 여유 범위 확보
+    const safeActive = (val) => (val && val > 0);
+
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         let cx = parseFloat(p.style.left) || p.x;
         let cy = parseFloat(p.style.top) || p.y;
-        
         cx += p.vx * delta; cy += p.vy * delta;
         p.style.left = cx + "px"; p.style.top = cy + "px";
 
@@ -671,10 +694,11 @@
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
-        if (!p.isReflected && !activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
+        if (!p.isReflected && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
             const rP = player.getBoundingClientRect();
             const rM = p.getBoundingClientRect();
-            if (rP.right > rM.left + 10 && rP.left < rM.right - 10 && rP.bottom > rM.top + 10 && rP.top < rM.bottom - 10) {
+            // 충돌 박스 여유 0으로 수정 (더 잘 맞게)
+            if (rP.right > rM.left && rP.left < rM.right && rP.bottom > rM.top && rP.top < rM.bottom) {
                 damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
@@ -709,10 +733,12 @@
             continue;
         }
         
-        if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
+        // [수정] 충돌 무시 조건문 단순화 (버그 수정)
+        if (!safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
             const rP = player.getBoundingClientRect();
             const rO = o.getBoundingClientRect();
-            if (rP.right > rO.left + 10 && rP.left < rO.right - 10 && rP.bottom > rO.top + 10 && rP.top < rO.bottom - 10) {
+            // 충돌 박스 여유 0으로 수정
+            if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
                 damageLife(); break;
             }
         }
@@ -783,20 +809,18 @@
     if(life<=0) gameOver();
   }
 
-  function unlockAudio() {
-      for(let key in sounds) {
-          sounds[key].play().then(() => {
-              sounds[key].pause();
-              sounds[key].currentTime = 0;
-          }).catch(()=>{});
-      }
-      playSound('bgm');
-  }
-
   function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
-  function startGameNow() { document.getElementById("startGuide").style.display="none"; running=true; lastTime=performance.now(); unlockAudio(); requestAnimationFrame(gameLoop); updateDailyMissionUI(); }
+  
+  // [수정] 게임 시작 시 BGM 강제 재생 (크롬 정책 대응)
+  function startGameNow() { 
+      document.getElementById("startGuide").style.display="none"; 
+      running=true; 
+      lastTime=performance.now(); 
+      if(sounds['bgm']) sounds['bgm'].play().catch(e=>console.log("BGM Error:", e));
+      requestAnimationFrame(gameLoop); 
+      updateDailyMissionUI(); 
+  }
    
-  // [수정 완료] 저장 시 화면의 faith 점수를 강제로 동기화
   async function saveProgress() { 
     saveData.faith = faith; 
     try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"save",id,saveData})});}catch(e){} localStorage.setItem("run_save",JSON.stringify(saveData)); 
