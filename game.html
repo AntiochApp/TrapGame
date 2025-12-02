@@ -2,10 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final Complete</title>
+  <title>Disciple Run – Final Fix</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
+    /* 스타일은 완벽하므로 유지 */
     :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
@@ -72,6 +73,7 @@
 
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
+    
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
     @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
     #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; font-weight: 900; text-shadow: 3px 3px #000; }
@@ -79,8 +81,6 @@
 
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; text-align: center; }
-    .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
-    .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
     .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
     .modal-input { width: 85%; padding: 12px; border-radius: 8px; border: 2px solid #b8a792; display: block; margin: 8px auto; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
@@ -157,9 +157,9 @@
 
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.9' };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '2.0' };
   }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.9') {
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '2.0') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
@@ -362,15 +362,18 @@
 
         if (!isBossBattle && distance >= 200 && boss.hp > 0) { startBossBattle(); }
 
-        /* [복구됨] 퀴즈 타이머 로직 */
+        /* [확인] 퀴즈 타이머 로직 (누락되었던 부분 복구됨) */
         quizTimer += safeDelta;
-        if (quizTimer >= 30) { quizTimer = 0; pauseForQuiz(); return; }
+        if (quizTimer >= 30) { 
+            quizTimer = 0; 
+            // 보스전 아닐 때만 퀴즈 호출
+            if(!isBossBattle) { pauseForQuiz(); return; }
+        }
 
         if (isBossBattle) {
             updateBoss(safeDelta);
         } else {
             obstacleTimer += safeDelta;
-            // 퀴즈 3초 전에는 장애물 생성 금지 (안전장치)
             if (obstacleTimer >= nextObstacleTime && quizTimer < 27) {
                 spawnObstacle(); obstacleTimer = 0; 
                 let sm = gameSpeed / BASE_SPEED;
@@ -390,6 +393,7 @@
 
         updatePhysics(safeDelta);
         
+        /* [확인] 아이템 생성 로직 (누락되었던 부분 복구됨) */
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
             let limit = (currentSkin==='jihye') ? 4 : 8; 
@@ -520,9 +524,8 @@
         }
 
         if (isBossBattle && p.isReflected) {
-            const bX = window.innerWidth - 150; 
-            const bY = (boss.y / 100) * window.innerHeight;
-            if (p.x > bX && p.x < bX + 120 && p.y > bY && p.y < bY + 120) {
+            const bRect = bossContainer.getBoundingClientRect();
+            if (p.x > bRect.left && p.x < bRect.right && p.y > bRect.top && p.y < bRect.bottom) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
@@ -576,8 +579,7 @@
   function spawnMissile(mult) { 
     const m = document.createElement("div"); m.classList.add("projectile", "missile-style");
     const sx = window.innerWidth+50; const sy = Math.random()*(window.innerHeight-100);
-    const rect = player.getBoundingClientRect();
-    const px = rect.left + rect.width/2; const py = rect.top + rect.height/2;
+    const px = 150; const py = window.innerHeight - playerY - 30;
     const dx=px-sx; const dy=py-sy; const d=Math.sqrt(dx*dx+dy*dy);
     let s = 250 + (mult * 250);
     m.style.left=sx+"px"; m.style.top=sy+"px";
