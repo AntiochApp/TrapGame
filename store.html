@@ -11,417 +11,389 @@
     --border-dark: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
-    --accent-light: #ffe1a8;
     --text-main: #3a2513;
   }
 
   * { box-sizing: border-box; }
 
   body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
+    margin: 0; padding: 0; min-height: 100vh;
     background:
       linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
       linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
     color: var(--text-main);
-    display: flex;
-    flex-direction: column; 
+    display: flex; flex-direction: column;
   }
 
   /* 상단바 */
   .top-bar {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 18px;
-    background: #3b2614;
-    color: #fbe8c4;
-    font-size: 14px;
-    border-bottom: 4px solid #1f130b;
-    flex-shrink: 0; 
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px; background: #3b2614; color: #fbe8c4;
+    font-size: 14px; border-bottom: 4px solid #1f130b; flex-shrink: 0;
   }
-
   .top-bar button {
-    padding: 6px 14px;
-    font-size: 12px;
-    border-radius: 8px;
-    border: 0;
-    background: var(--accent);
-    color: #fff;
-    cursor: pointer;
+    padding: 6px 14px; font-size: 12px; border-radius: 8px; border: 0;
+    background: var(--accent); color: #fff; cursor: pointer;
     box-shadow: 0 3px 0 var(--accent-dark);
   }
-  .top-bar button:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--accent-dark);
-  }
+  .top-bar button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dark); }
 
   /* 컨테이너 */
   .container {
-    max-width: 460px;
-    width: 90%;
-    margin: auto; 
-    background: var(--bg-panel);
-    padding: 28px 24px 22px;
-    border-radius: 12px;
-    border: 4px solid var(--border-dark);
-    box-shadow:
-      0 0 0 4px #fff,
-      0 8px 0 0 #b79b76,
-      0 12px 12px rgba(0,0,0,0.25);
+    max-width: 480px; width: 95%; margin: 20px auto;
+    background: var(--bg-panel); padding: 20px;
+    border-radius: 12px; border: 4px solid var(--border-dark);
+    box-shadow: 0 0 0 4px #fff, 0 8px 0 0 #b79b76;
   }
 
-  h1 {
-    text-align: center;
-    color: #4b2e12;
-    margin-bottom: 18px;
-  }
+  h1 { text-align: center; color: #4b2e12; margin-bottom: 15px; }
 
+  /* 탭 버튼 스타일 */
+  .tab-container {
+    display: flex; gap: 10px; margin-bottom: 20px;
+  }
+  .tab-btn {
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 16px; font-weight: bold; cursor: pointer;
+    background: #e0d8c8; color: #776e65;
+    box-shadow: 0 4px 0 #bcaaa4; transition: all 0.1s;
+  }
+  .tab-btn.active {
+    background: var(--accent); color: white;
+    box-shadow: 0 4px 0 var(--accent-dark);
+  }
+  .tab-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
+
+  /* 아이템 카드 스타일 */
   .item {
-    border: 3px solid #cfb99a;
-    padding: 14px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    background: #faf8f3;
-    position: relative;
+    border: 3px solid #cfb99a; padding: 14px; border-radius: 10px;
+    margin-bottom: 12px; background: #faf8f3; position: relative;
   }
+  .item h2 { font-size: 17px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; }
+  .lvl-badge { font-size: 12px; background: #8b4f26; color: #fff; padding: 2px 6px; border-radius: 4px; }
+  .item p { margin: 4px 0; color: #4b3b2a; font-size: 13px; line-height: 1.4; }
 
-  .item h2 {
-    font-size: 18px;
-    margin: 0 0 6px;
-    display: flex;
-    justify-content: space-between;
+  /* 스킨 전용 스타일 */
+  .skin-tag {
+    font-size: 11px; padding: 3px 6px; border-radius: 4px; color: #fff; font-weight: bold;
+    margin-right: 5px; vertical-align: middle;
   }
-  
-  .lvl-badge {
-    font-size: 12px;
-    background: #8b4f26;
-    color: #fff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    vertical-align: middle;
-  }
-
-  .item p {
-    margin: 5px 0;
-    color: #4b3b2a;
-    font-size: 13px;
-  }
+  .tag-active { background: #d32f2f; }  /* 액티브 스킬 */
+  .tag-passive { background: #1976D2; } /* 패시브 스킬 */
 
   .buy-btn {
-    width: 100%;
-    padding: 11px;
-    border: none;
-    border-radius: 9px;
-    background: var(--accent);
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 8px;
-    box-shadow: 0 3px 0 var(--accent-dark);
-    transition: all 0.1s;
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--accent); color: white; font-size: 15px; font-weight: bold;
+    cursor: pointer; margin-top: 8px; box-shadow: 0 3px 0 var(--accent-dark);
   }
-  .buy-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--accent-dark);
-  }
+  .buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dark); }
+  .buy-btn:disabled { background-color: #aaa; color: #eee; cursor: not-allowed; box-shadow: none; transform: none; }
   
-  /* [추가] 비활성화 버튼 스타일 (Max 레벨 도달 시) */
-  .buy-btn:disabled {
-    background-color: #aaa;
-    color: #eee;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-  }
+  /* 장착 버튼 스타일 */
+  .btn-equip { background: #4CAF50; box-shadow: 0 3px 0 #2E7D32; }
+  .btn-equip:active { transform: translateY(2px); box-shadow: 0 1px 0 #2E7D32; }
+  .btn-equipped { background: #555; cursor: default; box-shadow: none; }
 
   .back-btn {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    background: #444;
-    color: white;
-    font-size: 14px;
-    border-radius: 9px;
-    cursor: pointer;
-    border: 0;
-    box-shadow: 0 3px 0 #222;
-  }
-  .back-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #222;
+    width: 100%; padding: 12px; margin-top: 10px; background: #444; color: white;
+    font-size: 14px; border-radius: 9px; cursor: pointer; border: 0; box-shadow: 0 3px 0 #222;
   }
 
-  /* 가챠 애니메이션 */
-  #gachaModal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.55);
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-  }
+  /* 가챠 모달 등은 기존 유지 */
+  #gachaModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 999; }
+  #gachaBox { width: 220px; height: 220px; background-color: #c47a3f; background-image: url('giftbox.png'); background-position: center; background-size: cover; border-radius: 8px; border: 4px solid #2b1a0f; animation: spin 1.2s steps(8) infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  #gachaResult { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 22px; border-radius: 12px; text-align: center; box-shadow: 0 8px 12px rgba(0,0,0,0.35); border: 4px solid var(--border-dark); z-index: 1000; min-width: 300px; }
 
-  #gachaBox {
-    width: 220px;
-    height: 220px;
-    background-color: #c47a3f;
-    background-image: url('giftbox.png'); 
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    image-rendering: pixelated;
-    border-radius: 8px;
-    border: 4px solid #2b1a0f;
-    animation: spin 1.2s steps(8) infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-
-  /* 결과 팝업 */
-  #gachaResult {
-    display: none;
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--bg-panel);
-    padding: 22px 20px 18px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 8px 12px rgba(0,0,0,0.35);
-    border: 4px solid var(--border-dark);
-    z-index: 1000;
-    min-width: 300px;
-  }
-
-  @media (max-width: 600px) {
-    .container {
-      margin: 20px auto;
-      padding: 22px 18px 18px;
-    }
-  }
+  /* 탭 내용 숨김/표시용 */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 </style>
 </head>
 
 <body>
 
 <div class="top-bar">
-  <span>Faith: <b id="faithText"></b></span>
+  <span>Faith: <b id="faithText">0</b></span>
   <button onclick="goMenu()">← 메뉴</button>
 </div>
 
 <div class="container">
   <h1>상점</h1>
 
-  <div class="item">
-    <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
-    <p>점프 반응 속도가 빨라집니다. (Max 100)</p>
-    <p><b>가격: 30 Faith</b></p>
-    <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매하기</button>
+  <div class="tab-container">
+    <button class="tab-btn active" onclick="switchTab('upgrade')">능력치 강화</button>
+    <button class="tab-btn" onclick="switchTab('skin')">스킨 상점</button>
   </div>
 
-  <div class="item">
-    <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
-    <p>기본 생명력이 증가합니다. (Max 10)</p>
-    <p><b>가격: 200 Faith</b></p>
-    <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매하기</button>
+  <div id="tab-upgrade" class="tab-content active">
+    <div class="item">
+      <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
+      <p>점프 반응 속도가 빨라집니다. (Max 100)</p>
+      <p><b>가격: 30 Faith</b></p>
+      <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매하기</button>
+    </div>
+
+    <div class="item">
+      <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
+      <p>기본 생명력이 증가합니다. (Max 10)</p>
+      <p><b>가격: 200 Faith</b></p>
+      <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매하기</button>
+    </div>
+
+    <div class="item">
+      <h2>🛡️ 무적 시간 +1초 <span class="lvl-badge" id="lvl-invincible">Lv.0</span></h2>
+      <p>십자가 아이템 효과가 길어집니다. (Max 20)</p>
+      <p><b>가격: 40 Faith</b></p>
+      <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매하기</button>
+    </div>
+
+    <div class="item">
+      <h2>🚀 터보 시간 +1초 <span class="lvl-badge" id="lvl-turbo">Lv.0</span></h2>
+      <p>날개 아이템 효과가 길어집니다. (Max 20)</p>
+      <p><b>가격: 40 Faith</b></p>
+      <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매하기</button>
+    </div>
+
+    <div class="item">
+      <h2>🍃 감속 시간 +1초 <span class="lvl-badge" id="lvl-slow">Lv.0</span></h2>
+      <p>바람 아이템 효과가 길어집니다. (Max 20)</p>
+      <p><b>가격: 40 Faith</b></p>
+      <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매하기</button>
+    </div>
+
+    <div class="item">
+      <h2>🎁 랜덤 뽑기</h2>
+      <p>Faith 200으로 특별한 보상을 뽑아 보세요!</p>
+      <button class="buy-btn" onclick="buyGacha()">뽑기 (200 Faith)</button>
+    </div>
   </div>
 
-  <div class="item">
-    <h2>🛡️ 무적 시간 +1초 <span class="lvl-badge" id="lvl-invincible">Lv.0</span></h2>
-    <p>십자가 아이템 효과가 길어집니다. (Max 20)</p>
-    <p><b>가격: 40 Faith</b></p>
-    <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매하기</button>
-  </div>
-
-  <div class="item">
-    <h2>🚀 터보 시간 +1초 <span class="lvl-badge" id="lvl-turbo">Lv.0</span></h2>
-    <p>날개 아이템 효과가 길어집니다. (Max 20)</p>
-    <p><b>가격: 40 Faith</b></p>
-    <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매하기</button>
-  </div>
-
-  <div class="item">
-    <h2>🍃 감속 시간 +1초 <span class="lvl-badge" id="lvl-slow">Lv.0</span></h2>
-    <p>바람 아이템 효과가 길어집니다. (Max 20)</p>
-    <p><b>가격: 40 Faith</b></p>
-    <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매하기</button>
-  </div>
-
-  <div class="item">
-    <h2>🎁 랜덤 뽑기</h2>
-    <p>Faith 200으로 특별한 보상을 뽑아 보세요!</p>
-    <p style="font-size:12px; color:#8a735a;">(특별 당첨은 교역자님이 따로 알려줍니다 😊)</p>
-    <button class="buy-btn" onclick="buyGacha()">뽑기 (200 Faith)</button>
+  <div id="tab-skin" class="tab-content">
+    <div id="skinListArea">
+      </div>
   </div>
 
   <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
 </div>
 
-<div id="gachaModal">
-  <div id="gachaBox"></div>
-</div>
-
+<div id="gachaModal"><div id="gachaBox"></div></div>
 <div id="gachaResult"></div>
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
-
   const id = localStorage.getItem("run_id");
   const playerName = localStorage.getItem("run_name") || "";
+  
+  if (!id) { alert("로그인이 필요합니다."); window.location.href = "/TrapGame/index.html"; }
+
+  // 데이터 로드
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
-
-  if (!id) {
-    alert("로그인이 필요합니다.");
-    window.location.href = "/TrapGame/index.html";
-  }
-
-  // 데이터 초기화 (없으면 0)
+  
+  // 데이터 초기화 (없으면 기본값)
   saveData.faith = saveData.faith || 0;
   saveData.agility = saveData.agility || 0;
   saveData.extraLife = saveData.extraLife || 0;
-  // 신규 버프 레벨 (업그레이드 수치)
   saveData.up_invincible = saveData.up_invincible || 0;
   saveData.up_turbo = saveData.up_turbo || 0;
   saveData.up_slow = saveData.up_slow || 0;
+  
+  // 스킨 데이터 초기화 (배열이 없으면 기본값)
+  if(!saveData.ownedSkins) saveData.ownedSkins = ["default"];
+  if(!saveData.equippedSkin) saveData.equippedSkin = "default";
 
-  // 설정값 (가격 및 최대레벨)
+  // 설정값
   const CONFIG = {
-    agility: { price: 30, max: 100, name: "민첩성" },
-    life: { price: 200, max: 10, name: "라이프" },
-    up_invincible: { price: 40, max: 20, name: "무적 강화" },
-    up_turbo: { price: 40, max: 20, name: "터보 강화" },
-    up_slow: { price: 40, max: 20, name: "감속 강화" }
+    agility: { price: 30, max: 100 },
+    life: { price: 200, max: 10 },
+    up_invincible: { price: 40, max: 20 },
+    up_turbo: { price: 40, max: 20 },
+    up_slow: { price: 40, max: 20 }
   };
 
-  // UI 초기 업데이트
+  // 스킨 목록 데이터 (가격: 10,000 고정)
+  const SKIN_LIST = [
+    { code: "noel", name: "노엘", type: "Active", desc: "쿨타임 1분: 전방 장애물 길 열기" },
+    { code: "jeonchan", name: "전찬", type: "Passive", desc: "40초마다 랜덤 버프 발동 (15초간)" },
+    { code: "haeun", name: "하은", type: "Passive", desc: "30초마다 화면 전체 장애물 제거" },
+    { code: "jaeguk", name: "재국", type: "Active", desc: "쿨타임 2분: 30초간 자동부활 버프" },
+    { code: "hahwi", name: "하휘", type: "Passive", desc: "20초마다 5초 무적 (십자가 효과 2배)" },
+    { code: "jihye", name: "지혜", type: "Passive", desc: "아이템 출현 확률 100% 증가" },
+    { code: "jun", name: "준", type: "Passive", desc: "20m 달릴 때마다 Faith +1" },
+    { code: "stephanie", name: "스테파니", type: "Passive", desc: "장애물 통과 시 Faith +1" },
+    { code: "yejun", name: "예준", type: "Active", desc: "쿨타임 3분: 30초간 무중력 비행" },
+    { code: "ganghui", name: "강희", type: "Passive", desc: "20초마다 정면 장애물 파괴 (불꽃)" },
+    { code: "jieun", name: "지은", type: "Active", desc: "쿨타임 2분: 20초간 소환수 탱킹 (무적)" }
+  ];
+  const SKIN_PRICE = 10000;
+
+  // 초기 실행
   updateUI();
   loadLatestSave();
 
-  // 서버에서 최신 saveData 동기화
+  // 탭 전환 함수
+  function switchTab(tabName) {
+    // 버튼 활성화
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
+    if(tabName === 'upgrade') btns[0].classList.add('active');
+    else btns[1].classList.add('active');
+
+    // 내용 표시
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+  }
+
+  // 서버 동기화
   async function loadLatestSave() {
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "getSaveData", id })
       });
-
       const txt = await res.text();
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
-        // 병합 (기존 키 유지)
         saveData = { ...saveData, ...loaded };
+        
+        // 스킨 배열 병합 (혹시 서버에 새 데이터가 있으면)
+        if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
+        if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
+
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
       }
-    } catch (e) {
-      console.warn("saveData 불러오기 실패:", e);
-    }
+    } catch (e) { console.warn(e); }
   }
 
-  // ---------------- UI 업데이트 함수 ----------------
   function updateUI() {
     document.getElementById("faithText").innerText = saveData.faith;
 
-    // 각 아이템 버튼 상태 및 레벨 표시 업데이트
+    // 업그레이드 UI
     updateItemState('agility', 'btn-agility', 'lvl-agility');
-    updateItemState('life', 'btn-life', 'lvl-life'); // DB키는 extraLife지만 편의상 life로 매핑해서 처리
+    updateItemState('life', 'btn-life', 'lvl-life'); 
     updateItemState('up_invincible', 'btn-invincible', 'lvl-invincible');
     updateItemState('up_turbo', 'btn-turbo', 'lvl-turbo');
     updateItemState('up_slow', 'btn-slow', 'lvl-slow');
+
+    // 스킨 UI 렌더링
+    renderSkins();
   }
 
   function updateItemState(type, btnId, badgeId) {
-    // 실제 저장된 키 이름 매핑
-    let key = type;
-    if (type === 'life') key = 'extraLife';
-
+    let key = (type === 'life') ? 'extraLife' : type;
     const currentLvl = saveData[key] || 0;
     const info = CONFIG[type];
     const btn = document.getElementById(btnId);
     
-    // 레벨 표시
     document.getElementById(badgeId).innerText = `Lv.${currentLvl}`;
 
-    // Max 도달 시 비활성화
     if (currentLvl >= info.max) {
       btn.innerText = "MAX (완료)";
       btn.disabled = true;
     } else {
-      btn.innerText = "구매하기";
+      btn.innerText = `구매 (${info.price} F)`;
       btn.disabled = false;
     }
   }
 
-  // ---------------- 통합 구매 함수 ----------------
-  function buyItem(type) {
-    const info = CONFIG[type];
-    let key = type;
-    if (type === 'life') key = 'extraLife';
+  // 스킨 목록 생성
+  function renderSkins() {
+    const listArea = document.getElementById('skinListArea');
+    listArea.innerHTML = "";
 
-    // 1. Max 체크
-    if (saveData[key] >= info.max) {
-      alert("이미 최대 레벨입니다!");
-      return;
-    }
-
-    // 2. 돈 체크
-    if (saveData.faith < info.price) {
-      alert("신앙포인트가 부족합니다!");
-      return;
-    }
-
-    // 3. 구매 처리
-    saveData.faith -= info.price;
-    saveData[key]++;
+    // 기본 스킨 (항상 있음)
+    const defaultOwned = true;
+    const defaultEquipped = (saveData.equippedSkin === 'default');
+    let defaultBtn = defaultEquipped 
+      ? `<button class="buy-btn btn-equipped" disabled>장착 중</button>`
+      : `<button class="buy-btn btn-equip" onclick="equipSkin('default')">기본 스킨 장착</button>`;
     
-    alert(`${info.name} 업그레이드 완료! (Lv.${saveData[key]})`);
-    
-    saveProgress();
-    updateUI();
+    listArea.innerHTML += `
+      <div class="item">
+        <h2>😊 기본 캐릭터 <span class="skin-tag" style="background:#888;">Normal</span></h2>
+        <p>기본 능력치입니다.</p>
+        ${defaultBtn}
+      </div>
+    `;
+
+    // 판매 스킨들
+    SKIN_LIST.forEach(skin => {
+      const isOwned = saveData.ownedSkins.includes(skin.code);
+      const isEquipped = (saveData.equippedSkin === skin.code);
+      const tagColor = (skin.type === 'Active') ? '#d32f2f' : '#1976D2'; // 빨강(Active), 파랑(Passive)
+
+      let btnHtml = "";
+      if (isEquipped) {
+        btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
+      } else if (isOwned) {
+        btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
+      } else {
+        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">구매 (10,000 F)</button>`;
+      }
+
+      listArea.innerHTML += `
+        <div class="item">
+          <h2>${skin.name} <span class="skin-tag" style="background:${tagColor}">${skin.type}</span></h2>
+          <p>${skin.desc}</p>
+          ${btnHtml}
+        </div>
+      `;
+    });
   }
 
-  // ---------------- 저장하기 ----------------
+  // ---------------- 구매 로직 ----------------
+  function buyItem(type) {
+    const info = CONFIG[type];
+    let key = (type === 'life') ? 'extraLife' : type;
+
+    if (saveData[key] >= info.max) return alert("이미 최대 레벨입니다!");
+    if (saveData.faith < info.price) return alert("신앙포인트가 부족합니다!");
+
+    saveData.faith -= info.price;
+    saveData[key]++;
+    alert("업그레이드 완료!");
+    saveProgress();
+  }
+
+  function buySkin(code) {
+    if (saveData.faith < SKIN_PRICE) return alert("신앙포인트가 부족합니다! (10,000 필요)");
+    
+    if(confirm("10,000 Faith를 사용하여 스킨을 구매하시겠습니까?")) {
+      saveData.faith -= SKIN_PRICE;
+      saveData.ownedSkins.push(code);
+      alert("스킨 구매 완료! [장착하기]를 눌러주세요.");
+      saveProgress();
+    }
+  }
+
+  function equipSkin(code) {
+    saveData.equippedSkin = code;
+    alert("스킨이 장착되었습니다.");
+    saveProgress();
+  }
+
+  // ---------------- 저장 ----------------
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
-    updateUI(); // UI 즉시 갱신
-
+    updateUI();
     try {
       await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({
-          type: "save",
-          id,
-          saveData
-        })
+        body: JSON.stringify({ type: "save", id, saveData })
       });
-    } catch (e) {
-      console.warn("서버 저장 실패:", e);
-    }
+    } catch (e) { console.warn(e); }
+    document.getElementById("faithText").innerText = saveData.faith;
   }
 
-  // ---------------- 가챠 (200원) ----------------
+  // ---------------- 가챠 ----------------
   function buyGacha() {
-    const price = 200;
-    if (saveData.faith < price) {
-      alert("신앙포인트가 부족합니다!");
-      return;
-    }
-
-    saveData.faith -= price;
+    if (saveData.faith < 200) { alert("신앙포인트가 부족합니다!"); return; }
+    saveData.faith -= 200;
     updateUI();
-
     document.getElementById("gachaModal").style.display = "flex";
-
     setTimeout(() => {
       document.getElementById("gachaModal").style.display = "none";
       rollGacha();
@@ -434,14 +406,13 @@
     let isSpecial = false;
     let specialName = "";
 
-    // 확률 로직
     if (r < 40) { 
         if(saveData.agility < CONFIG.agility.max) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
-        else { saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith 반환"; }
+        else { saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith"; }
     }
     else if (r < 80) { 
         if(saveData.extraLife < CONFIG.life.max) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
-        else { saveData.faith += 100; prizeText = "💰 라이프 Max 보상: 100 Faith 반환"; }
+        else { saveData.faith += 100; prizeText = "💰 라이프 Max 보상: 100 Faith"; }
     }
     else if (r < 85) { 
         if(saveData.agility + 2 <= CONFIG.agility.max) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
@@ -452,59 +423,25 @@
         else { saveData.extraLife = CONFIG.life.max; prizeText = "❤️ 생명력 MAX 도달!"; }
     }
     else if (r < 94.9) { 
-        saveData.faith += 300; prizeText = "💎 대박! 300 Faith 당첨!";
-    }
-    else if (r < 94.91) {
-      prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
-      isSpecial = true; specialName = "Starbucks $5 Gift Card";
-    }
-    else if (r < 94.92) {
-      prizeText = "🎁 스타벅스 $10 기프트카드 당첨!";
-      isSpecial = true; specialName = "Starbucks $10 Gift Card";
-    }
-    else if (r < 94.93) {
-      prizeText = "🎁 아마존 $5 기프트카드 당첨!";
-      isSpecial = true; specialName = "Amazon $5 Gift Card";
-    }
-    else if (r < 94.94) {
-      prizeText = "🎁 아마존 $10 기프트카드 당첨!";
-      isSpecial = true; specialName = "Amazon $10 Gift Card";
+        saveData.faith += 300; prizeText = "💎 300 Faith 당첨!";
     }
     else {
-      prizeText = "📘 생명의 삶 QT 책 당첨!";
+      prizeText = "📘 QT 책 당첨 (특별 상품)";
       isSpecial = true; specialName = "QT Book";
     }
 
     if (isSpecial) {
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "rewardLog",
-          id: id,
-          name: playerName,
-          reward: specialName
-        })
-      });
+      fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
     }
 
     const box = document.getElementById("gachaResult");
-    box.innerHTML = `
-      <h2>🎉 뽑기 결과!</h2>
-      <p style="font-size:20px;"><b>${prizeText}</b></p>
-      <button onclick="closeResult()" class="buy-btn">확인</button>
-    `;
+    box.innerHTML = `<h2>🎉 결과!</h2><p style="font-size:20px;"><b>${prizeText}</b></p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
-
     saveProgress();
   }
 
-  function closeResult() {
-    document.getElementById("gachaResult").style.display = "none";
-  }
-
-  function goMenu() {
-    window.location.href = "/TrapGame/menu.html";
-  }
+  function closeResult() { document.getElementById("gachaResult").style.display = "none"; }
+  function goMenu() { window.location.href = "/TrapGame/menu.html"; }
 </script>
 
 </body>
