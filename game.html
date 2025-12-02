@@ -2,111 +2,92 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Stable Final</title>
+  <title>Disciple Run – Boss Patterns & FX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* UI 및 스타일 (가독성 좋게 유지) */
-    :root {
-      --hud-bg: rgba(255, 248, 235, 0.9);
-      --hud-border: #3a2513;
-      --accent: #c47a3f;
-      --accent-dark: #8b4f26;
-      --panel-bg: #fdfaf2;
-    }
-
+    /* 1. 기본 설정 */
+    :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
     * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; overscroll-behavior: none; touch-action: none;
-      font-family: "Pretendard", system-ui, -apple-system, sans-serif;
-    }
-
-    #gameArea {
-      position: relative; width: 100vw; height: 100vh; overflow: hidden;
-      background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
-    }
-
-    /* 배경 레이어 */
-    #bgLayer1, #bgLayer2, #bgLayer3 {
-      position: absolute; left: 0; top: 0; width: 200%; height: 100%;
-      background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
-      will-change: background-position;
-    }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
+    
+    #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); }
+    
+    /* 배경 */
+    #bgLayer1, #bgLayer2, #bgLayer3 { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
     #bgLayer1 { background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer3 { background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
 
     #ground { display: none; }
 
-    /* 플레이어 */
     #player {
       position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px;
       background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat;
-      image-rendering: pixelated; transition: opacity 0.2s, filter 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2));
+      image-rendering: pixelated; transition: opacity 0.2s, filter 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); will-change: bottom;
     }
 
-    /* 장애물 */
-    .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+    .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); will-change: left; }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; border-radius: 4px; }
-    .obs-ground.obs-cap::after { top: -12px; } 
-    .obs-ceil.obs-cap::after { bottom: -12px; }
-    
+    .obs-ground.obs-cap::after { top: -12px; } .obs-ceil.obs-cap::after { bottom: -12px; }
     .obs-log { width: 60px; background-color: #8D6E63; border-left: 4px solid #5D4037; border-right: 4px solid #5D4037; background-image: linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%); }
     .obs-log.obs-cap::after { background-color: #66BB6A; border: 4px solid #1B5E20; }
-    
     .obs-rock { width: 60px; background-color: #9E9E9E; border-left: 4px solid #616161; border-right: 4px solid #616161; background-image: radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%); }
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
-    
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* 투사체 (운석, 미사일) */
+    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
+    @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; 
       background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); 
-      box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; 
+      box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; will-change: left, top;
     }
     .projectile::before { content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); }
-    
     .missile-style { filter: hue-rotate(220deg) brightness(1.2); }
     .boss-missile { filter: hue-rotate(290deg) brightness(0.8); }
     .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* 아이템 */
-    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
-    @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+    /* [신규] 파티클 효과 */
+    .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
+    @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
-    /* HUD & UI */
+    /* [신규] 보스 레이저 */
+    .boss-laser {
+      position: absolute; right: 0; height: 40px; background: linear-gradient(to bottom, #ff0000, #fff, #ff0000);
+      z-index: 58; opacity: 0.8; border-top: 2px solid #fff; border-bottom: 2px solid #fff;
+      box-shadow: 0 0 20px #ff0000; pointer-events: none; display: none;
+    }
+
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
-    #hud span { display: inline-block; min-width: 60px; }
-    
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; }
 
-    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); flex-direction: column; text-align: center; line-height: 1.1; }
+    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; }
-    #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
     #shieldBtn { position: fixed; bottom: 150px; left: 20px; width: 90px; height: 90px; background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 16px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); text-align: center; }
     #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
     #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
-    .mission-item { margin-bottom: 4px; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
 
-    /* 보스 */
     #bossContainer { position: absolute; right: -200px; top: 50%; width: 120px; height: 120px; z-index: 55; display: none; transition: right 1s ease-out; }
     #bossBody { width: 100%; height: 100%; background: url('boss.png') no-repeat center/contain; image-rendering: pixelated; filter: drop-shadow(0 0 10px red); animation: bossFloat 2s ease-in-out infinite; }
+    
+    /* 보스 액션 애니메이션 */
+    .boss-charging { filter: drop-shadow(0 0 20px yellow) !important; transform: scale(1.1); }
+    .boss-dashing { filter: drop-shadow(0 0 20px #ff0000) !important; }
+
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     #bossHpBar { position: absolute; top: -20px; left: 0; width: 100%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
     #bossHpFill { width: 100%; height: 100%; background: #d32f2f; transition: width 0.2s; }
     #bossWarning { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000; display: none; z-index: 2000; animation: blink 0.5s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-    /* 이펙트 */
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
@@ -114,14 +95,11 @@
     #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; font-weight: 900; text-shadow: 3px 3px #000; }
     #comboEffect { top: 20%; font-size: 40px; color: #ffe24f; } #correctEffect { top: 40%; font-size: 48px; color: #00ffcc; }
 
-    /* 모달 */
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; text-align: center; }
     .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
     .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
-    .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 var(--accent-dark); }
-    .choice-btn:active, .action-btn:active, .start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
-    .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
+    .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
     .modal-input { width: 85%; padding: 12px; border-radius: 8px; border: 2px solid #b8a792; display: block; margin: 8px auto; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
   </style>
@@ -131,14 +109,15 @@
 <div id="gameArea">
   <div id="startGuide" class="modal-bg" style="display:flex;">
     <div class="modal-box">
-      <div class="modal-title">게임 방법 / How to Play</div>
-      <div class="modal-desc" style="text-align:left; font-size:15px;">
-• <b>Space / 터치</b>: 점프<br>
-• <b>A키 / 버튼</b>: 특수능력<br>
-• <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)<br><br>
-[아이템 효과]<br>
-✝️ <b>십자가:</b> 무적 / 🕊️ <b>날개:</b> 터보<br>
-🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
+      <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법 / How to Play</div>
+      <div style="text-align:left; font-size:15px; line-height:1.6;">
+        • <b>Space / 터치</b>: 점프<br>
+        • <b>A키 / 버튼</b>: 특수능력<br>
+        • <b>방패 버튼</b>: 보스 미사일 반사!<br><br>
+        [보스 패턴]<br>
+        😈 200m: 미사일<br>
+        😡 400m: 미사일 + 돌진<br>
+        👿 600m: 미사일 + 돌진 + 레이저
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -151,6 +130,7 @@
     <div id="bossHpBar"><div id="bossHpFill"></div></div>
     <div id="bossBody"></div>
   </div>
+  <div id="bossLaser" class="boss-laser"></div>
 
   <div id="hud">❤️ <span id="lifeText"></span> 📏 <span id="distanceText">0m</span> ✝ <span id="faithText"></span></div>
   <div id="abilityBtn" onclick="useAbility()">A<br><span>Ready</span></div>
@@ -166,8 +146,8 @@
 
 <div id="quizModal" class="modal-bg">
   <div class="modal-box">
-    <div class="modal-title">성경 퀴즈</div>
-    <div class="modal-desc" id="quizQuestion"></div>
+    <div style="font-size:28px; font-weight:800;">성경 퀴즈</div>
+    <div id="quizQuestion" style="margin:20px 0; font-size:18px;"></div>
     <button class="choice-btn" onclick="answerQuiz('A')" id="btnA"></button>
     <button class="choice-btn" onclick="answerQuiz('B')" id="btnB"></button>
     <button class="choice-btn" onclick="answerQuiz('C')" id="btnC"></button>
@@ -176,15 +156,15 @@
 
 <div id="gameOverModal" class="modal-bg">
   <div class="modal-box">
-    <div class="modal-title">GAME OVER</div>
-    <div class="modal-desc"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
+    <div style="font-size:28px; font-weight:800;">GAME OVER</div>
+    <div style="margin:20px 0;"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
     <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
     <button class="action-btn" style="background:#5d4037;" onclick="location.reload()">🔄 다시하기</button>
     <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
   </div>
 </div>
 
-<div id="loadingQuiz">⏳ 성경 문제를 불러오는 중입니다...</div>
+<div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
@@ -195,14 +175,10 @@
 
   if (!id) { alert("로그인 필요"); window.location.href = "/TrapGame/index.html"; }
 
-  // 일일 미션 (버전 1.8: 강제 초기화)
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
-  function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.8' };
-  }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.8') {
-    daily = initDailyMission();
-    localStorage.setItem("dailyMission", JSON.stringify(daily));
+  function initDailyMission() { return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '2.5' }; }
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '2.5') {
+    daily = initDailyMission(); localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
   let life = 3 + (saveData.extraLife || 0);
@@ -240,10 +216,8 @@
     return el;
   }
 
-  // [수정] 중력과 점프력 완화
   let playerY = 40; let velocity = 0; 
-  let gravity = -0.16; // 더 천천히 떨어짐
-  let jumpPower = Math.max(3, 5.5 - agility * 0.05); // 점프 높이 조절
+  let gravity = -0.16; let jumpPower = Math.max(3, 5.5 - agility * 0.05);
   
   let targetY = 0;
   let distance = 0;
@@ -252,10 +226,8 @@
 
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
   let lastTime = performance.now();
+  let nextQuizDistance = 35; 
   
-  // [수정] 퀴즈: 35m 단위로 등장
-  let nextQuizDistance = 35;
-
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let meteorTimer = 0; let missileTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
@@ -268,14 +240,40 @@
   let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
   let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0 };
 
+  /* 보스 시스템 확장 */
   let isBossBattle = false;
-  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 2, state: 'idle', shootTimer: 0 };
+  let nextBossTrigger = 200; // 200, 400, 600...
+  let bossLevel = 0; // 1, 2, 3
+  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 2, state: 'idle', shootTimer: 0, actionTimer: 0 };
   let bossContainer = document.getElementById('bossContainer');
+  let bossBody = document.getElementById('bossBody');
   let bossHpFill = document.getElementById('bossHpFill');
   let shieldBtn = document.getElementById('shieldBtn');
   let shieldCooldown = 0;
+  let bossLaserElem = document.getElementById('bossLaser');
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
+
+  /* 파티클 생성 */
+  function spawnParticles(x, y, type) {
+    const colors = type==='item' ? ['#ffd700','#fff'] : type==='spark' ? ['#ff4500','#ff8c00'] : ['#8b4513','#a0522d'];
+    for(let i=0; i<8; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.width = (Math.random()*6+4)+'px'; p.style.height = p.style.width;
+        p.style.left = x + 'px'; p.style.top = y + 'px';
+        gameArea.appendChild(p);
+        
+        const tx = (Math.random()-0.5) * 100;
+        const ty = (Math.random()-0.5) * 100;
+        
+        p.animate([
+            { transform: `translate(0,0)` },
+            { transform: `translate(${tx}px, ${ty}px)` }
+        ], { duration: 600, fill: 'forwards' }).onfinish = () => p.remove();
+    }
+  }
 
   function jump() {
     if (!running) return;
@@ -299,17 +297,14 @@
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            // 안전한 거리 계산 (DOM 기준)
-            const pRect = p.getBoundingClientRect();
-            const plRect = player.getBoundingClientRect();
-            const dist = Math.hypot((pRect.left+20) - (plRect.left+30), (pRect.top+20) - (plRect.top+30));
-            
+            const dist = Math.sqrt(Math.pow(p.x - 150, 2) + Math.pow(p.y - (window.innerHeight - playerY - 30), 2));
             if (dist < 250) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
                 p.classList.add('reflected-missile');
                 p.vx = Math.abs(p.vx) * 1.5; p.vy = -p.vy * 0.5; 
                 reflected = true;
+                spawnParticles(p.x, p.y, 'spark'); // 반사 파티클
             }
         }
     });
@@ -384,7 +379,7 @@
     if (!running) return;
     const delta = (now - lastTime) / 1000;
     lastTime = now;
-    const safeDelta = Math.min(delta, 0.1); // 렉 방지
+    const safeDelta = Math.min(delta, 0.05);
 
     try {
         updateBuffUI(safeDelta);
@@ -397,7 +392,6 @@
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
             distance += safeDelta * 1 * distMultiplier;
             document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
-            
             let progress = Math.min(distance / 3000, 1);
             let speedMultiplier = 1 + (progress * 14);
             let currentSpeed = BASE_SPEED * speedMultiplier;
@@ -408,9 +402,9 @@
             gameSpeed = BASE_SPEED * 0.5; 
         }
 
-        if (!isBossBattle && distance >= 200 && boss.hp > 0) { startBossBattle(); }
+        // 보스 등장 체크 (200, 400, 600...)
+        if (!isBossBattle && distance >= nextBossTrigger) { startBossBattle(); }
 
-        /* [수정] 퀴즈 거리 기반 (35m 단위) */
         if (!isBossBattle && distance >= nextQuizDistance) {
             nextQuizDistance += 35; 
             pauseForQuiz(); return; 
@@ -420,7 +414,7 @@
             updateBoss(safeDelta);
         } else {
             obstacleTimer += safeDelta;
-            if (obstacleTimer >= nextObstacleTime) {
+            if (obstacleTimer >= nextObstacleTime && (nextQuizDistance - distance > 10)) {
                 spawnObstacle(); obstacleTimer = 0; 
                 let sm = gameSpeed / BASE_SPEED;
                 let baseTime = randBetween(1.8, 2.6);
@@ -439,30 +433,23 @@
 
         updatePhysics(safeDelta);
         
-        /* [수정] 아이템 생성 로직 단순화 (무조건 등장) */
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
-            spawnItem(); 
-            itemTimer = 0; 
-            nextItemTime = 8 + Math.random() * 4; 
+            spawnItem(); itemTimer = 0; nextItemTime = 8 + Math.random() * 4; 
         }
 
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
-            // 아이템 이동 (DOM 읽기 기반)
             let left = parseFloat(it.style.left) || window.innerWidth;
             left -= gameSpeed * safeDelta;
             it.style.left = left + "px";
             if (left < -60) { it.remove(); items.splice(i, 1); continue; }
-            
-            const rP = player.getBoundingClientRect();
-            const rI = it.getBoundingClientRect();
-            if (rP.left < rI.right && rP.right > rI.left && rP.top < rI.bottom && rP.bottom > rI.top) {
+            if (120 < left + 48 && 120 + 60 > left && playerY < 48 + 40 && playerY + 60 > 40) {
                 activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
+                spawnParticles(left+20, window.innerHeight - playerY - 40, 'item'); // 아이템 파티클
             }
         }
         
-        // 배경 이동 (게임 멈추지 않게)
         let speedMult = (gameSpeed / BASE_SPEED); 
         bg1X -= BG1_SPEED * speedMult * safeDelta;
         bg2X -= BG2_SPEED * speedMult * safeDelta;
@@ -478,10 +465,17 @@
 
   function startBossBattle() {
     isBossBattle = true;
-    showFloatText("⚠️ WARNING: BOSS!!");
+    bossLevel++; // 보스 레벨 증가
+    // 레벨별 체력 증가
+    boss.maxHp = 6 + (bossLevel-1)*4;
+    boss.hp = boss.maxHp;
+    
+    showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning');
+    warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block';
     setTimeout(() => warning.style.display = 'none', 3000);
+    
     obstacles.forEach(o => o.remove()); obstacles = [];
     bossContainer.style.display = 'block';
     setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
@@ -491,16 +485,94 @@
 
   function updateBoss(delta) {
     if (boss.hp <= 0) return;
-    boss.y += boss.vy;
-    if (boss.y > 80 || boss.y < 20) boss.vy *= -1; 
-    bossContainer.style.top = boss.y + "%";
-    boss.shootTimer += delta;
-    let shootInterval = 2.0; let missileCount = 1; let missileSpeedMult = 1.0;
-    if (boss.hp <= 4) { missileCount = 2; missileSpeedMult = 1.3; }
-    if (boss.hp <= 2) { missileCount = 3; missileSpeedMult = 1.7; shootInterval = 1.5; }
-    if (boss.shootTimer > shootInterval) {
-        bossShoot(missileCount, missileSpeedMult); boss.shootTimer = 0;
+    
+    // 보스 액션 상태 관리
+    boss.actionTimer += delta;
+
+    // 기본 상하 이동
+    if (boss.state === 'idle') {
+        boss.y += boss.vy;
+        if (boss.y > 80 || boss.y < 20) boss.vy *= -1; 
+        bossContainer.style.top = boss.y + "%";
     }
+
+    // 돌진 패턴 (400m / Lv2 이상)
+    if (bossLevel >= 2 && boss.state === 'idle' && boss.actionTimer > 5.0 && Math.random() < 0.01) {
+        startBossDash();
+    }
+
+    // 레이저 패턴 (600m / Lv3 이상)
+    if (bossLevel >= 3 && boss.state === 'idle' && boss.actionTimer > 7.0 && Math.random() < 0.01) {
+        startBossLaser();
+    }
+
+    // 기본 미사일 발사
+    boss.shootTimer += delta;
+    if (boss.state === 'idle' && boss.shootTimer > 2.0) {
+        bossShoot(bossLevel, 1.0 + (bossLevel*0.2)); // 레벨별 미사일 강화
+        boss.shootTimer = 0;
+    }
+  }
+
+  /* 보스 패턴 구현 */
+  function startBossDash() {
+    boss.state = 'dash';
+    bossBody.classList.add('boss-charging'); // 빨갛게 예고
+    showFloatText("💢 돌진 준비!");
+    
+    setTimeout(() => {
+        // 돌진 시작
+        bossBody.classList.remove('boss-charging');
+        bossBody.classList.add('boss-dashing');
+        bossContainer.style.transition = "right 0.5s ease-in";
+        bossContainer.style.right = "80%"; // 플레이어 쪽으로 돌진
+        
+        // 히트박스 체크 (돌진 중 닿으면 데미지)
+        setTimeout(() => {
+             // 플레이어와 겹치는지 체크는 updatePhysics에서 수행하거나 여기서 간단히
+             if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) {
+                 damageLife();
+             }
+        }, 250);
+
+        // 복귀
+        setTimeout(() => {
+            bossContainer.style.right = "20px";
+            bossBody.classList.remove('boss-dashing');
+            boss.state = 'idle';
+            boss.actionTimer = 0;
+        }, 800);
+    }, 1000); // 1초 예고
+  }
+
+  function startBossLaser() {
+    boss.state = 'laser';
+    showFloatText("⚡ 레이저 충전!");
+    // 보스 높이 고정 (레이저 쏘기 좋게)
+    
+    setTimeout(() => {
+        // 레이저 발사
+        bossLaserElem.style.display = 'block';
+        bossLaserElem.style.top = (boss.y + 5) + "%"; // 보스 위치에 맞춤
+        
+        // 충돌 체크 (0.5초간 지속)
+        let checkLaser = setInterval(() => {
+            // 플레이어가 레이저 높이에 있으면 피격
+            // 레이저 높이: 화면의 boss.y% 지점. 플레이어 점프 높이로 회피 가능?
+            // 레이저 판정: 바닥 기준 높이
+            let laserH = (100 - boss.y) / 100 * window.innerHeight;
+            if (Math.abs(playerY - laserH + 50) < 40 && !invincible) { // 대략적 높이차 체크
+                 damageLife();
+            }
+        }, 50);
+
+        setTimeout(() => {
+            clearInterval(checkLaser);
+            bossLaserElem.style.display = 'none';
+            boss.state = 'idle';
+            boss.actionTimer = 0;
+        }, 1000);
+    }, 1500);
   }
 
   function bossShoot(count, speedMult) {
@@ -530,29 +602,30 @@
     if (boss.hp <= 0) {
         bossContainer.style.transition = "top 1s ease-in";
         bossContainer.style.top = "120%"; 
+        
+        spawnParticles(window.innerWidth-100, window.innerHeight-100, 'dust'); // 흙먼지
+
         setTimeout(() => { 
             bossContainer.style.display = 'none'; 
             isBossBattle = false;
             shieldBtn.style.display = 'none';
             if(!daily.completed) document.getElementById('dailyMissionBox').style.display = 'block';
-            faith += 50; daily.faith20 += 50; updateDailyMissionUI();
-            showFloatText("🎉 보스 처치! (+50 Faith)");
+            
+            faith += 100 * bossLevel; // 레벨별 보상 증가
+            daily.faith20 += 100; 
+            updateDailyMissionUI();
+            showFloatText(`🎉 보스 처치! (+${100*bossLevel} Faith)`);
+            
+            // 다음 보스 설정 (200m 뒤)
+            nextBossTrigger = distance + 200; 
         }, 1000);
     }
   }
 
-  // [안정화] 충돌 로직: getBoundingClientRect 사용 (정확도 100%)
   function updatePhysics(delta) {
-    if (activeEffects.fly > 0) {
-      playerY += (targetY - playerY) * 0.1; velocity = 0;
-      if(speedLines) speedLines.style.display = "none";
-    } else if (activeEffects.turbo > 0) {
-      let tY = 200; playerY += (tY - playerY) * 0.1; velocity = 0;
-      if(speedLines) speedLines.style.display = "block";
-    } else {
-      velocity += gravity; playerY += velocity;
-      if(speedLines) speedLines.style.display = "none";
-    }
+    if (activeEffects.fly > 0) { playerY += (targetY - playerY) * 0.1; velocity = 0; if(speedLines) speedLines.style.display = "none"; } 
+    else if (activeEffects.turbo > 0) { let tY = 200; playerY += (tY - playerY) * 0.1; velocity = 0; if(speedLines) speedLines.style.display = "block"; } 
+    else { velocity += gravity; playerY += velocity; if(speedLines) speedLines.style.display = "none"; }
 
     if (playerY < 0) playerY = 0;
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
@@ -560,16 +633,10 @@
 
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
-        
-        // DOM 기반 이동 업데이트 (끊김 방지)
-        let cx = parseFloat(p.style.left);
-        let cy = parseFloat(p.style.top);
-        if(isNaN(cx)) { cx = p.x; cy = p.y; } // 초기값
-        
-        cx += p.vx * delta; cy += p.vy * delta;
-        p.style.left = cx + "px"; p.style.top = cy + "px";
+        p.x += p.vx * delta; p.y += p.vy * delta;
+        p.style.left = p.x + "px"; p.style.top = p.y + "px";
 
-        if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) {
+        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > window.innerHeight + 100) {
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
@@ -580,7 +647,6 @@
                 damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
-
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect();
             const pRect = p.getBoundingClientRect();
@@ -595,8 +661,7 @@
         let left = parseFloat(o.style.left) || window.innerWidth;
         left -= gameSpeed * delta;
         o.style.left = left + "px";
-        
-        let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
+        let rw = o.offsetWidth || 60;
 
         if (left + rw < 0) {
             o.remove(); obstacles.splice(i, 1);
@@ -611,7 +676,6 @@
             }
             continue;
         }
-        
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
             const rP = player.getBoundingClientRect();
             const rO = o.getBoundingClientRect();
@@ -637,7 +701,8 @@
   function spawnMissile(mult) { 
     const m = document.createElement("div"); m.classList.add("projectile", "missile-style");
     const sx = window.innerWidth+50; const sy = Math.random()*(window.innerHeight-100);
-    const px = 150; const py = window.innerHeight - playerY - 30;
+    const rect = player.getBoundingClientRect();
+    const px = rect.left + rect.width/2; const py = rect.top + rect.height/2;
     const dx=px-sx; const dy=py-sy; const d=Math.sqrt(dx*dx+dy*dy);
     let s = 250 + (mult * 250);
     m.style.left=sx+"px"; m.style.top=sy+"px";
@@ -684,24 +749,20 @@
     if(life<=0) gameOver();
   }
 
-  // [수정] 퀴즈 로딩 안전장치 (3초 후 강제 재개)
+  // [안전장치] 퀴즈 로딩 중 3초 지나면 강제 재개
   async function pauseForQuiz() {
     if (!running) return;
     running = false; document.getElementById("loadingQuiz").style.display = "flex";
-    
-    const safetyTimeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
         if(document.getElementById("loadingQuiz").style.display === "flex") {
             document.getElementById("loadingQuiz").style.display = "none";
             running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
         }
     }, 3000);
-
     try {
       const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getQuiz" }) });
       const txt = await res.text();
-      clearTimeout(safetyTimeout); // 로딩 성공 시 타임아웃 해제
-      
-      document.getElementById("loadingQuiz").style.display = "none";
+      clearTimeout(timeout); document.getElementById("loadingQuiz").style.display = "none";
       if (txt === "noquiz") { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); return; }
       const quiz = JSON.parse(txt);
       document.getElementById("quizQuestion").innerText = quiz.question;
@@ -711,8 +772,7 @@
       window.correctAnswer = quiz.answer;
       document.getElementById("quizModal").style.display = "flex";
     } catch (err) {
-      clearTimeout(safetyTimeout);
-      document.getElementById("loadingQuiz").style.display = "none";
+      clearTimeout(timeout); document.getElementById("loadingQuiz").style.display = "none";
       running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
     }
   }
