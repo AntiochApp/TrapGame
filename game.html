@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final Fix</title>
+  <title>Disciple Run – Final Fix v2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* 스타일은 완벽하므로 유지 */
+    /* 스타일은 기존과 동일하게 유지 */
     :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
@@ -73,7 +73,6 @@
 
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
-    
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
     @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
     #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; font-weight: 900; text-shadow: 3px 3px #000; }
@@ -81,6 +80,8 @@
 
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; text-align: center; }
+    .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
+    .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
     .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
     .modal-input { width: 85%; padding: 12px; border-radius: 8px; border: 2px solid #b8a792; display: block; margin: 8px auto; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
@@ -157,9 +158,9 @@
 
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '2.0' };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.10' };
   }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '2.0') {
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.10') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
@@ -199,8 +200,11 @@
     return el;
   }
 
-  let playerY = 40; let velocity = 0; let gravity = -0.25; 
-  let jumpPower = Math.max(3, 6.5 - agility * 0.05);
+  // [수정 1] 중력과 점프력 조정 (부드럽게)
+  let playerY = 40; let velocity = 0; 
+  let gravity = -0.16; // 기존 -0.25에서 완화
+  let jumpPower = Math.max(3, 5.5 - agility * 0.05); // 기존 6.5에서 완화
+
   let targetY = 0;
   let distance = 0;
   let obstacles = []; let projectiles = []; 
@@ -208,7 +212,11 @@
 
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
   let lastTime = performance.now();
-  let quizTimer = 0; let nextFaithMilestone = 100;
+  
+  let nextFaithMilestone = 100;
+  
+  // [수정 2] 퀴즈 거리 변수 추가
+  let nextQuizDistance = 35;
   
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let meteorTimer = 0; let missileTimer = 0;
@@ -362,19 +370,19 @@
 
         if (!isBossBattle && distance >= 200 && boss.hp > 0) { startBossBattle(); }
 
-        /* [확인] 퀴즈 타이머 로직 (누락되었던 부분 복구됨) */
-        quizTimer += safeDelta;
-        if (quizTimer >= 30) { 
-            quizTimer = 0; 
-            // 보스전 아닐 때만 퀴즈 호출
-            if(!isBossBattle) { pauseForQuiz(); return; }
+        /* [수정 2] 퀴즈 거리 기반 로직 (35m 마다) */
+        if (!isBossBattle && distance >= nextQuizDistance) {
+            pauseForQuiz();
+            nextQuizDistance += 35; // 다음 퀴즈 거리 설정
+            return;
         }
 
         if (isBossBattle) {
             updateBoss(safeDelta);
         } else {
             obstacleTimer += safeDelta;
-            if (obstacleTimer >= nextObstacleTime && quizTimer < 27) {
+            // 퀴즈 직전(5m 전) 장애물 생성 금지
+            if (obstacleTimer >= nextObstacleTime && (nextQuizDistance - distance > 5)) {
                 spawnObstacle(); obstacleTimer = 0; 
                 let sm = gameSpeed / BASE_SPEED;
                 let baseTime = randBetween(1.8, 2.6);
@@ -393,11 +401,13 @@
 
         updatePhysics(safeDelta);
         
-        /* [확인] 아이템 생성 로직 (누락되었던 부분 복구됨) */
+        /* [수정 3] 아이템 생성 로직 (확실하게 등장하도록) */
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
-            let limit = (currentSkin==='jihye') ? 4 : 8; 
-            if(itemTimer > limit) { spawnItem(); nextItemTime = Math.random() * 6 + 6; itemTimer = 0; }
+            spawnItem();
+            itemTimer = 0;
+            let baseT = (currentSkin === 'jihye') ? 4 : 8;
+            nextItemTime = baseT + Math.random() * 4; // 8~12초 간격
         }
 
         for (let i = items.length - 1; i >= 0; i--) {
@@ -524,8 +534,9 @@
         }
 
         if (isBossBattle && p.isReflected) {
-            const bRect = bossContainer.getBoundingClientRect();
-            if (p.x > bRect.left && p.x < bRect.right && p.y > bRect.top && p.y < bRect.bottom) {
+            const bX = window.innerWidth - 150; 
+            const bY = (boss.y / 100) * window.innerHeight;
+            if (p.x > bX && p.x < bX + 120 && p.y > bY && p.y < bY + 120) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
