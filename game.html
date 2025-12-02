@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Boss Battle</title>
+  <title>Disciple Run – Daily Mission & Boss</title>
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
@@ -52,7 +52,7 @@
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* 장애물 및 아이템 스타일 (기존 유지) */
+    /* 장애물 및 아이템 스타일 */
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; box-sizing: border-box; border-radius: 4px; }
     .obs-ground.obs-cap::after { top: -12px; }
@@ -66,7 +66,7 @@
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    /* 투사체 (운석, 미사일, 보스 미사일 공통) */
+    /* 투사체 */
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; 
       border-radius: 50%; 
@@ -79,9 +79,9 @@
       background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); 
       transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); 
     }
-    .missile-style { filter: hue-rotate(220deg) brightness(1.2); } /* 파란색 */
-    .boss-missile { filter: hue-rotate(290deg) brightness(0.8); } /* 보라색 (보스용) */
-    .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; } /* 초록색 (반사됨) */
+    .missile-style { filter: hue-rotate(220deg) brightness(1.2); }
+    .boss-missile { filter: hue-rotate(290deg) brightness(0.8); }
+    .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; }
 
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -102,11 +102,11 @@
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; background: #555; }
     #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
-    /* [신규] 방패(패링) 버튼 */
+    /* 방패 버튼 */
     #shieldBtn {
       position: fixed; bottom: 20px; left: 20px; width: 90px; height: 90px;
       background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff;
-      font-weight: bold; font-size: 16px; display: none; /* 보스전에서만 등장 */
+      font-weight: bold; font-size: 16px; display: none; 
       justify-content: center; align-items: center; cursor: pointer; z-index: 1000;
       box-shadow: 0 6px 12px rgba(0,0,0,0.6); user-select: none;
       text-align: center;
@@ -114,15 +114,26 @@
     #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
     #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
-    /* [신규] 보스 스타일 */
+    /* [신규] 일일 미션 UI */
+    #dailyMissionBox {
+      position: fixed; bottom: 120px; left: 20px;
+      background: rgba(0, 0, 0, 0.75); color: #fff;
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; z-index: 800; pointer-events: none;
+      border: 2px solid #3a2513; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .mission-item { margin-bottom: 4px; }
+    .mission-done { color: #4caf50; text-decoration: line-through; }
+
+    /* 보스 스타일 */
     #bossContainer {
       position: absolute; right: -200px; top: 50%; width: 120px; height: 120px;
       z-index: 55; display: none; transition: right 1s ease-out;
     }
     #bossBody {
       width: 100%; height: 100%;
-      background: url('https://cdn-icons-png.flaticon.com/512/477/477464.png') no-repeat center/contain; /* 임시 보스 이미지 (악마 아이콘) */
-      filter: drop-shadow(0 0 10px red);
+      background: url('boss.png') no-repeat center/contain;
+      image-rendering: pixelated; filter: drop-shadow(0 0 10px red);
       animation: bossFloat 2s ease-in-out infinite;
     }
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
@@ -171,7 +182,7 @@
       <div class="modal-desc" style="text-align:left; font-size:15px;">
 • <b>Space</b> / <b>터치</b>: 점프
 • <b>A키</b> / <b>버튼</b>: 특수능력
-• <b>방패 버튼</b>: 보스 미사일 반사! (400m 등장)
+• <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)
 
 [아이템 효과]
 ✝️ <b>십자가:</b> 무적
@@ -203,6 +214,8 @@
   
   <div id="abilityBtn" onclick="useAbility()">A<br><span>Ready</span></div>
   <div id="shieldBtn" onclick="useShield()">🛡️<br>반사!</div>
+  
+  <div id="dailyMissionBox"></div>
 </div>
 
 <div id="buffArea"></div>
@@ -246,9 +259,10 @@
     window.location.href = "/TrapGame/index.html";
   }
 
+  // 일일 미션 초기화 (completed 플래그 추가)
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0 };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false };
   }
   if (!daily.date || daily.date !== new Date().toDateString()) {
     daily = initDailyMission();
@@ -357,44 +371,32 @@
   document.body.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility();
-    if (e.code === "KeyS" && isBossBattle) useShield(); // S키로도 패링 가능
+    if (e.code === "KeyS" && isBossBattle) useShield(); 
   });
   document.body.addEventListener("touchstart", jump);
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
 
-  /* 패링(반사) 스킬 */
   function useShield() {
     if (!isBossBattle || shieldCooldown > 0) return;
-    
-    // 쿨타임 설정 (0.5초)
     shieldCooldown = 0.5;
     shieldBtn.classList.add('cooldown');
-    
-    // 주변의 보스 미사일 찾기
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            // 미사일과의 거리 계산
-            // 플레이어 중심 (150, playerY+30)
             const px = 150; 
             const py = window.innerHeight - playerY - 30;
             const dist = Math.sqrt(Math.pow(p.x - px, 2) + Math.pow(p.y - py, 2));
-
-            // 거리 150px 이내면 반사 성공
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
                 p.classList.add('reflected-missile');
-                
-                // 속도 반전 및 가속 (보스에게 되돌리기)
                 p.vx = Math.abs(p.vx) * 1.5; 
-                p.vy = -p.vy * 0.5; // 약간 유도 느낌
+                p.vy = -p.vy * 0.5; 
                 reflected = true;
             }
         }
     });
-
     if (reflected) showFloatText("⚔️ 반사 성공!");
     else showFloatText("🛡️ 방어!");
   }
@@ -419,7 +421,6 @@
   }
 
   function updateBuffUI(delta) {
-    // 버프 시간 감소
     for(let k in activeEffects) if(activeEffects[k] > 0) activeEffects[k] -= delta;
     if(shieldCooldown > 0) {
         shieldCooldown -= delta;
@@ -439,6 +440,48 @@
     }
   }
 
+  // [신규] 일일 미션 UI 업데이트 함수
+  function updateDailyMissionUI() {
+    const box = document.getElementById('dailyMissionBox');
+    if (daily.completed) {
+      box.style.display = 'none';
+      return;
+    }
+    box.style.display = 'block';
+    
+    // 미션 달성 여부 체크 (200m 달리기, 퀴즈 3회, Faith 20 누적)
+    // Faith는 누적합산 방식으로 변경
+    const m1 = daily.run200 ? 'mission-done' : '';
+    const m2 = daily.quiz3 >= 3 ? 'mission-done' : '';
+    const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
+
+    box.innerHTML = `
+      <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
+      <div class="mission-item ${m1}">🏃 200m 달리기</div>
+      <div class="mission-item ${m2}">🧠 퀴즈 3회 (${daily.quiz3}/3)</div>
+      <div class="mission-item ${m3}">✝ Faith 20 (${Math.min(daily.faith20, 20)}/20)</div>
+    `;
+  }
+
+  // [신규] 미션 달성 체크
+  function checkMissions() {
+    if (daily.completed) return;
+
+    if (!daily.run200 && distance >= 200) daily.run200 = true;
+    
+    // 3가지 조건 모두 달성 시
+    if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
+        daily.completed = true;
+        faith += 200;
+        saveData.faith = faith;
+        document.getElementById("faithText").innerText = faith;
+        showFloatText("🎉 일일 미션 완료! (+200 Faith)");
+        saveProgress();
+    }
+    localStorage.setItem("dailyMission", JSON.stringify(daily));
+    updateDailyMissionUI();
+  }
+
   /* ------------ 메인 게임 루프 ------------ */
   function gameLoop(now) {
     if (!running) return;
@@ -446,9 +489,9 @@
     lastTime = now;
 
     updateBuffUI(delta);
+    checkMissions(); // 미션 상태 체크
     
-    // 거리 및 속도 계산
-    if (!isBossBattle) { // 보스전 아닐 때만 거리 증가
+    if (!isBossBattle) { 
         let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
         distance += delta * 1 * distMultiplier;
         document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
@@ -460,38 +503,34 @@
         if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
         gameSpeed = currentSpeed;
     } else {
-        // 보스전일 때 배경 천천히 이동
         gameSpeed = BASE_SPEED * 0.5; 
     }
 
-    // 보스전 트리거 (400m)
-    if (!isBossBattle && distance >= 400 && boss.hp > 0) {
+    // [수정] 보스전 트리거: 400m -> 200m로 변경
+    if (!isBossBattle && distance >= 200 && boss.hp > 0) {
         startBossBattle();
     }
 
     if (isBossBattle) {
         updateBoss(delta);
     } else {
-        // 일반 패턴 (장애물, 운석, 미사일)
         obstacleTimer += delta;
         if (obstacleTimer >= nextObstacleTime) {
             spawnObstacle(); 
             obstacleTimer = 0; 
-            // 속도에 따라 장애물 간격 조정
             let sm = gameSpeed / BASE_SPEED;
             let baseTime = randBetween(1.8, 2.6);
             nextObstacleTime = baseTime / (1 + (sm - 1) * 0.6); 
             if (nextObstacleTime < 0.2) nextObstacleTime = 0.2;
         }
 
-        // 150m 운석
         if (distance > 150 && activeEffects.turbo <= 0) {
             meteorTimer += delta;
             if (meteorTimer > 3.0 / (gameSpeed/BASE_SPEED)) {
                 spawnMeteor(gameSpeed/BASE_SPEED); meteorTimer = 0;
             }
         }
-        // 200m 미사일
+        // 미사일도 200m 근처부터 등장 (보스와 겹칠 수 있음 - 난이도 상승 요소)
         if (distance > 200 && activeEffects.turbo <= 0) {
             missileTimer += delta;
             if (missileTimer > 4.0 / (gameSpeed/BASE_SPEED)) {
@@ -502,7 +541,27 @@
 
     updatePhysics(delta);
     
-    // 배경 이동
+    itemTimer += delta;
+    if (itemTimer >= nextItemTime) {
+      let limit = (currentSkin==='jihye') ? 4 : 8; 
+      if(itemTimer > limit) {
+          spawnItem(); nextItemTime = Math.random() * 6 + 6; itemTimer = 0;
+      }
+    }
+
+    for (let i = items.length - 1; i >= 0; i--) {
+      let it = items[i];
+      let left = parseFloat(it.style.left) || 0;
+      left -= gameSpeed * delta;
+      it.style.left = left + "px";
+      if (left < -60) { it.remove(); items.splice(i, 1); continue; }
+      const rP = player.getBoundingClientRect();
+      const rI = it.getBoundingClientRect();
+      if (rP.left < rI.right && rP.right > rI.left && rP.top < rI.bottom && rP.bottom > rI.top) {
+        activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
+      }
+    }
+    
     let speedMult = (gameSpeed / BASE_SPEED); 
     bg1X -= BG1_SPEED * speedMult * delta;
     bg2X -= BG2_SPEED * speedMult * delta;
@@ -521,40 +580,25 @@
     const warning = document.getElementById('bossWarning');
     warning.style.display = 'block';
     setTimeout(() => warning.style.display = 'none', 3000);
-
-    // 장애물 클리어
-    obstacles.forEach(o => o.remove());
-    obstacles = [];
-    
-    // 보스 등장
+    obstacles.forEach(o => o.remove()); obstacles = [];
     bossContainer.style.display = 'block';
     setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
-    
-    // 방패 버튼 활성화
     shieldBtn.style.display = 'flex';
   }
 
   function updateBoss(delta) {
     if (boss.hp <= 0) return;
-
-    // 보스 상하 이동 (사인파)
     boss.y += boss.vy;
-    if (boss.y > 80 || boss.y < 20) boss.vy *= -1; // 화면 % 기준 대략적 이동
+    if (boss.y > 80 || boss.y < 20) boss.vy *= -1; 
     bossContainer.style.top = boss.y + "%";
-
-    // 보스 공격 패턴
     boss.shootTimer += delta;
-    
-    let shootInterval = 2.0; // 기본 2초
+    let shootInterval = 2.0; 
     let missileCount = 1;
     let missileSpeedMult = 1.0;
-
     if (boss.hp <= 4) { missileCount = 2; missileSpeedMult = 1.3; }
     if (boss.hp <= 2) { missileCount = 3; missileSpeedMult = 1.7; shootInterval = 1.5; }
-
     if (boss.shootTimer > shootInterval) {
-        bossShoot(missileCount, missileSpeedMult);
-        boss.shootTimer = 0;
+        bossShoot(missileCount, missileSpeedMult); boss.shootTimer = 0;
     }
   }
 
@@ -563,51 +607,35 @@
         setTimeout(() => {
             const m = document.createElement("div");
             m.classList.add("projectile", "boss-missile");
-            
-            // 보스 위치에서 시작
             const rect = bossContainer.getBoundingClientRect();
-            const startX = rect.left; 
-            const startY = rect.top + 30; // 보스 중앙
-
-            // 플레이어 조준
-            const pX = 120; 
-            const pY = window.innerHeight - playerY - 30;
-            const dx = pX - startX;
-            const dy = pY - startY;
+            const startX = rect.left; const startY = rect.top + 30; 
+            const pX = 120; const pY = window.innerHeight - playerY - 30;
+            const dx = pX - startX; const dy = pY - startY;
             const dist = Math.sqrt(dx*dx + dy*dy);
-            
             const speed = 300 * speedMult;
-            const vx = (dx / dist) * speed;
-            const vy = (dy / dist) * speed;
-
-            m.style.left = startX + "px";
-            m.style.top = startY + "px";
-            m.x = startX; m.y = startY;
-            m.vx = vx; m.vy = vy;
-            m.w = 40; m.h = 40;
-            m.isBossMissile = true; // 태그
-
-            gameArea.appendChild(m);
-            projectiles.push(m);
-        }, i * 300); // 연발 간격
+            const vx = (dx / dist) * speed; const vy = (dy / dist) * speed;
+            m.style.left = startX + "px"; m.style.top = startY + "px";
+            m.x = startX; m.y = startY; m.vx = vx; m.vy = vy; m.w = 40; m.h = 40;
+            m.isBossMissile = true; 
+            gameArea.appendChild(m); projectiles.push(m);
+        }, i * 300); 
     }
   }
 
   function damageBoss() {
     boss.hp--;
-    // HP Bar Update
     bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + "%";
     showFloatText("💥 보스 타격!");
-
     if (boss.hp <= 0) {
-        // 보스 사망 처리
         bossContainer.style.transition = "top 1s ease-in";
-        bossContainer.style.top = "120%"; // 추락
+        bossContainer.style.top = "120%"; 
         setTimeout(() => { 
             bossContainer.style.display = 'none'; 
             isBossBattle = false;
             shieldBtn.style.display = 'none';
-            faith += 50; // 보상
+            faith += 50; 
+            // [수정] 보스 처치 시 미션 카운트도 올릴 수 있음 (선택사항)
+            daily.faith20 += 50; 
             showFloatText("🎉 보스 처치! (+50 Faith)");
         }, 1000);
     }
@@ -615,7 +643,6 @@
 
   /* ------------ 물리 및 충돌 ------------ */
   function updatePhysics(delta) {
-    // 플레이어 이동
     if (activeEffects.fly > 0) {
       playerY += (targetY - playerY) * 0.1; velocity = 0;
       if(speedLines) speedLines.style.display = "none";
@@ -631,57 +658,53 @@
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
-    // 플레이어 히트박스
     const px = 120, py = window.innerHeight - playerY - 60, pw = 60, ph = 60;
 
-    // 투사체 이동 및 충돌
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
-        p.x += p.vx * delta;
-        p.y += p.vy * delta;
-        p.style.left = p.x + "px";
-        p.style.top = p.y + "px";
+        p.x += p.vx * delta; p.y += p.vy * delta;
+        p.style.left = p.x + "px"; p.style.top = p.y + "px";
 
-        // 화면 밖 제거
         if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > window.innerHeight + 100) {
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
-        // 1. 플레이어 충돌 (보스 미사일 or 일반 투사체)
-        // 단, 반사된 미사일은 플레이어에게 해를 입히지 않음
         if (!p.isReflected && !activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
             if (px < p.x + p.w && px + pw > p.x && py < p.y + p.h && py + ph > p.y) {
-                damageLife();
-                p.remove(); projectiles.splice(i, 1);
-                continue;
+                damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
 
-        // 2. 보스 충돌 (반사된 미사일만)
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect();
-            // 보스 히트박스 근사값
             if (p.x > bRect.left && p.x < bRect.right && p.y > bRect.top && p.y < bRect.bottom) {
-                damageBoss();
-                p.remove(); projectiles.splice(i, 1);
-                continue;
+                damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
     }
 
-    // 장애물 이동
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
         let left = parseFloat(o.style.left) || 0;
         left -= gameSpeed * delta;
         o.style.left = left + "px";
-        
         let rw = o.offsetWidth || 60;
+        
         if (left + rw < 0) {
-            o.remove(); obstacles.splice(i, 1); continue;
+            o.remove(); obstacles.splice(i, 1);
+            obstacleSurviveCount++;
+            if (obstacleSurviveCount >= 5) {
+                combo++; faith++; daily.faith20++; // [수정] 콤보 달성 시 미션 카운트도 증가
+                saveData.faith = faith;
+                document.getElementById("faithText").innerText = faith;
+                const ce = document.getElementById("comboEffect");
+                ce.style.display = "block"; ce.innerText = `COMBO +${combo}!`;
+                setTimeout(() => ce.style.display = "none", 1000);
+                obstacleSurviveCount = 0; saveProgress();
+            }
+            continue;
         }
         
-        // 충돌 (getBoundingClientRect 사용, 안전)
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
             const rP = player.getBoundingClientRect();
             const rO = o.getBoundingClientRect();
@@ -689,14 +712,17 @@
                 damageLife(); break;
             }
         }
+        if(currentSkin === 'stephanie' && left < 50 && !o.passed) {
+            faith++; daily.faith20++; // [수정] 스테파니 패시브 미션 카운트
+            document.getElementById("faithText").innerText = faith;
+            o.passed = true;
+        }
     }
   }
 
-  // 기존 함수들 (스폰, 데미지 등)
-  function spawnMeteor(mult) { /* ... (이전 코드와 동일, 충돌은 위에서 통합 처리) ... */ 
+  function spawnMeteor(mult) { 
     const m = document.createElement("div"); m.classList.add("projectile");
     const sx = window.innerWidth + Math.random()*200; const sy = -100;
-    // 속도 계산
     let s = 150 + (mult * 200);
     m.style.left=sx+"px"; m.style.top=sy+"px";
     m.x=sx; m.y=sy; m.vx=-s*0.8; m.vy=s; m.w=40; m.h=40;
@@ -714,10 +740,9 @@
     gameArea.appendChild(m); projectiles.push(m);
   }
 
-  function spawnObstacle() { /* ... (기존 코드 그대로) ... */ 
+  function spawnObstacle() { 
     if(!running || activeEffects.turbo>0) return;
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
-    // 가로 장애물
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
@@ -730,7 +755,6 @@
         }
         return;
     }
-    // 세로 장애물
     const type = (Math.random()<0.5)?'obs-log':'obs-rock';
     const sx = window.innerWidth+80;
     if(Math.random()<0.5) {
@@ -747,6 +771,19 @@
     }
   }
 
+  function spawnItem() {
+    const types = ["cross", "wings", "wind", "bible"];
+    const type  = types[Math.floor(Math.random() * types.length)];
+    const item  = document.createElement("div");
+    item.classList.add("item");
+    item.dataset.type = type;
+    item.style.left   = window.innerWidth + "px";
+    item.style.bottom = (Math.random() * 250 + 120) + "px";
+    item.style.backgroundImage = `url('https://antiochapp.github.io/TrapGame/item_${type}.png')`;
+    gameArea.appendChild(item);
+    items.push(item);
+  }
+
   function damageLife() {
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
     if(activeEffects.turbo>0 || activeEffects.invincible>0 || invincible || !running) return;
@@ -755,9 +792,8 @@
     if(life<=0) gameOver();
   }
 
-  /* ------------ (나머지 유틸 함수들: saveProgress, showFloatText 등 기존 유지) ------------ */
   function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
-  function startGameNow() { document.getElementById("startGuide").style.display="none"; running=true; lastTime=performance.now(); requestAnimationFrame(gameLoop); }
+  function startGameNow() { document.getElementById("startGuide").style.display="none"; running=true; lastTime=performance.now(); requestAnimationFrame(gameLoop); updateDailyMissionUI(); }
   async function saveProgress() { try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"save",id,saveData})});}catch(e){} localStorage.setItem("run_save",JSON.stringify(saveData)); }
   async function gameOver() { if(rankingSaved)return; running=false; invincible=true; player.style.opacity="0.4"; document.getElementById("finalDist").innerText=Math.floor(distance); document.getElementById("gameOverModal").style.display="flex"; try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})});}catch(e){} rankingSaved=true; }
   async function confirmRanking() { const msg=document.getElementById("rankMsg").value.trim(); try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateComment",id,message:msg})}); alert("등록완료"); window.location.href="/TrapGame/menu.html";}catch(e){alert("오류"); window.location.href="/TrapGame/menu.html";} }
