@@ -7,7 +7,7 @@
 
 <style>
   :root {
-    --bg-panel: rgba(253, 250, 242, 0.95); /* 반투명 패널 */
+    --bg-panel: rgba(253, 250, 242, 0.95);
     --border-dark: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
@@ -19,15 +19,13 @@
   body {
     margin: 0; padding: 0; min-height: 100vh;
     display: flex; justify-content: center; align-items: center;
-    /* [개선] 게임과 동일한 하늘 배경 적용 */
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
-    background-attachment: fixed; /* 배경 고정 */
+    background-attachment: fixed;
     font-family: "Pretendard", system-ui, -apple-system, sans-serif;
     color: var(--text-main);
   }
 
-  /* 배경 오버레이 (가독성 확보) */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(255, 248, 235, 0.3); z-index: -1;
@@ -35,41 +33,58 @@
 
   .pixel-card {
     width: 90%; max-width: 400px;
-    padding: 32px 24px;
+    padding: 40px 24px 32px; /* 상단 여백 확보 */
     background: var(--bg-panel);
     border-radius: 16px;
     border: 4px solid var(--border-dark);
     box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 12px 20px rgba(0,0,0,0.3);
     backdrop-filter: blur(5px);
-    transition: transform 0.3s ease;
+    position: relative;
+    margin-top: 20px;
+  }
+
+  /* [수정] 캐릭터 장식 영역 */
+  .deco-chars {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* 간격 넓힘 */
+    margin-bottom: 15px;
+  }
+
+  /* [수정] 캐릭터 스타일 (박스 제거, 이미지만 표시) */
+  .char-img {
+    width: 54px; height: 54px; /* 크기 조금 키움 */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    animation: bounce 1s infinite alternate; /* 콩콩 뛰는 효과 */
+  }
+  
+  /* 캐릭터별 엇박자 점프 */
+  .char-img:nth-child(1) { animation-delay: 0s; }
+  .char-img:nth-child(2) { animation-delay: 0.2s; }
+  .char-img:nth-child(3) { animation-delay: 0.4s; }
+
+  /* 이미지 연결 */
+  .moses { background-image: url("pixel_moses.png"); } 
+  .david { background-image: url("pixel_david.png"); }
+  .peter { background-image: url("pixel_peter.png"); }
+
+  @keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
   }
 
   .pixel-title {
-    text-align: center; font-size: 24px; font-weight: 900;
+    text-align: center; font-size: 28px; font-weight: 900;
     margin: 0 0 8px; letter-spacing: -0.02em; color: #4b2e12;
   }
 
   .pixel-sub {
-    text-align: center; font-size: 13px; color: #8a735a; margin-bottom: 24px;
+    text-align: center; font-size: 14px; color: #8a735a; margin-bottom: 28px;
     font-weight: 600;
   }
-
-  /* 캐릭터 아이콘 (이미지 없을 때 이모지 보이게 설정) */
-  .avatar-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
-  .avatar {
-    width: 42px; height: 42px;
-    background: #fff; border-radius: 8px;
-    border: 3px solid #e0d8c8;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 24px; cursor: default;
-    box-shadow: 0 4px 0 #d7ccc0;
-    background-size: cover; background-position: center;
-  }
-  
-  /* 이미지가 있으면 이모지를 덮어씀 */
-  .avatar.moses { background-image: url("pixel_moses.png"); } 
-  .avatar.david { background-image: url("pixel_david.png"); }
-  .avatar.peter { background-image: url("pixel_peter.png"); }
 
   label { display: block; font-size: 13px; margin-top: 12px; margin-bottom: 6px; font-weight: 700; color: #5d4037; }
 
@@ -116,14 +131,15 @@
 <body>
 
 <div class="pixel-card" id="loginBox">
+  
+  <div class="deco-chars">
+    <div class="char-img moses"></div>
+    <div class="char-img david"></div>
+    <div class="char-img peter"></div>
+  </div>
+
   <h1 class="pixel-title">Disciple Run</h1>
   <div class="pixel-sub">안디옥 청년부 홀리 스파크 런!</div>
-
-  <div class="avatar-row">
-    <div class="avatar moses" title="모세">🧔‍♂️</div>
-    <div class="avatar david" title="다윗">🤴</div>
-    <div class="avatar peter" title="베드로">🐟</div>
-  </div>
 
   <label for="loginId">ID</label>
   <input id="loginId" type="text" autocomplete="username" placeholder="아이디 입력">
@@ -189,7 +205,6 @@
   const signupBox = document.getElementById("signupBox");
   const findPwBox = document.getElementById("findPwBox");
 
-  // [신규] 엔터키 입력 시 동작 함수
   function handleEnter(e, func) {
     if (e.key === "Enter") func();
   }
@@ -248,18 +263,15 @@
         setTimeout(() => loginBox.classList.remove("shake"), 400);
       } else {
         const data = JSON.parse(txt);
-        // 로컬 스토리지 저장
         localStorage.setItem("run_id", id);
         localStorage.setItem("run_name", data.name);
         localStorage.setItem("run_bible", data.bible);
         localStorage.setItem("run_save", JSON.stringify(data.saveData));
-
-        // 페이지 이동
         window.location.href = "/TrapGame/menu.html";
       }
     } catch (e) {
       console.error(e);
-      alert("서버 연결에 실패했습니다. 인터넷 상태를 확인해주세요.");
+      alert("서버 연결에 실패했습니다.");
     }
 
     btn.disabled = false;
