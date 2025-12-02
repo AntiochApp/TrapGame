@@ -28,7 +28,6 @@
       background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* 배경 레이어 */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute; left: 0; top: 0; width: 200%; height: 100%;
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
@@ -40,7 +39,6 @@
 
     #ground { display: none; }
 
-    /* 플레이어 */
     #player {
       position: absolute; 
       z-index: 50; 
@@ -57,7 +55,6 @@
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* ------------ 장애물 공통 ------------ */
     .obstacle {
       position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
     }
@@ -67,18 +64,14 @@
     .obs-ground.obs-cap::after { top: -12px; }
     .obs-ceil.obs-cap::after { bottom: -12px; }
 
-    /* [타입 1] 세로 통나무 */
     .obs-log { width: 60px; background-color: #8D6E63; border-left: 4px solid #5D4037; border-right: 4px solid #5D4037; background-image: linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%), linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%); }
     .obs-log.obs-cap::after { background-color: #66BB6A; border: 4px solid #1B5E20; background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%); }
 
-    /* [타입 2] 돌기둥 */
     .obs-rock { width: 60px; background-color: #9E9E9E; border-left: 4px solid #616161; border-right: 4px solid #616161; background-image: radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%), radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 20%); background-size: 16px 16px; }
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
 
-    /* [타입 3] 가로 긴 통나무 */
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); background-size: 100% 10px; border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* ------------ 투사체 (운석 & 미사일) ------------ */
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; 
       border-radius: 50%; 
@@ -92,26 +85,21 @@
       transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); 
     }
     
-    /* [신규] 미사일 스타일 (색상 변경으로 구분) */
     .missile-style {
-      filter: hue-rotate(220deg); /* 파란색/보라색 계열로 변경 */
+      filter: hue-rotate(220deg) brightness(1.2); 
     }
 
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* 아이템 */
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    /* HUD */
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* 버프 상태창 */
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.5); border-left: 5px solid; }
 
-    /* 액티브 스킬 버튼 */
     #abilityBtn {
       position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px;
       background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff;
@@ -123,7 +111,6 @@
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; background: #555; }
     #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
-    /* 스피드 라인 */
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
 
@@ -134,7 +121,6 @@
     #comboEffect { top: 20%; font-size: 40px; font-weight: 900; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; font-weight: 900; color: #00ffcc; text-shadow: 3px 3px #006644; }
 
-    /* 모달 */
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76; text-align: center; }
     .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
@@ -308,7 +294,7 @@
 
   let distance  = 0;
   let obstacles = [];
-  let projectiles = []; // 운석+미사일 통합 관리
+  let projectiles = []; // 운석+미사일
   let running   = false;
   let invincible = false;
 
@@ -322,7 +308,6 @@
   let obstacleTimer = 0;
   let nextObstacleTime = 2.0;
   
-  // 투사체 타이머 분리
   let meteorTimer = 0; 
   let missileTimer = 0;
 
@@ -495,18 +480,20 @@
     }
   }
 
-  // [기능 1] 운석 생성 (150m~) - 위에서 떨어짐
-  function spawnMeteor(speedMultiplier) {
+  // [수정] 운석 생성 (150m~) - 독립 속도 적용
+  function spawnMeteor(currentProgress) {
     const meteor = document.createElement("div");
-    meteor.classList.add("projectile"); // 공통 클래스
-    // 시각적 구분을 위해 기본색 사용 (CSS 기본값: 주황/빨강)
+    meteor.classList.add("projectile"); 
 
     const startX = window.innerWidth + Math.random() * 200;
     const startY = -100;
     
-    // 왼쪽 아래로 떨어지는 속도 벡터
-    const vx = -150 * speedMultiplier * 0.8;
-    const vy = 150 * speedMultiplier * 1.0;
+    // 독립 속도 계산: 기본 150 + 진행도에 따라 약간 증가 (최대 2.5배 정도)
+    // 게임 전체 속도(15배)를 따라가지 않음
+    let speed = 150 + (currentProgress * 200); 
+    
+    const vx = -speed * 0.8;
+    const vy = speed * 1.0;
 
     meteor.style.left = startX + "px";
     meteor.style.top = startY + "px";
@@ -518,15 +505,14 @@
     projectiles.push(meteor);
   }
 
-  // [기능 2] 미사일 생성 (200m~) - 오른쪽에서 조준 사격
-  function spawnMissile(speedMultiplier) {
+  // [수정] 미사일 생성 (200m~) - 독립 속도 적용
+  function spawnMissile(currentProgress) {
     const missile = document.createElement("div");
-    missile.classList.add("projectile", "missile-style"); // 파란색 필터 적용
+    missile.classList.add("projectile", "missile-style"); 
 
     const startX = window.innerWidth + 50;
     const startY = Math.random() * (window.innerHeight - 100);
 
-    // 플레이어 조준 (현재 위치 기준 일직선 발사)
     const pX = 120 + 30; 
     const pY = window.innerHeight - playerY - 30;
 
@@ -534,7 +520,8 @@
     const dy = pY - startY;
     const dist = Math.sqrt(dx*dx + dy*dy);
     
-    const speed = 250 * speedMultiplier;
+    // 독립 속도: 미사일은 운석보다 빠름
+    let speed = 250 + (currentProgress * 250); 
     const vx = (dx / dist) * speed;
     const vy = (dy / dist) * speed;
 
@@ -629,8 +616,10 @@
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
+    /* [수정] 게임 속도 15배속 로직 복구 */
     let progress = Math.min(distance / 3000, 1);
-    let speedMultiplier = 1 + (progress * 14); 
+    let speedMultiplier = 1 + (progress * 14); // 3000m 도달 시 15배속
+    
     let currentSpeed = BASE_SPEED * speedMultiplier;
 
     if (activeEffects.slow > 0) currentSpeed *= 0.5;
@@ -651,27 +640,29 @@
       }
     }
 
-    /* [수정] 150m 이상: 운석 떨어짐 */
+    /* [수정] 투사체 생성에 speedMultiplier를 전달하지 않고 progress만 전달 */
     if (distance > 150 && activeEffects.turbo <= 0) {
         meteorTimer += delta;
+        // 빈도는 여전히 게임 속도에 비례 (화면이 빨리 지나가니까)
         let rate = 3.0 / speedMultiplier;
-        if (rate < 0.3) rate = 0.3;
+        if (rate < 0.2) rate = 0.2;
         if (meteorTimer > rate) {
-            spawnMeteor(speedMultiplier); meteorTimer = 0;
+            spawnMeteor(progress); // progress 전달
+            meteorTimer = 0;
         }
     }
 
-    /* [수정] 200m 이상: 미사일 발사 (운석과 함께 등장) */
     if (distance > 200 && activeEffects.turbo <= 0) {
         missileTimer += delta;
-        let rate = 4.0 / speedMultiplier; // 미사일은 좀 더 가끔
-        if (rate < 0.8) rate = 0.8;
+        let rate = 4.0 / speedMultiplier;
+        if (rate < 0.5) rate = 0.5;
         if (missileTimer > rate) {
-            spawnMissile(speedMultiplier); missileTimer = 0;
+            spawnMissile(progress); // progress 전달
+            missileTimer = 0;
         }
     }
 
-    /* 투사체(운석+미사일) 이동 및 충돌 로직 */
+    /* 투사체 이동 및 충돌 로직 */
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         
@@ -681,15 +672,17 @@
         p.style.left = p.x + "px";
         p.style.top = p.y + "px";
 
-        // 화면 밖 제거
         if (p.x < -100 || p.y > window.innerHeight + 100 || p.x > window.innerWidth + 200) {
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
+        // 충돌 체크
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
             const rectP = player.getBoundingClientRect();
             const rectM = p.getBoundingClientRect();
-            const buffer = 5; 
+            
+            // [수정] 충돌 판정 여유값 10px (적당히 널널하게)
+            const buffer = 10; 
             if (
                 rectP.left + buffer < rectM.right - buffer &&
                 rectP.right - buffer > rectM.left + buffer &&
