@@ -63,7 +63,7 @@
 
     #player {
       position: absolute;
-      z-index: 50; /* 플레이어 레이어 상향 */
+      z-index: 50; 
       left: 120px; bottom: 40px;
       width: 60px; height: 60px;
       background: url("disciple.png") center/contain no-repeat;
@@ -89,9 +89,9 @@
     .obs-ground.obs-cap::after { top: -12px; }
     .obs-ceil.obs-cap::after { bottom: -12px; }
 
-    /* [타입 1] 세로 통나무 (기존) */
+    /* [타입 1] 세로 통나무 */
     .obs-log {
-      width: 60px; /* 기본 너비 */
+      width: 60px; 
       background-color: #8D6E63;
       background-image: 
         linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%),
@@ -105,7 +105,7 @@
         background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%);
     }
 
-    /* [타입 2] 돌기둥 (기존) */
+    /* [타입 2] 돌기둥 */
     .obs-rock {
       width: 60px;
       background-color: #9E9E9E; 
@@ -121,18 +121,17 @@
         border: 4px solid #424242; 
     }
 
-    /* [타입 3] 가로 긴 통나무 (신규) */
+    /* [타입 3] 가로 긴 통나무 */
     .obs-long {
-      width: 110px;  /* 가로로 긺 */
-      height: 40px;  /* 높이는 낮음 */
-      background-color: #5D4037; /* 더 진한 나무색 */
+      width: 110px;  
+      height: 40px;  
+      background-color: #5D4037; 
       background-image: 
-        linear-gradient(0deg, rgba(0,0,0,0.1) 50%, transparent 50%); /* 가로 결 */
+        linear-gradient(0deg, rgba(0,0,0,0.1) 50%, transparent 50%); 
       background-size: 100% 8px;
       border: 4px solid #3E2723;
       border-radius: 8px;
     }
-    /* 가로 통나무는 뚜껑(cap) 없음 */
 
     /* ------------ 운석 ------------ */
     .meteor {
@@ -190,10 +189,10 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* ------------ [버프 상태창 수정] ------------ */
+    /* 버프 상태창 (화면 고정) */
     #buffArea {
       position: fixed;
-      z-index: 2147483647; /* 최대값으로 설정하여 무조건 보이게 함 */
+      z-index: 2147483647; 
       bottom: 20px; 
       right: 15px;
       display: flex;
@@ -201,7 +200,6 @@
       align-items: flex-end;
       gap: 8px;
       pointer-events: none;
-      /* 모바일 GPU 렌더링 강제 (이게 핵심) */
       transform: translateZ(0); 
       -webkit-transform: translateZ(0);
     }
@@ -221,7 +219,7 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* 터보 스피드 라인 */
+    /* 스피드 라인 */
     #speedLines {
       display: none;
       position: fixed;
@@ -266,7 +264,6 @@
     #comboEffect { top: 20%; font-size: 40px; font-weight: 900; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; font-weight: 900; color: #00ffcc; text-shadow: 3px 3px #006644; }
 
-    /* 모달 */
     .modal-bg {
       position: fixed;
       top: 0; left: 0;
@@ -275,7 +272,7 @@
       display: none;
       justify-content: center; align-items: center;
       padding: 16px;
-      z-index: 20000; /* 버프창보다 더 위 */
+      z-index: 20000; 
     }
     .modal-box {
       width: 90%; max-width: 420px;
@@ -329,9 +326,9 @@
 • 상점에서 민첩/생명력/랜덤 뽑기 교환
 
 [아이템 효과]
-✝️ <b>십자가:</b> 무적 (10초)
-🕊️ <b>날개:</b> 터보 모드 (초고속 비행)
-🍃 <b>바람:</b> 속도 감소
+✝️ <b>십자가:</b> 무적 (기본 10초 + 강화)
+🕊️ <b>날개:</b> 터보 모드 (기본 5초 + 강화)
+🍃 <b>바람:</b> 속도 감소 (기본 10초 + 강화)
 📘 <b>성경:</b> Faith +10
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
@@ -405,8 +402,14 @@
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
+  /* ------------ 업그레이드 레벨 불러오기 ------------ */
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
+  
+  // 추가된 업그레이드 스탯 로딩
+  let lvlInvincible = saveData.up_invincible || 0;
+  let lvlTurbo      = saveData.up_turbo || 0;
+  let lvlSlow       = saveData.up_slow || 0;
 
   document.getElementById("lifeText").innerText  = life;
   document.getElementById("faithText").innerText = faith;
@@ -497,26 +500,20 @@
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
     
-    // [수정됨] 100m 이상일 때 가로 장애물(Bar) 20% 확률 등장
+    // 100m 이상일 때 가로 장애물(Bar) 20% 확률 등장
     let spawnHorizontal = (distance > 100) && (Math.random() < 0.20);
 
     if (spawnHorizontal) {
-        // 가로 장애물 생성
         const box = document.createElement("div");
         box.classList.add("obstacle", "obs-long");
-        
-        // 바닥에 깔리거나, 살짝 떠서 점프 강요 (랜덤)
-        // 바닥형: bottom 0, 공중형: bottom 50
         const isFlying = Math.random() < 0.5;
         box.style.left = (window.innerWidth + 80) + "px";
         box.style.bottom = isFlying ? "50px" : "0px"; 
-        
         gameArea.appendChild(box);
         obstacles.push(box);
         return;
     }
 
-    // 기존 세로 장애물 로직
     const useGroundBox = Math.random() < 0.5;
     const obsTypeClass = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
 
@@ -598,13 +595,23 @@
     setTimeout(() => el.remove(), 1000);
   }
 
+  /* ------------ [수정됨] 아이템 효과 (업그레이드 반영) ------------ */
   function activateItem(type) {
     if (type === "cross") {
-      activeEffects.invincible = 10; showFloatText("🛡️ 무적!");
+      // 기본 10초 + 레벨당 1초
+      let duration = 10 + lvlInvincible;
+      activeEffects.invincible = duration; 
+      showFloatText(`🛡️ 무적! (${duration}s)`);
     } else if (type === "wings") {
-      activeEffects.turbo = 5; showFloatText("🚀 터보 모드!");
+      // 기본 5초 + 레벨당 1초
+      let duration = 5 + lvlTurbo;
+      activeEffects.turbo = duration; 
+      showFloatText(`🚀 터보 모드! (${duration}s)`);
     } else if (type === "wind") {
-      activeEffects.slow = 10; showFloatText("🍃 속도 감소");
+      // 기본 10초 + 레벨당 1초
+      let duration = 10 + lvlSlow;
+      activeEffects.slow = duration; 
+      showFloatText(`🍃 속도 감소 (${duration}s)`);
     } else if (type === "bible") {
       faith += 10; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
       showFloatText("✝ Faith +10"); saveProgress();
