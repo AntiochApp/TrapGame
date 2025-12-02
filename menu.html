@@ -3,187 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <title>안디옥 청년부 게임 – Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
 <style>
   :root {
-    --bg-main: #f4f0e4;
     --bg-panel: #fdfaf2;
     --border-dark: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
-    --accent-light: #ffe1a8;
+    --primary-btn: #4CAF50; /* 게임시작 버튼용 녹색 */
+    --primary-dark: #2E7D32;
     --text-main: #3a2513;
   }
 
   * { box-sizing: border-box; }
 
-  #menuWrapper {
-  flex: 1;                /* top-bar 아래 남는 공간을 전부 차지 */
-  display: flex;
-  justify-content: center; /* 가로 중앙 */
-  align-items: center;     /* 세로 중앙 */
-}
-  
-body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background:
-    linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
-    linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-  font-family: "Pretendard", system-ui, -apple-system, sans-serif;
-  color: var(--text-main);
-}
-
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    background: #3b2614;
-    color: #fbe8c4;
-    font-size: 14px;
-    border-bottom: 4px solid #1f130b;
-  }
-
-  .game-logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-  }
-
-  .logo-pixel {
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    background: #f7cf70;
-    border: 3px solid #1f130b;
-    image-rendering: pixelated;
-    background-image: url("pixel_cross.png");
+  body {
+    margin: 0; padding: 0; height: 100vh;
+    display: flex; flex-direction: column;
+    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    /* [개선] 게임 분위기와 이어지는 배경 적용 */
+    background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
-    background-position: center;
   }
 
-  .player-label {
-    font-size: 13px;
-    opacity: 0.9;
+  /* 배경 오버레이 (텍스트 가독성 확보) */
+  body::before {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 248, 235, 0.4); z-index: -1;
   }
 
+  /* 상단바 */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: rgba(59, 38, 20, 0.95); color: #fbe8c4;
+    font-size: 14px; border-bottom: 4px solid #1f130b; backdrop-filter: blur(4px);
+  }
+
+  .game-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: 0.05em; }
+  .logo-pixel {
+    width: 24px; height: 24px; border-radius: 4px; background: #f7cf70;
+    border: 2px solid #fff; image-rendering: pixelated;
+    background-image: url("pixel_cross.png"); background-size: cover;
+  }
+
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .logout-btn {
+    padding: 4px 8px; font-size: 11px; background: #d32f2f; color: white;
+    border: 0; border-radius: 4px; cursor: pointer;
+  }
+
+  /* 메인 컨테이너 */
+  #menuWrapper { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; }
+  
   .container {
-    max-width: 460px;
-    margin: 80px auto 40px;
-    padding: 32px 30px 28px;
-    background: var(--bg-panel);
-    border-radius: 12px;
+    width: 90%; max-width: 400px;
+    padding: 32px 24px;
+    background: rgba(253, 250, 242, 0.95); /* 반투명 패널 */
+    border-radius: 16px;
     border: 4px solid var(--border-dark);
-    box-shadow:
-      0 0 0 4px #fff,
-      0 8px 0 0 #b79b76,
-      0 12px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.5), 0 12px 20px rgba(0,0,0,0.3);
     text-align: center;
+    backdrop-filter: blur(5px);
   }
 
-  h1 {
-    font-size: 28px;
-    font-weight: 800;
-    margin: 0 0 6px;
-  }
+  h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; color: #3a2513; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+  .sub { font-size: 13px; color: #7d6a4c; margin-bottom: 28px; font-weight: 600; }
 
-  .sub {
-    font-size: 13px;
-    color: #7d6a4c;
-    margin-bottom: 22px;
-  }
-
+  /* 버튼 스타일 */
   .pixel-btn {
-    width: 100%;
-    padding: 15px;
-    font-size: 17px;
-    margin-top: 14px;
-    border: 0;
-    border-radius: 10px;
+    width: 100%; padding: 16px; font-size: 18px; margin-bottom: 12px;
+    border: 0; border-radius: 12px; color: #fff; cursor: pointer;
+    font-weight: 800; transition: transform 0.1s;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .pixel-btn:active { transform: translateY(3px); }
+
+  /* [개선] 시작 버튼 강조 (녹색) */
+  .btn-start {
+    background: var(--primary-btn);
+    box-shadow: 0 5px 0 var(--primary-dark);
+    font-size: 20px; padding: 18px;
+  }
+  .btn-start:active { box-shadow: 0 2px 0 var(--primary-dark); }
+
+  /* [개선] 일반 버튼 (갈색/주황) */
+  .btn-normal {
     background: var(--accent);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 4px 0 var(--accent-dark);
-    font-weight: 700;
+    box-shadow: 0 5px 0 var(--accent-dark);
   }
+  .btn-normal:active { box-shadow: 0 2px 0 var(--accent-dark); }
 
-  .pixel-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--accent-dark);
-  }
+  .version { margin-top: 24px; font-size: 11px; color: #9a8970; opacity: 0.7; }
 
-  .version {
-    margin-top: 20px;
-    font-size: 11px;
-    color: #9a8970;
-  }
-
-  /* Ranking Modal */
+  /* 랭킹 모달 */
   .modal-bg {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.55);
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+    justify-content: center; align-items: center; padding: 16px; z-index: 999;
+    backdrop-filter: blur(3px);
   }
-
   .modal {
-    width: 100%;
-    max-width: 420px;
-    background: var(--bg-panel);
-    padding: 22px 20px 18px;
-    border-radius: 12px;
-    border: 4px solid var(--border-dark);
-    box-shadow:
-      0 0 0 4px #fff,
-      0 10px 0 #b79b76;
-    text-align: center;
+    width: 100%; max-width: 420px; background: var(--bg-panel);
+    padding: 24px; border-radius: 14px; border: 4px solid var(--border-dark);
+    box-shadow: 0 10px 0 #b79b76; text-align: center;
+    max-height: 80vh; overflow-y: auto;
   }
-
-  .modal h2 {
-    margin: 0 0 12px;
-    font-size: 22px;
-  }
-
   .rank-item {
-    margin: 8px 0;
-    padding: 8px 10px;
-    background: #f2efe9;
-    border-radius: 8px;
-    border: 2px solid #c9b79c;
-    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 8px 0; padding: 10px 14px;
+    background: #fff; border-radius: 8px; border: 2px solid #e0d8c8;
+    font-size: 14px; text-align: left;
   }
+  .rank-rank { font-weight: 900; color: var(--accent-dark); width: 40px; }
+  .rank-info { flex: 1; }
+  .rank-score { font-weight: bold; color: #d32f2f; }
+  .msg { font-size: 12px; color: #888; display: block; margin-top: 2px; font-style: italic;}
 
   .close-btn {
-    margin-top: 14px;
-    padding: 9px 18px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 0;
-    box-shadow: 0 3px 0 var(--accent-dark);
-    font-size: 13px;
-  }
-  .close-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--accent-dark);
-  }
-
-  @media (max-width: 600px) {
-    .container {
-      margin: 40px 16px 24px;
-      padding: 26px 18px 22px;
-    }
+    margin-top: 18px; padding: 12px 24px; background: #555;
+    color: #fff; border-radius: 8px; cursor: pointer; border: 0;
+    box-shadow: 0 4px 0 #333; font-weight: bold; width: 100%;
   }
 </style>
 </head>
@@ -195,25 +136,33 @@ body {
     <div class="logo-pixel"></div>
     <span>Disciple Run</span>
   </div>
-  <div class="player-label" id="playerName"></div>
+  <div class="user-info">
+    <span id="playerName" style="font-weight:bold;">Guest</span>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
 </div>
 
 <div id="menuWrapper">
-<div class="container">
-  <h1>메인 메뉴</h1>
-  <div class="sub">ANTIOCH HOLY SPARK RUNNING TIME!</div>
+  <div class="container">
+    <h1>메인 메뉴</h1>
+    <div class="sub">ANTIOCH HOLY SPARK RUN</div>
 
-  <button class="pixel-btn" onclick="startGame()">▶ 게임 시작</button>
-  <button class="pixel-btn" onclick="openStore()">🛒 상점</button>
-  <button class="pixel-btn" onclick="showRanking()">🏆 랭킹 보기</button>
+    <button class="pixel-btn btn-start" onclick="startGame()">
+      <span>▶ 게임 시작</span>
+    </button>
+    
+    <div style="display:flex; gap:10px;">
+      <button class="pixel-btn btn-normal" onclick="openStore()">🛒 상점</button>
+      <button class="pixel-btn btn-normal" onclick="showRanking()">🏆 랭킹</button>
+    </div>
 
-  <div class="version">v1.0 · Antioch Youth</div>
+    <div class="version">v1.1 · Antioch Youth</div>
+  </div>
 </div>
 
-<!-- Ranking Modal -->
 <div id="rankingModal" class="modal-bg">
   <div class="modal">
-    <h2>🏆 TOP 10 랭킹</h2>
+    <h2 style="margin-top:0;">🏆 명예의 전당</h2>
     <div id="rankingList"></div>
     <button class="close-btn" onclick="closeRanking()">닫기</button>
   </div>
@@ -230,17 +179,20 @@ body {
     window.location.href = "/TrapGame/index.html";
   }
 
-  document.getElementById("playerName").innerText = name ? `Player: ${name}` : "Guest";
+  document.getElementById("playerName").innerText = name || "Guest";
 
-  function startGame() {
-    window.location.href = "/TrapGame/game.html";
+  function startGame() { window.location.href = "/TrapGame/game.html"; }
+  function openStore() { window.location.href = "/TrapGame/store.html"; }
+  
+  function logout() {
+    if(confirm("로그아웃 하시겠습니까?")) {
+      localStorage.removeItem("run_id");
+      localStorage.removeItem("run_name");
+      window.location.href = "/TrapGame/index.html";
+    }
   }
 
-  function openStore() {
-    window.location.href = "/TrapGame/store.html";
-  }
-
-  // 서버의 최신 saveData를 한번 동기화 (메뉴 입장시)
+  // 서버 동기화
   async function refreshSave() {
     try {
       const res = await fetch(API_URL, {
@@ -249,60 +201,53 @@ body {
       });
       const txt = await res.text();
       if (txt !== "fail") {
-        try {
-          const obj = JSON.parse(txt);
-          localStorage.setItem("run_save", JSON.stringify(obj));
-        } catch (e) {
-          console.warn("saveData 파싱 실패:", e);
-        }
+        localStorage.setItem("run_save", txt); // 받은 JSON 문자열 그대로 저장
       }
-    } catch (e) {
-      console.warn("saveData 동기화 실패:", e);
-    }
+    } catch (e) { console.warn("Sync Fail:", e); }
   }
   refreshSave();
 
-  // ---------------- 랭킹 불러오기 ----------------
+  // 랭킹 불러오기
   async function showRanking() {
     const modal = document.getElementById("rankingModal");
     modal.style.display = "flex";
-
     const listDiv = document.getElementById("rankingList");
-    listDiv.innerHTML = "불러오는 중...";
+    listDiv.innerHTML = "<p style='padding:20px;'>데이터를 불러오는 중...</p>";
 
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "getRanking" })
-      });
-
+      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getRanking" }) });
       const txt = await res.text();
       const list = JSON.parse(txt);
 
       let html = "";
       if (list.length === 0) {
-        html = "<p>아직 랭킹이 없습니다.</p>";
+        html = "<p>아직 등록된 랭킹이 없습니다.</p>";
       } else {
         list.forEach((item, index) => {
+          let rankIcon = (index + 1) + ".";
+          if(index === 0) rankIcon = "🥇";
+          if(index === 1) rankIcon = "🥈";
+          if(index === 2) rankIcon = "🥉";
+
           html += `
             <div class="rank-item">
-              <strong>${index + 1}등</strong><br>
-              ${item.name} — <b>${item.distance}m</b><br>
-              <i>"${item.message || ""}"</i>
+              <div class="rank-rank">${rankIcon}</div>
+              <div class="rank-info">
+                <div>${item.name}</div>
+                <span class="msg">${item.message || "한마디 없음"}</span>
+              </div>
+              <div class="rank-score">${item.distance}m</div>
             </div>
           `;
         });
       }
-
       listDiv.innerHTML = html;
     } catch (e) {
-      listDiv.innerHTML = "<p>랭킹을 불러오지 못했습니다.</p>";
+      listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
     }
   }
 
-  function closeRanking() {
-    document.getElementById("rankingModal").style.display = "none";
-  }
+  function closeRanking() { document.getElementById("rankingModal").style.display = "none"; }
 </script>
 
 </body>
