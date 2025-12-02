@@ -78,9 +78,25 @@
     /* [타입 3] 가로 긴 통나무 */
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); background-size: 100% 10px; border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* ------------ 운석 ------------ */
-    .meteor { position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; }
-    .meteor::before { content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); }
+    /* ------------ 투사체 (운석 & 미사일) ------------ */
+    .projectile { 
+      position: absolute; z-index: 60; width: 40px; height: 40px; 
+      border-radius: 50%; 
+      background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); 
+      box-shadow: 0 0 10px #ff9800; 
+      animation: spinMeteor 1s linear infinite; 
+    }
+    .projectile::before { 
+      content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; 
+      background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); 
+      transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); 
+    }
+    
+    /* [신규] 미사일 스타일 (색상 변경으로 구분) */
+    .missile-style {
+      filter: hue-rotate(220deg); /* 파란색/보라색 계열로 변경 */
+    }
+
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* 아이템 */
@@ -232,7 +248,6 @@
   
   let currentSkin   = saveData.equippedSkin || "default";
 
-  // 스킨 데이터
   const SKIN_DATA = {
     default: { type: "none" },
     noel: { type: "Active", cd: 60, name: "노엘" },
@@ -293,7 +308,7 @@
 
   let distance  = 0;
   let obstacles = [];
-  let meteors   = [];
+  let projectiles = []; // 운석+미사일 통합 관리
   let running   = false;
   let invincible = false;
 
@@ -306,8 +321,11 @@
   
   let obstacleTimer = 0;
   let nextObstacleTime = 2.0;
+  
+  // 투사체 타이머 분리
   let meteorTimer = 0; 
-  let nextMeteorTime  = 4.0; 
+  let missileTimer = 0;
+
   let itemTimer = 0;
   let nextItemTime = 8;
   let skinTimer = 0;
@@ -416,35 +434,27 @@
     if (nextObstacleTime < 0.2) nextObstacleTime = 0.2;
   }
 
-  /* [수정됨] 장애물 생성 로직: 중앙 멀티 스폰 적용 */
   function spawnObstacle() {
     if (!running) return;
     if (activeEffects.turbo > 0) return;
 
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
-    let spawnHorizontal = (distance > 100) && (Math.random() < 0.35);
+    let spawnHorizontal = (distance > 50) && (Math.random() < 0.65);
 
     if (spawnHorizontal) {
-        // [수정] 30% 확률로 2개 동시 등장, 아니면 1개
         let count = (Math.random() < 0.3) ? 2 : 1;
-
         for(let k=0; k<count; k++) {
             const box = document.createElement("div");
             box.classList.add("obstacle", "obs-long");
             box.style.left = (window.innerWidth + 80) + "px";
-
-            // 화면 높이의 10% ~ 80% 사이 안전 구역
             let safeH = window.innerHeight;
-            
             if(count === 2) {
-                // 2개일 땐 위/아래로 벌려줌 (터널 효과)
                 if(k===0) box.style.bottom = randBetween(30, safeH * 0.35) + "px";
                 else      box.style.bottom = randBetween(safeH * 0.55, safeH * 0.85) + "px";
             } else {
-                // 1개일 땐 랜덤 (바닥, 천장, 혹은 중간)
                 let r = Math.random();
                 if(r < 0.2) box.style.bottom = "0px";
-                else if(r < 0.4) box.style.top = "0px"; // box.style.bottom auto 필요없음 (CSS 우선순위)
+                else if(r < 0.4) box.style.top = "0px"; 
                 else box.style.bottom = randBetween(50, safeH - 120) + "px";
             }
             gameArea.appendChild(box);
@@ -453,14 +463,11 @@
         return;
     }
 
-    // 일반 장애물 (돌/통나무) 로직 유지
     const useGroundBox = Math.random() < 0.5;
     const obsTypeClass = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
-
     const startX = window.innerWidth + 80;
 
     if (useGroundBox) {
-      // 바닥 장애물
       const box = document.createElement("div");
       box.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
       box.style.height = randi(90, 220) + "px";
@@ -469,18 +476,15 @@
       gameArea.appendChild(box);
       obstacles.push(box);
     } else {
-      // 천장 + 바닥 장애물 (틈새 통과)
       let topH = randi(120, 260);
       let gap = randi(160, 220);
       let bottomH = Math.max(80, window.innerHeight - topH - gap);
-
       const topObs = document.createElement("div");
       topObs.classList.add("obstacle", "obs-cap", "obs-ceil", obsTypeClass);
       topObs.style.height = topH + "px";
       topObs.style.left = startX + "px";
       topObs.style.top = "0";
       gameArea.appendChild(topObs);
-
       const bottomObs = document.createElement("div");
       bottomObs.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
       bottomObs.style.height = bottomH + "px";
@@ -491,18 +495,57 @@
     }
   }
 
+  // [기능 1] 운석 생성 (150m~) - 위에서 떨어짐
   function spawnMeteor(speedMultiplier) {
     const meteor = document.createElement("div");
-    meteor.classList.add("meteor");
+    meteor.classList.add("projectile"); // 공통 클래스
+    // 시각적 구분을 위해 기본색 사용 (CSS 기본값: 주황/빨강)
+
     const startX = window.innerWidth + Math.random() * 200;
-    const startY = -100; 
+    const startY = -100;
+    
+    // 왼쪽 아래로 떨어지는 속도 벡터
+    const vx = -150 * speedMultiplier * 0.8;
+    const vy = 150 * speedMultiplier * 1.0;
+
     meteor.style.left = startX + "px";
     meteor.style.top = startY + "px";
-    meteor.dataset.x = startX;
-    meteor.dataset.y = startY;
-    meteor.dataset.speed = 150 * speedMultiplier; 
+    
+    meteor.x = startX; meteor.y = startY;
+    meteor.vx = vx; meteor.vy = vy;
+
     gameArea.appendChild(meteor);
-    meteors.push(meteor);
+    projectiles.push(meteor);
+  }
+
+  // [기능 2] 미사일 생성 (200m~) - 오른쪽에서 조준 사격
+  function spawnMissile(speedMultiplier) {
+    const missile = document.createElement("div");
+    missile.classList.add("projectile", "missile-style"); // 파란색 필터 적용
+
+    const startX = window.innerWidth + 50;
+    const startY = Math.random() * (window.innerHeight - 100);
+
+    // 플레이어 조준 (현재 위치 기준 일직선 발사)
+    const pX = 120 + 30; 
+    const pY = window.innerHeight - playerY - 30;
+
+    const dx = pX - startX;
+    const dy = pY - startY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    
+    const speed = 250 * speedMultiplier;
+    const vx = (dx / dist) * speed;
+    const vy = (dy / dist) * speed;
+
+    missile.style.left = startX + "px";
+    missile.style.top = startY + "px";
+    
+    missile.x = startX; missile.y = startY;
+    missile.vx = vx; missile.vy = vy;
+
+    gameArea.appendChild(missile);
+    projectiles.push(missile);
   }
 
   function spawnItem() {
@@ -608,35 +651,45 @@
       }
     }
 
-    if (distance > 200 && activeEffects.turbo <= 0) {
+    /* [수정] 150m 이상: 운석 떨어짐 */
+    if (distance > 150 && activeEffects.turbo <= 0) {
         meteorTimer += delta;
-        let meteorSpawnRate = 3.0 / speedMultiplier;
-        if (meteorSpawnRate < 0.2) meteorSpawnRate = 0.2;
-        if (meteorTimer > meteorSpawnRate) {
+        let rate = 3.0 / speedMultiplier;
+        if (rate < 0.3) rate = 0.3;
+        if (meteorTimer > rate) {
             spawnMeteor(speedMultiplier); meteorTimer = 0;
         }
     }
 
-    for (let i = meteors.length - 1; i >= 0; i--) {
-        let m = meteors[i];
-        let x = parseFloat(m.dataset.x);
-        let y = parseFloat(m.dataset.y);
-        let mSpeed = parseFloat(m.dataset.speed);
-        x -= mSpeed * delta * 0.8; 
-        y += mSpeed * delta * 1.0; 
-        m.style.left = x + "px";
-        m.style.top = y + "px";
-        m.dataset.x = x;
-        m.dataset.y = y;
+    /* [수정] 200m 이상: 미사일 발사 (운석과 함께 등장) */
+    if (distance > 200 && activeEffects.turbo <= 0) {
+        missileTimer += delta;
+        let rate = 4.0 / speedMultiplier; // 미사일은 좀 더 가끔
+        if (rate < 0.8) rate = 0.8;
+        if (missileTimer > rate) {
+            spawnMissile(speedMultiplier); missileTimer = 0;
+        }
+    }
 
-        if (x < -100 || y > window.innerHeight + 100) {
-            m.remove(); meteors.splice(i, 1); continue;
+    /* 투사체(운석+미사일) 이동 및 충돌 로직 */
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        let p = projectiles[i];
+        
+        p.x += p.vx * delta;
+        p.y += p.vy * delta;
+
+        p.style.left = p.x + "px";
+        p.style.top = p.y + "px";
+
+        // 화면 밖 제거
+        if (p.x < -100 || p.y > window.innerHeight + 100 || p.x > window.innerWidth + 200) {
+            p.remove(); projectiles.splice(i, 1); continue;
         }
 
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
             const rectP = player.getBoundingClientRect();
-            const rectM = m.getBoundingClientRect();
-            const buffer = 15;
+            const rectM = p.getBoundingClientRect();
+            const buffer = 5; 
             if (
                 rectP.left + buffer < rectM.right - buffer &&
                 rectP.right - buffer > rectM.left + buffer &&
@@ -644,7 +697,7 @@
                 rectP.bottom - buffer > rectM.top + buffer
             ) {
                 damageLife();
-                m.remove(); meteors.splice(i, 1);
+                p.remove(); projectiles.splice(i, 1);
             }
         }
     }
@@ -667,7 +720,9 @@
       left      -= gameSpeed * delta;
       obs.style.left = left + "px";
 
-      if (left + 60 < 0) {
+      const realWidth = obs.offsetWidth > 0 ? obs.offsetWidth : 60;
+
+      if (left + realWidth < 0) {
         obs.remove(); obstacles.splice(i, 1);
         obstacleSurviveCount++;
         if (obstacleSurviveCount >= 5) {
