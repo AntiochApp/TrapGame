@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final Fixed V3</title>
+  <title>Disciple Run – Enemy Update</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -22,6 +22,7 @@
 
     #player { position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px; background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; transition: opacity 0.2s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); }
 
+    /* 장애물 */
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; border-radius: 4px; }
     .obs-ground.obs-cap::after { top: -12px; } .obs-ceil.obs-cap::after { bottom: -12px; }
@@ -31,15 +32,32 @@
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* 아이템 스타일 */
+    /* 적군 (Enemy) 스타일 */
+    .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
+    
+    /* 아이템 */
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    .projectile { position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; }
-    .projectile::before { content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); }
-    .missile-style { filter: hue-rotate(220deg) brightness(1.2); }
-    .boss-missile { filter: hue-rotate(290deg) brightness(0.8); }
-    .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; }
+    /* 투사체 공통 */
+    .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; }
+    
+    /* 보스/적군 미사일 */
+    .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
+    .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
+    
+    /* 유저 미사일 */
+    .player-missile { width: 40px; height: 20px; background: cyan; border-radius: 10px; box-shadow: 0 0 10px cyan; z-index: 65; }
+
+    /* 폭발 이펙트 (범위형 미사일) */
+    .explosion-area { position: absolute; border-radius: 50%; background: rgba(255, 69, 0, 0.5); border: 2px solid orange; animation: explode 0.5s forwards; z-index: 59; }
+    @keyframes explode { 0% { transform: scale(0.1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+
+    /* 적군 레이저 */
+    .enemy-laser-warning { position: absolute; height: 2px; background: rgba(255,0,0,0.5); z-index: 49; }
+    .enemy-laser-beam { position: absolute; height: 30px; background: linear-gradient(to bottom, transparent, red, transparent); box-shadow: 0 0 15px red; z-index: 50; }
+
+    .reflected-missile { background: #00ff00 !important; box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
@@ -53,9 +71,12 @@
     #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; }
 
-    #shieldBtn { position: fixed; bottom: 150px; left: 20px; width: 90px; height: 90px; background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 16px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); text-align: center; }
-    #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
-    #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
+    /* 서브 액션 버튼 (방패 OR 공격) */
+    #subActionBtn { position: fixed; bottom: 150px; left: 20px; width: 90px; height: 90px; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 16px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); text-align: center; color: white; flex-direction: column; transition: background 0.3s; }
+    #subActionBtn:active { transform: scale(0.95); }
+    #subActionBtn.shield-mode { background: #2196F3; } /* 파란색 (방패) */
+    #subActionBtn.attack-mode { background: #E91E63; } /* 분홍색 (공격) */
+    #subActionBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
@@ -98,8 +119,8 @@
       <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법 / How to Play</div>
       <div style="text-align:left; font-size:15px; line-height:1.6;">
         • <b>Space / 터치</b>: 점프<br>
-        • <b>A키 / 버튼</b>: 특수능력<br>
-        • <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)<br><br>
+        • <b>A키</b>: 특수능력<br>
+        • <b>S키 / 왼쪽버튼</b>: 200m 이후 공격 / 보스전 방어<br><br>
         [아이템 효과]<br>
         ✝️ <b>십자가:</b> 무적 / 🕊️ <b>Wings:</b> 터보<br>
         🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
@@ -123,7 +144,11 @@
    
   <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">A<br><span>Ready</span></div>
   <div id="dailyMissionBox"></div>
-  <div id="shieldBtn" ontouchstart="useShield(event)" onclick="useShield(event)">🛡️<br>반사!</div>
+  
+  <div id="subActionBtn" ontouchstart="handleSubAction(event)" onclick="handleSubAction(event)">
+      <span id="subActionIcon">🚀</span><br>
+      <span id="subActionText" style="font-size:12px;">Shot</span>
+  </div>
 </div>
 
 <div id="buffArea"></div>
@@ -224,6 +249,7 @@
   let targetY = 0;
   let distance = 0;
   let obstacles = []; let projectiles = []; 
+  let enemies = []; let playerMissiles = []; // [추가] 적군 및 플레이어 미사일 배열
   let running = false; let invincible = false;
 
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
@@ -231,7 +257,8 @@
   let nextQuizDistance = 35; 
    
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
-  let meteorTimer = 0; let missileTimer = 0;
+  let enemySpawnTimer = 0; // [추가] 적군 스폰 타이머
+  let meteorTimer = 0; 
   let itemTimer = 0; let nextItemTime = 8;
   let abilityCD = 0;
   let missionUpdateTimer = 0;
@@ -245,11 +272,13 @@
   let isBossBattle = false;
   let nextBossTrigger = 200; 
   let bossLevel = 0;
-  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 2, state: 'idle', shootTimer: 0, actionTimer: 0 };
+  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 1, state: 'idle', shootTimer: 0, actionTimer: 0 }; // [수정] 보스 속도 1로 감소
   let bossContainer = document.getElementById('bossContainer');
   let bossBody = document.getElementById('bossBody');
   let bossHpFill = document.getElementById('bossHpFill');
-  let shieldBtn = document.getElementById('shieldBtn');
+  
+  // [수정] 버튼 변수명 변경 (다목적 버튼)
+  let subActionBtn = document.getElementById('subActionBtn');
   let shieldCooldown = 0;
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
@@ -279,29 +308,42 @@
   document.body.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility();
-    if (e.code === "KeyS" && isBossBattle) useShield(); 
+    if (e.code === "KeyS") handleSubAction(); 
   });
    
   document.body.addEventListener("touchstart", (e) => {
-      if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#shieldBtn')) return;
+      if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
       jump();
   });
    
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
 
-  function useShield(e) {
-    if(e) e.stopPropagation(); 
-    if (!isBossBattle || shieldCooldown > 0) return;
+  // [수정] 다목적 버튼 핸들러 (보스전엔 방패, 평소엔 공격)
+  function handleSubAction(e) {
+      if(e) e.stopPropagation();
+      if (!running) return;
+
+      if (isBossBattle) {
+          useShield();
+      } else if (distance >= 200) {
+          playerShoot();
+      }
+  }
+
+  function useShield() {
+    if (shieldCooldown > 0) return;
     shieldCooldown = 0.5;
-    shieldBtn.classList.add('cooldown');
+    subActionBtn.classList.add('cooldown');
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
             const pRect = p.getBoundingClientRect();
             const plRect = player.getBoundingClientRect();
             const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
-            if (dist < 250) {
+            
+            // [수정] 방어 판정을 타이트하게 변경 (250 -> 70)
+            if (dist < 70) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
                 p.classList.add('reflected-missile');
@@ -313,6 +355,18 @@
     });
     if (reflected) { showFloatText("⚔️ 반사 성공!"); playSound('parry'); }
     else showFloatText("🛡️ 방어!");
+  }
+
+  // [추가] 플레이어 미사일 발사 로직
+  function playerShoot() {
+      const m = document.createElement("div");
+      m.classList.add("player-missile");
+      const pRect = player.getBoundingClientRect();
+      m.style.left = (pRect.right) + "px";
+      m.style.top = (pRect.top + 20) + "px";
+      gameArea.appendChild(m);
+      playerMissiles.push(m);
+      playSound('jump'); // 효과음 재활용
   }
 
   function useAbility(e) {
@@ -354,9 +408,28 @@
 
     if(shieldCooldown > 0) {
         shieldCooldown -= delta;
-        if(shieldCooldown <= 0) shieldBtn.classList.remove('cooldown');
+        if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown');
     }
     updateAbilityBtn(delta);
+    
+    // [추가] 거리 및 보스 상태에 따른 버튼 UI 업데이트
+    updateSubActionButtonUI();
+  }
+
+  function updateSubActionButtonUI() {
+      if (isBossBattle) {
+          subActionBtn.style.display = 'flex';
+          subActionBtn.className = 'shield-mode';
+          document.getElementById("subActionIcon").innerText = "🛡️";
+          document.getElementById("subActionText").innerText = "반사";
+      } else if (distance >= 200) {
+          subActionBtn.style.display = 'flex';
+          subActionBtn.className = 'attack-mode';
+          document.getElementById("subActionIcon").innerText = "🚀";
+          document.getElementById("subActionText").innerText = "발사";
+      } else {
+          subActionBtn.style.display = 'none';
+      }
   }
 
   function updateAbilityBtn(dt) {
@@ -453,12 +526,16 @@
                 meteorTimer += safeDelta;
                 if (meteorTimer > 3.0 / (gameSpeed/BASE_SPEED)) { spawnMeteor(gameSpeed/BASE_SPEED); meteorTimer = 0; }
             }
-            if (distance > 200 && activeEffects.turbo <= 0) {
-                missileTimer += safeDelta;
-                if (missileTimer > 4.0 / (gameSpeed/BASE_SPEED)) { spawnMissile(gameSpeed/BASE_SPEED); missileTimer = 0; }
+            
+            // [수정] 랜덤 미사일 생성 제거됨. 대신 적군 스폰 로직 추가
+            enemySpawnTimer += safeDelta;
+            if(enemySpawnTimer > 2.5 && !isBossBattle) { // 2.5초마다 체크
+                spawnEnemyLogic();
+                enemySpawnTimer = 0;
             }
         }
 
+        updateEnemies(safeDelta); // [추가] 적군 로직 업데이트
         updatePhysics(safeDelta);
         
         itemTimer += safeDelta;
@@ -498,19 +575,159 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // [수정] 파일명 item_wings.png로 수정
+  // [추가] 적군 생성 로직
+  function spawnEnemyLogic() {
+      let type = 0;
+      if (distance >= 500) type = 5;
+      else if (distance >= 450) type = 4;
+      else if (distance >= 400) type = 3;
+      else if (distance >= 300) type = 2;
+      else if (distance >= 200) type = 1;
+
+      if (type > 0 && Math.random() < 0.6) { // 확률적으로 생성
+          spawnEnemy(type);
+      }
+  }
+
+  function spawnEnemy(type) {
+      const e = document.createElement("div");
+      e.classList.add("enemy");
+      e.style.backgroundImage = `url('enemy${type}.png')`;
+      e.style.backgroundColor = 'red'; // 이미지 없을 때 대비
+      
+      e.type = type;
+      e.hp = 1;
+      e.timer = 0;
+      e.state = 'enter'; // enter -> attack
+      
+      e.x = window.innerWidth + 50;
+      e.y = randBetween(50, window.innerHeight - 150);
+      e.style.left = e.x + "px";
+      e.style.top = e.y + "px";
+      
+      gameArea.appendChild(e);
+      enemies.push(e);
+  }
+
+  // [추가] 적군 행동 패턴 업데이트
+  function updateEnemies(dt) {
+      for (let i = enemies.length - 1; i >= 0; i--) {
+          let e = enemies[i];
+          e.timer += dt;
+
+          // 공통 이동 (등장)
+          if(e.state === 'enter') {
+              e.x -= 100 * dt;
+              if (e.x < window.innerWidth - 150) {
+                  e.state = 'attack';
+                  e.timer = 0;
+              }
+          } else if (e.state === 'attack') {
+              // 타입별 패턴
+              if (e.type === 1) { // 돌격
+                  if (e.timer < 2.0) { // 2초 위아래 무빙
+                      e.y += Math.sin(e.timer * 5) * 2;
+                  } else { // 전진
+                      e.x -= 300 * dt; 
+                  }
+              } else if (e.type === 2) { // 3초마다 미사일 1개
+                  if (e.timer > 3.0) {
+                      spawnEnemyProjectile(e.x, e.y + 30, 'single');
+                      e.timer = 0;
+                  }
+              } else if (e.type === 3) { // 4초마다 부채꼴 3개
+                  if (e.timer > 4.0) {
+                      spawnEnemyProjectile(e.x, e.y + 30, 'fan');
+                      e.timer = 0;
+                  }
+              } else if (e.type === 4) { // 3초마다 폭발형
+                  if (e.timer > 3.0) {
+                      spawnEnemyProjectile(e.x, e.y + 30, 'explode');
+                      e.timer = 0;
+                  }
+              } else if (e.type === 5) { // 3.5초마다 레이저
+                  if (e.timer > 3.5) {
+                      fireEnemyLaser(e);
+                      e.timer = 0;
+                  }
+              }
+              
+              // 기본적으로 플레이어 따라다니거나 천천히 전진
+              if(e.type !== 1) e.x -= 50 * dt; 
+          }
+
+          e.style.left = e.x + "px";
+          e.style.top = e.y + "px";
+
+          // 화면 밖 제거
+          if (e.x < -100) { e.remove(); enemies.splice(i, 1); }
+      }
+  }
+
+  function spawnEnemyProjectile(x, y, pattern) {
+      if(pattern === 'single') {
+          createProj(x, y, -200, 0); // 느린 속도
+      } else if (pattern === 'fan') {
+          createProj(x, y, -300, 0);
+          createProj(x, y, -280, 100);
+          createProj(x, y, -280, -100);
+      } else if (pattern === 'explode') {
+          let p = createProj(x, y, -250, 0);
+          p.isExplosive = true;
+      }
+  }
+
+  function createProj(x, y, vx, vy) {
+      const p = document.createElement("div");
+      p.classList.add("projectile", "enemy-missile");
+      p.style.left = x + "px"; p.style.top = y + "px";
+      p.x = x; p.y = y; p.vx = vx; p.vy = vy;
+      gameArea.appendChild(p);
+      projectiles.push(p);
+      return p;
+  }
+
+  function fireEnemyLaser(e) {
+      // 기 모으기 (경고선)
+      const warning = document.createElement("div");
+      warning.className = "enemy-laser-warning";
+      warning.style.left = "0px"; warning.style.width = e.x + "px";
+      warning.style.top = (e.y + 30) + "px";
+      gameArea.appendChild(warning);
+
+      setTimeout(() => {
+          warning.remove();
+          // 발사
+          const laser = document.createElement("div");
+          laser.className = "enemy-laser-beam";
+          laser.style.left = "0px"; laser.style.width = e.x + "px";
+          laser.style.top = (e.y + 15) + "px";
+          gameArea.appendChild(laser);
+          
+          let duration = 0;
+          let check = setInterval(() => {
+              duration += 0.1;
+              let laserY = parseFloat(laser.style.top);
+              if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) {
+                  damageLife();
+              }
+              if(duration > 4.0) { // 4초 지속
+                  clearInterval(check);
+                  laser.remove();
+              }
+          }, 100);
+      }, 1000); // 1초 충전
+  }
+
   function spawnItem() {
     const types = ['invincible', 'turbo', 'slow', 'faith'];
     const images = { 
         'invincible': 'url("item_cross.png")', 
-        'turbo': 'url("item_wings.png")',  // [수정] 업로드된 파일명과 일치시킴
+        'turbo': 'url("item_wings.png")', 
         'slow': 'url("item_wind.png")', 
         'faith': 'url("item_bible.png")' 
     };
-    
-    const colors = {
-        'invincible': 'gold', 'turbo': 'cyan', 'slow': 'lightgreen', 'faith': 'blue'
-    };
+    const colors = { 'invincible': 'gold', 'turbo': 'cyan', 'slow': 'lightgreen', 'faith': 'blue' };
     
     const item = document.createElement("div");
     const type = types[Math.floor(Math.random() * types.length)];
@@ -550,9 +767,10 @@
     setTimeout(() => warning.style.display = 'none', 3000);
      
     obstacles.forEach(o => o.remove()); obstacles = [];
+    enemies.forEach(e => e.remove()); enemies = []; // 보스전 시 적군 제거
+    
     bossContainer.style.display = 'block';
     setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
-    shieldBtn.style.display = 'flex';
     document.getElementById('dailyMissionBox').style.display = 'none';
     saveProgress();
   }
@@ -642,7 +860,6 @@
     }
   }
 
-  // [수정] 보스 처치 후 모든 무적 상태 강제 해제 (220m 문제 해결)
   function damageBoss() {
     boss.hp--;
     bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + "%";
@@ -655,12 +872,11 @@
             bossContainer.style.display = 'none'; 
             isBossBattle = false;
             
-            // [중요] 상태 강제 초기화
+            // 상태 강제 초기화
             invincible = false;
             activeEffects.invincible = 0;
             activeEffects.turbo = 0;
             
-            shieldBtn.style.display = 'none';
             if(!daily.completed) document.getElementById('dailyMissionBox').style.display = 'block';
             faith += 100 * bossLevel; daily.faith20 += 100; updateDailyMissionUI();
             showFloatText(`🎉 보스 처치! (+${100*bossLevel} Faith)`);
@@ -682,6 +898,34 @@
 
     const safeActive = (val) => (val && val > 0);
 
+    // [추가] 플레이어 미사일 업데이트 및 적군 충돌 처리
+    for (let i = playerMissiles.length - 1; i >= 0; i--) {
+        let m = playerMissiles[i];
+        let mx = parseFloat(m.style.left);
+        mx += 500 * delta; // 빠른 속도
+        m.style.left = mx + "px";
+        
+        if (mx > window.innerWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
+
+        // 적군 충돌 체크
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            let e = enemies[j];
+            let rM = m.getBoundingClientRect();
+            let rE = e.getBoundingClientRect();
+            
+            if (rM.right > rE.left && rM.left < rE.right && rM.bottom > rE.top && rM.top < rE.bottom) {
+                e.hp--;
+                m.remove(); playerMissiles.splice(i, 1);
+                spawnParticles(rE.left, rE.top, 'spark');
+                if (e.hp <= 0) {
+                    e.remove(); enemies.splice(j, 1);
+                    showFloatText("💥 격파!");
+                }
+                break; // 미사일 하나당 적 하나만 타격
+            }
+        }
+    }
+
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         let cx = parseFloat(p.style.left) || p.x;
@@ -691,6 +935,25 @@
 
         if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) {
             p.remove(); projectiles.splice(i, 1); continue;
+        }
+
+        // 폭발형 미사일 처리
+        if (p.isExplosive && !p.exploded && Math.abs(cx - 120) < 100) { // 플레이어 근처 도달 시
+             p.exploded = true;
+             const boom = document.createElement("div");
+             boom.className = "explosion-area";
+             boom.style.width = "150px"; boom.style.height = "150px";
+             boom.style.left = (cx - 50) + "px"; boom.style.top = (cy - 50) + "px";
+             gameArea.appendChild(boom);
+             setTimeout(() => boom.remove(), 500);
+             
+             // 폭발 데미지 체크
+             const pRect = player.getBoundingClientRect();
+             const bRect = boom.getBoundingClientRect();
+             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
+                 if(!invincible && !safeActive(activeEffects.invincible)) damageLife();
+             }
+             p.remove(); projectiles.splice(i, 1); continue;
         }
 
         if (!p.isReflected && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
@@ -706,6 +969,20 @@
             const pRect = p.getBoundingClientRect();
             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
+            }
+        }
+    }
+
+    // 적군 몸체 충돌 (플레이어 데미지)
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i];
+        if (!safeActive(activeEffects.invincible) && !invincible) {
+            const rP = player.getBoundingClientRect();
+            const rE = e.getBoundingClientRect();
+            if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
+                damageLife();
+                e.remove(); enemies.splice(i, 1); // 몸통 박치기 후 적군 소멸
+                continue;
             }
         }
     }
@@ -734,7 +1011,6 @@
         if (!safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
             const rP = player.getBoundingClientRect();
             const rO = o.getBoundingClientRect();
-            // 충돌 로직
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
                 damageLife(); break;
             }
@@ -751,18 +1027,6 @@
     let s = 150 + (mult * 200);
     m.style.left=sx+"px"; m.style.top=sy+"px";
     m.x = sx; m.y = sy; m.vx=-s*0.8; m.vy=s; 
-    gameArea.appendChild(m); projectiles.push(m);
-  }
-   
-  function spawnMissile(mult) { 
-    const m = document.createElement("div"); m.classList.add("projectile", "missile-style");
-    const sx = window.innerWidth+50; const sy = Math.random()*(window.innerHeight-100);
-    const rect = player.getBoundingClientRect();
-    const px = rect.left + rect.width/2; const py = rect.top + rect.height/2;
-    const dx=px-sx; const dy=py-sy; const d=Math.sqrt(dx*dx+dy*dy);
-    let s = 250 + (mult * 250);
-    m.style.left=sx+"px"; m.style.top=sy+"px";
-    m.x = sx; m.y = sy; m.vx=(dx/d)*s; m.vy=(dy/d)*s; 
     gameArea.appendChild(m); projectiles.push(m);
   }
 
