@@ -21,19 +21,16 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    /* 배경 설정 */
     background:
       linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
       linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
     font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--text-main);
-    
-    /* [수정 포인트] 화면 전체를 세로(Flex-column)로 배치 */
     display: flex;
     flex-direction: column; 
   }
 
-  /* 상단바: 화면 최상단에 고정된 크기로 배치 */
+  /* 상단바 */
   .top-bar {
     width: 100%;
     display: flex;
@@ -62,7 +59,7 @@
     box-shadow: 0 1px 0 var(--accent-dark);
   }
 
-  /* 컨테이너: 남은 화면 공간의 정중앙에 위치하도록 margin: auto 설정 */
+  /* 컨테이너 */
   .container {
     max-width: 460px;
     width: 90%;
@@ -89,11 +86,23 @@
     border-radius: 10px;
     margin-bottom: 16px;
     background: #faf8f3;
+    position: relative;
   }
 
   .item h2 {
     font-size: 18px;
     margin: 0 0 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .lvl-badge {
+    font-size: 12px;
+    background: #8b4f26;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
   }
 
   .item p {
@@ -110,13 +119,24 @@
     background: var(--accent);
     color: white;
     font-size: 14px;
+    font-weight: bold;
     cursor: pointer;
     margin-top: 8px;
     box-shadow: 0 3px 0 var(--accent-dark);
+    transition: all 0.1s;
   }
   .buy-btn:active {
     transform: translateY(2px);
     box-shadow: 0 1px 0 var(--accent-dark);
+  }
+  
+  /* [추가] 비활성화 버튼 스타일 (Max 레벨 도달 시) */
+  .buy-btn:disabled {
+    background-color: #aaa;
+    color: #eee;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
   }
 
   .back-btn {
@@ -136,7 +156,7 @@
     box-shadow: 0 1px 0 #222;
   }
 
-  /* 가챠 애니메이션 모달 */
+  /* 가챠 애니메이션 */
   #gachaModal {
     display: none;
     position: fixed;
@@ -151,7 +171,6 @@
   #gachaBox {
     width: 220px;
     height: 220px;
-    /* 이미지가 없어도 보이도록 기본 색상 지정 */
     background-color: #c47a3f;
     background-image: url('giftbox.png'); 
     background-position: center;
@@ -204,24 +223,45 @@
   <h1>상점</h1>
 
   <div class="item">
-    <h2>⚡ 민첩성 +1</h2>
-    <p>점프 반응 속도가 조금 더 빨라집니다.</p>
-    <p><b>가격: 10 Faith</b></p>
-    <button class="buy-btn" onclick="buyAgility()">구매하기</button>
+    <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
+    <p>점프 반응 속도가 빨라집니다. (Max 100)</p>
+    <p><b>가격: 30 Faith</b></p>
+    <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매하기</button>
   </div>
 
   <div class="item">
-    <h2>❤️ 라이프 +1</h2>
-    <p>게임 시작 시 기본 생명력이 +1 증가합니다.</p>
-    <p><b>가격: 20 Faith</b></p>
-    <button class="buy-btn" onclick="buyLife()">구매하기</button>
+    <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
+    <p>기본 생명력이 증가합니다. (Max 10)</p>
+    <p><b>가격: 200 Faith</b></p>
+    <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매하기</button>
+  </div>
+
+  <div class="item">
+    <h2>🛡️ 무적 시간 +1초 <span class="lvl-badge" id="lvl-invincible">Lv.0</span></h2>
+    <p>십자가 아이템 효과가 길어집니다. (Max 20)</p>
+    <p><b>가격: 40 Faith</b></p>
+    <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매하기</button>
+  </div>
+
+  <div class="item">
+    <h2>🚀 터보 시간 +1초 <span class="lvl-badge" id="lvl-turbo">Lv.0</span></h2>
+    <p>날개 아이템 효과가 길어집니다. (Max 20)</p>
+    <p><b>가격: 40 Faith</b></p>
+    <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매하기</button>
+  </div>
+
+  <div class="item">
+    <h2>🍃 감속 시간 +1초 <span class="lvl-badge" id="lvl-slow">Lv.0</span></h2>
+    <p>바람 아이템 효과가 길어집니다. (Max 20)</p>
+    <p><b>가격: 40 Faith</b></p>
+    <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매하기</button>
   </div>
 
   <div class="item">
     <h2>🎁 랜덤 뽑기</h2>
-    <p>Faith 15로 특별한 보상을 뽑아 보세요!</p>
+    <p>Faith 200으로 특별한 보상을 뽑아 보세요!</p>
     <p style="font-size:12px; color:#8a735a;">(특별 당첨은 교역자님이 따로 알려줍니다 😊)</p>
-    <button class="buy-btn" onclick="buyGacha()">뽑기 시작</button>
+    <button class="buy-btn" onclick="buyGacha()">뽑기 (200 Faith)</button>
   </div>
 
   <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
@@ -234,21 +274,38 @@
 <div id="gachaResult"></div>
 
 <script>
-  // 구글 시트 웹앱 URL (기존 코드 유지)
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
   const id = localStorage.getItem("run_id");
   const playerName = localStorage.getItem("run_name") || "";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
-  // 로그인 체크
   if (!id) {
     alert("로그인이 필요합니다.");
     window.location.href = "/TrapGame/index.html";
   }
 
-  let faith = saveData.faith || 0;
-  document.getElementById("faithText").innerText = faith;
+  // 데이터 초기화 (없으면 0)
+  saveData.faith = saveData.faith || 0;
+  saveData.agility = saveData.agility || 0;
+  saveData.extraLife = saveData.extraLife || 0;
+  // 신규 버프 레벨 (업그레이드 수치)
+  saveData.up_invincible = saveData.up_invincible || 0;
+  saveData.up_turbo = saveData.up_turbo || 0;
+  saveData.up_slow = saveData.up_slow || 0;
+
+  // 설정값 (가격 및 최대레벨)
+  const CONFIG = {
+    agility: { price: 30, max: 100, name: "민첩성" },
+    life: { price: 200, max: 10, name: "라이프" },
+    up_invincible: { price: 40, max: 20, name: "무적 강화" },
+    up_turbo: { price: 40, max: 20, name: "터보 강화" },
+    up_slow: { price: 40, max: 20, name: "감속 강화" }
+  };
+
+  // UI 초기 업데이트
+  updateUI();
+  loadLatestSave();
 
   // 서버에서 최신 saveData 동기화
   async function loadLatestSave() {
@@ -260,20 +317,83 @@
 
       const txt = await res.text();
       if (txt !== "fail") {
-        saveData = JSON.parse(txt);
+        const loaded = JSON.parse(txt);
+        // 병합 (기존 키 유지)
+        saveData = { ...saveData, ...loaded };
         localStorage.setItem("run_save", JSON.stringify(saveData));
-        faith = saveData.faith || 0;
-        document.getElementById("faithText").innerText = faith;
+        updateUI();
       }
     } catch (e) {
       console.warn("saveData 불러오기 실패:", e);
     }
   }
-  loadLatestSave();
+
+  // ---------------- UI 업데이트 함수 ----------------
+  function updateUI() {
+    document.getElementById("faithText").innerText = saveData.faith;
+
+    // 각 아이템 버튼 상태 및 레벨 표시 업데이트
+    updateItemState('agility', 'btn-agility', 'lvl-agility');
+    updateItemState('life', 'btn-life', 'lvl-life'); // DB키는 extraLife지만 편의상 life로 매핑해서 처리
+    updateItemState('up_invincible', 'btn-invincible', 'lvl-invincible');
+    updateItemState('up_turbo', 'btn-turbo', 'lvl-turbo');
+    updateItemState('up_slow', 'btn-slow', 'lvl-slow');
+  }
+
+  function updateItemState(type, btnId, badgeId) {
+    // 실제 저장된 키 이름 매핑
+    let key = type;
+    if (type === 'life') key = 'extraLife';
+
+    const currentLvl = saveData[key] || 0;
+    const info = CONFIG[type];
+    const btn = document.getElementById(btnId);
+    
+    // 레벨 표시
+    document.getElementById(badgeId).innerText = `Lv.${currentLvl}`;
+
+    // Max 도달 시 비활성화
+    if (currentLvl >= info.max) {
+      btn.innerText = "MAX (완료)";
+      btn.disabled = true;
+    } else {
+      btn.innerText = "구매하기";
+      btn.disabled = false;
+    }
+  }
+
+  // ---------------- 통합 구매 함수 ----------------
+  function buyItem(type) {
+    const info = CONFIG[type];
+    let key = type;
+    if (type === 'life') key = 'extraLife';
+
+    // 1. Max 체크
+    if (saveData[key] >= info.max) {
+      alert("이미 최대 레벨입니다!");
+      return;
+    }
+
+    // 2. 돈 체크
+    if (saveData.faith < info.price) {
+      alert("신앙포인트가 부족합니다!");
+      return;
+    }
+
+    // 3. 구매 처리
+    saveData.faith -= info.price;
+    saveData[key]++;
+    
+    alert(`${info.name} 업그레이드 완료! (Lv.${saveData[key]})`);
+    
+    saveProgress();
+    updateUI();
+  }
 
   // ---------------- 저장하기 ----------------
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
+    updateUI(); // UI 즉시 갱신
 
     try {
       await fetch(API_URL, {
@@ -287,62 +407,53 @@
     } catch (e) {
       console.warn("서버 저장 실패:", e);
     }
-
-    document.getElementById("faithText").innerText = saveData.faith;
   }
 
-  // ---------------- 민첩성 구매 ----------------
-  function buyAgility() {
-    if (saveData.faith < 10) { alert("신앙포인트가 부족합니다!"); return; }
-    saveData.faith -= 10;
-    saveData.agility = (saveData.agility || 0) + 1;
-    alert("민첩성 +1 증가!");
-    saveProgress();
-  }
-
-  // ---------------- 라이프 구매 ----------------
-  function buyLife() {
-    if (saveData.faith < 20) { alert("신앙포인트가 부족합니다!"); return; }
-    saveData.faith -= 20;
-    saveData.extraLife = (saveData.extraLife || 0) + 1;
-    alert("라이프 +1 증가!");
-    saveProgress();
-  }
-
-  // ---------------- 가챠 버튼 클릭 ----------------
+  // ---------------- 가챠 (200원) ----------------
   function buyGacha() {
-    if (saveData.faith < 15) {
+    const price = 200;
+    if (saveData.faith < price) {
       alert("신앙포인트가 부족합니다!");
       return;
     }
 
-    saveData.faith -= 15;
-    document.getElementById("faithText").innerText = saveData.faith;
+    saveData.faith -= price;
+    updateUI();
 
-    // 애니메이션 모달 띄우기
     document.getElementById("gachaModal").style.display = "flex";
 
-    // 1.8초 뒤 결과 보여주기
     setTimeout(() => {
       document.getElementById("gachaModal").style.display = "none";
       rollGacha();
     }, 1800);
   }
 
-  // ---------------- 실제 뽑기 로직 (확률 계산) ----------------
   function rollGacha() {
     const r = Math.random() * 100;
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
 
-    // 확률 로직 (기존 유지)
-    if (r < 40) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
-    else if (r < 80) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
-    else if (r < 85) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
-    else if (r < 90) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
-    else if (r < 92.45) { saveData.agility += 3; prizeText = "⚡ 민첩성 +3"; }
-    else if (r < 94.9) { saveData.extraLife += 3; prizeText = "❤️ 생명력 +3"; }
+    // 확률 로직
+    if (r < 40) { 
+        if(saveData.agility < CONFIG.agility.max) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
+        else { saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith 반환"; }
+    }
+    else if (r < 80) { 
+        if(saveData.extraLife < CONFIG.life.max) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
+        else { saveData.faith += 100; prizeText = "💰 라이프 Max 보상: 100 Faith 반환"; }
+    }
+    else if (r < 85) { 
+        if(saveData.agility + 2 <= CONFIG.agility.max) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
+        else { saveData.agility = CONFIG.agility.max; prizeText = "⚡ 민첩성 MAX 도달!"; }
+    }
+    else if (r < 90) { 
+        if(saveData.extraLife + 2 <= CONFIG.life.max) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
+        else { saveData.extraLife = CONFIG.life.max; prizeText = "❤️ 생명력 MAX 도달!"; }
+    }
+    else if (r < 94.9) { 
+        saveData.faith += 300; prizeText = "💎 대박! 300 Faith 당첨!";
+    }
     else if (r < 94.91) {
       prizeText = "🎁 스타벅스 $5 기프트카드 당첨!";
       isSpecial = true; specialName = "Starbucks $5 Gift Card";
@@ -364,7 +475,6 @@
       isSpecial = true; specialName = "QT Book";
     }
 
-    // 특별 상품 당첨 시 로그 전송
     if (isSpecial) {
       fetch(API_URL, {
         method: "POST",
@@ -377,7 +487,6 @@
       });
     }
 
-    // 결과창 표시
     const box = document.getElementById("gachaResult");
     box.innerHTML = `
       <h2>🎉 뽑기 결과!</h2>
