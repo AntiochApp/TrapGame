@@ -2,12 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Daily Mission & Boss</title>
+  <title>Disciple Run – Final</title>
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* ... (기존 스타일 유지) ... */
     :root {
       --hud-bg: rgba(255, 248, 235, 0.9);
       --hud-border: #3a2513;
@@ -52,7 +51,6 @@
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* 장애물 및 아이템 스타일 */
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; box-sizing: border-box; border-radius: 4px; }
     .obs-ground.obs-cap::after { top: -12px; }
@@ -66,7 +64,6 @@
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    /* 투사체 */
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; 
       border-radius: 50%; 
@@ -85,7 +82,6 @@
 
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* UI 요소들 */
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
     #hud span { display: inline-block; min-width: 60px; }
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; transform: translateZ(0); }
@@ -102,7 +98,6 @@
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; background: #555; }
     #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
-    /* 방패 버튼 */
     #shieldBtn {
       position: fixed; bottom: 20px; left: 20px; width: 90px; height: 90px;
       background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff;
@@ -114,7 +109,7 @@
     #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
     #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
-    /* [신규] 일일 미션 UI */
+    /* 일일 미션 UI */
     #dailyMissionBox {
       position: fixed; bottom: 120px; left: 20px;
       background: rgba(0, 0, 0, 0.75); color: #fff;
@@ -144,7 +139,6 @@
     }
     #bossHpFill { width: 100%; height: 100%; background: #d32f2f; transition: width 0.2s; }
 
-    /* 경고 메시지 */
     #bossWarning {
       position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
       font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000;
@@ -152,7 +146,6 @@
     }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-    /* 이펙트 */
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
@@ -161,7 +154,6 @@
     #comboEffect { top: 20%; font-size: 40px; font-weight: 900; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; font-weight: 900; color: #00ffcc; text-shadow: 3px 3px #006644; }
 
-    /* 모달 */
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76; text-align: center; }
     .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
@@ -214,7 +206,6 @@
   
   <div id="abilityBtn" onclick="useAbility()">A<br><span>Ready</span></div>
   <div id="shieldBtn" onclick="useShield()">🛡️<br>반사!</div>
-  
   <div id="dailyMissionBox"></div>
 </div>
 
@@ -259,17 +250,18 @@
     window.location.href = "/TrapGame/index.html";
   }
 
-  // 일일 미션 초기화 (completed 플래그 추가)
+  // [수정] 일일 미션 초기화 (버전 체크를 통해 강제 리셋)
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
+  // version을 '1.1'로 변경하여 기존 데이터(자동완료된 것들)를 덮어쓰기함
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.1' };
   }
-  if (!daily.date || daily.date !== new Date().toDateString()) {
+  
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.1') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
-  // --- 변수 초기화 ---
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
@@ -278,7 +270,6 @@
   let lvlSlow = saveData.up_slow || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // 스킨 데이터
   const SKIN_DATA = {
     default: { type: "none" },
     noel: { type: "Active", cd: 60, name: "노엘" },
@@ -352,7 +343,6 @@
 
   let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0 };
 
-  /* ------------ 보스전 관련 변수 ------------ */
   let isBossBattle = false;
   let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 2, state: 'idle', shootTimer: 0 };
   let bossContainer = document.getElementById('bossContainer');
@@ -440,7 +430,8 @@
     }
   }
 
-  // [신규] 일일 미션 UI 업데이트 함수
+  // [수정] 일일 미션 UI 최적화 (상태 변경 시에만 렌더링)
+  let lastMissionHTML = "";
   function updateDailyMissionUI() {
     const box = document.getElementById('dailyMissionBox');
     if (daily.completed) {
@@ -449,27 +440,32 @@
     }
     box.style.display = 'block';
     
-    // 미션 달성 여부 체크 (200m 달리기, 퀴즈 3회, Faith 20 누적)
-    // Faith는 누적합산 방식으로 변경
     const m1 = daily.run200 ? 'mission-done' : '';
     const m2 = daily.quiz3 >= 3 ? 'mission-done' : '';
     const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
 
-    box.innerHTML = `
+    const newHTML = `
       <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
       <div class="mission-item ${m1}">🏃 200m 달리기</div>
       <div class="mission-item ${m2}">🧠 퀴즈 3회 (${daily.quiz3}/3)</div>
       <div class="mission-item ${m3}">✝ Faith 20 (${Math.min(daily.faith20, 20)}/20)</div>
     `;
+
+    if(newHTML !== lastMissionHTML) {
+        box.innerHTML = newHTML;
+        lastMissionHTML = newHTML;
+    }
   }
 
-  // [신규] 미션 달성 체크
   function checkMissions() {
     if (daily.completed) return;
-
-    if (!daily.run200 && distance >= 200) daily.run200 = true;
     
-    // 3가지 조건 모두 달성 시
+    // [수정] 게임 시작 시 즉시 달성되는 문제 방지 (거리가 조금이라도 진행되어야 체크)
+    if(distance < 5) return;
+
+    let changed = false;
+    if (!daily.run200 && distance >= 200) { daily.run200 = true; changed = true; }
+    
     if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
         daily.completed = true;
         faith += 200;
@@ -477,23 +473,32 @@
         document.getElementById("faithText").innerText = faith;
         showFloatText("🎉 일일 미션 완료! (+200 Faith)");
         saveProgress();
+        changed = true;
     }
-    localStorage.setItem("dailyMission", JSON.stringify(daily));
-    updateDailyMissionUI();
+    
+    if(changed) {
+        localStorage.setItem("dailyMission", JSON.stringify(daily));
+        updateDailyMissionUI(); // 상태 변경 시에만 UI 업데이트 호출
+    }
   }
 
-  /* ------------ 메인 게임 루프 ------------ */
   function gameLoop(now) {
     if (!running) return;
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
-    updateBuffUI(delta);
-    checkMissions(); // 미션 상태 체크
+    // 안전장치: delta가 비정상적으로 크면(렉 등) 0.1초로 제한
+    const safeDelta = Math.min(delta, 0.1);
+
+    updateBuffUI(safeDelta);
+    checkMissions();
     
+    // 미션 UI 초기 렌더링 (한 번은 실행)
+    if(lastMissionHTML === "") updateDailyMissionUI();
+
     if (!isBossBattle) { 
         let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
-        distance += delta * 1 * distMultiplier;
+        distance += safeDelta * 1 * distMultiplier;
         document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
         
         let progress = Math.min(distance / 3000, 1);
@@ -506,15 +511,14 @@
         gameSpeed = BASE_SPEED * 0.5; 
     }
 
-    // [수정] 보스전 트리거: 400m -> 200m로 변경
     if (!isBossBattle && distance >= 200 && boss.hp > 0) {
         startBossBattle();
     }
 
     if (isBossBattle) {
-        updateBoss(delta);
+        updateBoss(safeDelta);
     } else {
-        obstacleTimer += delta;
+        obstacleTimer += safeDelta;
         if (obstacleTimer >= nextObstacleTime) {
             spawnObstacle(); 
             obstacleTimer = 0; 
@@ -525,23 +529,22 @@
         }
 
         if (distance > 150 && activeEffects.turbo <= 0) {
-            meteorTimer += delta;
+            meteorTimer += safeDelta;
             if (meteorTimer > 3.0 / (gameSpeed/BASE_SPEED)) {
                 spawnMeteor(gameSpeed/BASE_SPEED); meteorTimer = 0;
             }
         }
-        // 미사일도 200m 근처부터 등장 (보스와 겹칠 수 있음 - 난이도 상승 요소)
         if (distance > 200 && activeEffects.turbo <= 0) {
-            missileTimer += delta;
+            missileTimer += safeDelta;
             if (missileTimer > 4.0 / (gameSpeed/BASE_SPEED)) {
                 spawnMissile(gameSpeed/BASE_SPEED); missileTimer = 0;
             }
         }
     }
 
-    updatePhysics(delta);
+    updatePhysics(safeDelta);
     
-    itemTimer += delta;
+    itemTimer += safeDelta;
     if (itemTimer >= nextItemTime) {
       let limit = (currentSkin==='jihye') ? 4 : 8; 
       if(itemTimer > limit) {
@@ -552,7 +555,7 @@
     for (let i = items.length - 1; i >= 0; i--) {
       let it = items[i];
       let left = parseFloat(it.style.left) || 0;
-      left -= gameSpeed * delta;
+      left -= gameSpeed * safeDelta;
       it.style.left = left + "px";
       if (left < -60) { it.remove(); items.splice(i, 1); continue; }
       const rP = player.getBoundingClientRect();
@@ -563,9 +566,9 @@
     }
     
     let speedMult = (gameSpeed / BASE_SPEED); 
-    bg1X -= BG1_SPEED * speedMult * delta;
-    bg2X -= BG2_SPEED * speedMult * delta;
-    bg3X -= BG3_SPEED * speedMult * delta;
+    bg1X -= BG1_SPEED * speedMult * safeDelta;
+    bg2X -= BG2_SPEED * speedMult * safeDelta;
+    bg3X -= BG3_SPEED * speedMult * safeDelta;
     bg1.style.backgroundPosition = `${bg1X}px 0`;
     bg2.style.backgroundPosition = `${bg2X}px bottom`;
     bg3.style.backgroundPosition = `${bg3X}px bottom`;
@@ -573,7 +576,6 @@
     requestAnimationFrame(gameLoop);
   }
 
-  /* ------------ 보스 로직 ------------ */
   function startBossBattle() {
     isBossBattle = true;
     showFloatText("⚠️ WARNING: BOSS!!");
@@ -633,15 +635,12 @@
             bossContainer.style.display = 'none'; 
             isBossBattle = false;
             shieldBtn.style.display = 'none';
-            faith += 50; 
-            // [수정] 보스 처치 시 미션 카운트도 올릴 수 있음 (선택사항)
-            daily.faith20 += 50; 
+            faith += 50; daily.faith20 += 50; updateDailyMissionUI();
             showFloatText("🎉 보스 처치! (+50 Faith)");
         }, 1000);
     }
   }
 
-  /* ------------ 물리 및 충돌 ------------ */
   function updatePhysics(delta) {
     if (activeEffects.fly > 0) {
       playerY += (targetY - playerY) * 0.1; velocity = 0;
@@ -670,14 +669,20 @@
         }
 
         if (!p.isReflected && !activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
-            if (px < p.x + p.w && px + pw > p.x && py < p.y + p.h && py + ph > p.y) {
+            const rectP = player.getBoundingClientRect();
+            const rectM = p.getBoundingClientRect();
+            // [수정] 충돌 판정 (화면 좌표 기준, 여유값 10px)
+            if (rectP.right > rectM.left + 10 && rectP.left < rectM.right - 10 &&
+                rectP.bottom > rectM.top + 10 && rectP.top < rectM.bottom - 10) {
                 damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
 
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect();
-            if (p.x > bRect.left && p.x < bRect.right && p.y > bRect.top && p.y < bRect.bottom) {
+            const pRect = p.getBoundingClientRect();
+            if (pRect.right > bRect.left && pRect.left < bRect.right &&
+                pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
@@ -694,13 +699,14 @@
             o.remove(); obstacles.splice(i, 1);
             obstacleSurviveCount++;
             if (obstacleSurviveCount >= 5) {
-                combo++; faith++; daily.faith20++; // [수정] 콤보 달성 시 미션 카운트도 증가
+                combo++; faith++; daily.faith20++; 
                 saveData.faith = faith;
                 document.getElementById("faithText").innerText = faith;
                 const ce = document.getElementById("comboEffect");
                 ce.style.display = "block"; ce.innerText = `COMBO +${combo}!`;
                 setTimeout(() => ce.style.display = "none", 1000);
                 obstacleSurviveCount = 0; saveProgress();
+                updateDailyMissionUI();
             }
             continue;
         }
@@ -713,7 +719,7 @@
             }
         }
         if(currentSkin === 'stephanie' && left < 50 && !o.passed) {
-            faith++; daily.faith20++; // [수정] 스테파니 패시브 미션 카운트
+            faith++; daily.faith20++; updateDailyMissionUI();
             document.getElementById("faithText").innerText = faith;
             o.passed = true;
         }
@@ -769,19 +775,6 @@
         b.style.height=bh+"px"; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(t); obstacles.push(t); gameArea.appendChild(b); obstacles.push(b);
     }
-  }
-
-  function spawnItem() {
-    const types = ["cross", "wings", "wind", "bible"];
-    const type  = types[Math.floor(Math.random() * types.length)];
-    const item  = document.createElement("div");
-    item.classList.add("item");
-    item.dataset.type = type;
-    item.style.left   = window.innerWidth + "px";
-    item.style.bottom = (Math.random() * 250 + 120) + "px";
-    item.style.backgroundImage = `url('https://antiochapp.github.io/TrapGame/item_${type}.png')`;
-    gameArea.appendChild(item);
-    items.push(item);
   }
 
   function damageLife() {
