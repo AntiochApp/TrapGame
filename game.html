@@ -28,7 +28,7 @@
       background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* 배경 레이어 (z-index 1, 2, 3) */
+    /* 배경 레이어 */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute; left: 0; top: 0; width: 200%; height: 100%;
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
@@ -40,14 +40,13 @@
 
     #ground { display: none; }
 
-    /* 플레이어 (z-index 50) */
+    /* 플레이어 */
     #player {
       position: absolute; 
       z-index: 50; 
       left: 120px; bottom: 40px; 
       width: 60px; height: 60px;
       
-      /* [중요] 배경 속성 분리 (이미지 교체 시 사이즈 유지용) */
       background-image: url("disciple.png");
       background-position: center;
       background-size: contain;
@@ -58,7 +57,7 @@
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* ------------ 장애물 공통 (z-index 40) ------------ */
+    /* ------------ 장애물 공통 ------------ */
     .obstacle {
       position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
     }
@@ -264,7 +263,7 @@
   const bg2 = document.getElementById("bgLayer2");
   const bg3 = document.getElementById("bgLayer3");
 
-  // [수정] 스킨 적용 로직
+  // 스킨 적용
   if (currentSkin !== 'default') {
       player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
   } else {
@@ -417,68 +416,79 @@
     if (nextObstacleTime < 0.2) nextObstacleTime = 0.2;
   }
 
+  /* [수정됨] 장애물 생성 로직: 중앙 멀티 스폰 적용 */
   function spawnObstacle() {
     if (!running) return;
     if (activeEffects.turbo > 0) return;
 
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
-    let pattern;
     let spawnHorizontal = (distance > 100) && (Math.random() < 0.35);
 
     if (spawnHorizontal) {
-        const box = document.createElement("div");
-        box.classList.add("obstacle", "obs-long");
-        const posType = Math.floor(Math.random() * 3); 
-        box.style.left = (window.innerWidth + 80) + "px";
-        if (posType === 0) box.style.bottom = "0px";
-        else if (posType === 1) box.style.bottom = "90px"; 
-        else { box.style.top = "0px"; box.style.bottom = "auto"; }
-        gameArea.appendChild(box);
-        obstacles.push(box);
+        // [수정] 30% 확률로 2개 동시 등장, 아니면 1개
+        let count = (Math.random() < 0.3) ? 2 : 1;
+
+        for(let k=0; k<count; k++) {
+            const box = document.createElement("div");
+            box.classList.add("obstacle", "obs-long");
+            box.style.left = (window.innerWidth + 80) + "px";
+
+            // 화면 높이의 10% ~ 80% 사이 안전 구역
+            let safeH = window.innerHeight;
+            
+            if(count === 2) {
+                // 2개일 땐 위/아래로 벌려줌 (터널 효과)
+                if(k===0) box.style.bottom = randBetween(30, safeH * 0.35) + "px";
+                else      box.style.bottom = randBetween(safeH * 0.55, safeH * 0.85) + "px";
+            } else {
+                // 1개일 땐 랜덤 (바닥, 천장, 혹은 중간)
+                let r = Math.random();
+                if(r < 0.2) box.style.bottom = "0px";
+                else if(r < 0.4) box.style.top = "0px"; // box.style.bottom auto 필요없음 (CSS 우선순위)
+                else box.style.bottom = randBetween(50, safeH - 120) + "px";
+            }
+            gameArea.appendChild(box);
+            obstacles.push(box);
+        }
         return;
     }
 
+    // 일반 장애물 (돌/통나무) 로직 유지
     const useGroundBox = Math.random() < 0.5;
     const obsTypeClass = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
 
+    const startX = window.innerWidth + 80;
+
     if (useGroundBox) {
-      pattern = { groundBox: true, height: randi(90, 220) };
-    } else {
-      pattern = { groundBox: false, top: randi(120, 260), gap: randi(160, 220) };
-    }
-
-    const startX  = window.innerWidth + 80;
-
-    if (pattern.groundBox) {
+      // 바닥 장애물
       const box = document.createElement("div");
       box.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
-      box.style.height = pattern.height + "px";
+      box.style.height = randi(90, 220) + "px";
       box.style.left = startX + "px";
       box.style.bottom = "0";
       gameArea.appendChild(box);
       obstacles.push(box);
-      return;
+    } else {
+      // 천장 + 바닥 장애물 (틈새 통과)
+      let topH = randi(120, 260);
+      let gap = randi(160, 220);
+      let bottomH = Math.max(80, window.innerHeight - topH - gap);
+
+      const topObs = document.createElement("div");
+      topObs.classList.add("obstacle", "obs-cap", "obs-ceil", obsTypeClass);
+      topObs.style.height = topH + "px";
+      topObs.style.left = startX + "px";
+      topObs.style.top = "0";
+      gameArea.appendChild(topObs);
+
+      const bottomObs = document.createElement("div");
+      bottomObs.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
+      bottomObs.style.height = bottomH + "px";
+      bottomObs.style.left = startX + "px";
+      bottomObs.style.bottom = "0";
+      gameArea.appendChild(bottomObs);
+      obstacles.push(topObs, bottomObs);
     }
-
-    const topHeight = pattern.top;
-    const gap = pattern.gap;
-    const screenH = window.innerHeight;
-    const bottomHeight = Math.max(80, screenH - topHeight - gap);
-
-    const topObs = document.createElement("div");
-    topObs.classList.add("obstacle", "obs-cap", "obs-ceil", obsTypeClass);
-    topObs.style.height = topHeight + "px";
-    topObs.style.left = startX + "px";
-    topObs.style.top = "0";
-    gameArea.appendChild(topObs);
-
-    const bottomObs = document.createElement("div");
-    bottomObs.classList.add("obstacle", "obs-cap", "obs-ground", obsTypeClass);
-    bottomObs.style.height = bottomHeight + "px";
-    bottomObs.style.left = startX + "px";
-    bottomObs.style.bottom = "0";
-    gameArea.appendChild(bottomObs);
-    obstacles.push(topObs, bottomObs);
   }
 
   function spawnMeteor(speedMultiplier) {
