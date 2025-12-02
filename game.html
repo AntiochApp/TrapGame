@@ -18,334 +18,108 @@
     * { box-sizing: border-box; }
 
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      overscroll-behavior: none;
-      touch-action: none;
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; overscroll-behavior: none; touch-action: none;
       font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* ------------ 게임 영역 ------------ */
     #gameArea {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
       background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* ------------ 패럴랙스 배경 ------------ */
+    /* 배경 */
     #bgLayer1, #bgLayer2, #bgLayer3 {
-      position: absolute;
-      left: 0; top: 0;
-      width: 200%; height: 100%;
-      background-repeat: repeat-x;
-      image-rendering: pixelated;
-      pointer-events: none;
+      position: absolute; left: 0; top: 0; width: 200%; height: 100%;
+      background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
       will-change: background-position;
     }
-    #bgLayer1 {
-      background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png");
-      z-index: 1; background-size: auto 100%; background-position: 0 bottom;
-    }
-    #bgLayer2 {
-      background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png");
-      z-index: 2; background-size: auto 100%; background-position: 0 bottom;
-    }
-    #bgLayer3 {
-      background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png");
-      z-index: 3; background-size: auto 60%; background-position: 0 bottom;
-    }
+    #bgLayer1 { background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
+    #bgLayer2 { background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
+    #bgLayer3 { background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
 
-    /* 바닥 숨김 */
     #ground { display: none; }
 
     /* 플레이어 */
     #player {
-      position: absolute;
-      z-index: 50; 
-      left: 120px; bottom: 40px;
-      width: 60px; height: 60px;
-      background: url("disciple.png") center/contain no-repeat;
-      image-rendering: pixelated;
-      transition: opacity 0.2s;
-      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
+      position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px;
+      background: url("disciple.png") center/contain no-repeat; image-rendering: pixelated;
+      transition: opacity 0.2s, filter 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* ------------ 장애물 ------------ */
+    /* ------------ 장애물 공통 ------------ */
     .obstacle {
-      position: absolute;
-      z-index: 40;
-      background-size: 8px 8px; 
-      box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
+      position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
     }
     .obs-cap::after {
-        content: '';
-        position: absolute;
-        left: -10%; width: 120%; height: 24px; 
-        box-sizing: border-box;
-        border-radius: 4px;
+        content: ''; position: absolute; left: -10%; width: 120%; height: 24px; box-sizing: border-box; border-radius: 4px;
     }
     .obs-ground.obs-cap::after { top: -12px; }
     .obs-ceil.obs-cap::after { bottom: -12px; }
 
-    /* 통나무 */
-    .obs-log {
-      width: 60px; 
-      background-color: #8D6E63;
-      background-image: 
-        linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%),
-        linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%);
-      border-left: 4px solid #5D4037;
-      border-right: 4px solid #5D4037;
-    }
-    .obs-log.obs-cap::after {
-        background-color: #66BB6A; 
-        border: 4px solid #1B5E20; 
-        background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%);
-    }
+    /* [타입 1] 세로 통나무 */
+    .obs-log { width: 60px; background-color: #8D6E63; border-left: 4px solid #5D4037; border-right: 4px solid #5D4037; background-image: linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%), linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%); }
+    .obs-log.obs-cap::after { background-color: #66BB6A; border: 4px solid #1B5E20; background-image: linear-gradient(45deg, transparent 80%, rgba(255,255,255,0.3) 80%); }
 
-    /* 돌기둥 */
-    .obs-rock {
-      width: 60px;
-      background-color: #9E9E9E; 
-      background-image: 
-        radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%),
-        radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 20%);
-      background-size: 16px 16px;
-      border-left: 4px solid #616161;
-      border-right: 4px solid #616161;
-    }
-    .obs-rock.obs-cap::after {
-        background-color: #BDBDBD; 
-        border: 4px solid #424242; 
-    }
+    /* [타입 2] 돌기둥 */
+    .obs-rock { width: 60px; background-color: #9E9E9E; border-left: 4px solid #616161; border-right: 4px solid #616161; background-image: radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%), radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 20%); background-size: 16px 16px; }
+    .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
 
-    /* 가로 긴 통나무 */
-    .obs-long {
-      width: 240px; height: 35px;  
-      background-color: #5D4037; 
-      background-image: linear-gradient(0deg, rgba(0,0,0,0.1) 50%, transparent 50%); 
-      background-size: 100% 8px;
-      border: 3px solid #3E2723;
-      border-radius: 8px;
-      box-shadow: 0 5px 5px rgba(0,0,0,0.3);
-    }
+    /* [타입 3] 가로 긴 통나무 */
+    .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); background-size: 100% 10px; border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* 운석 */
-    .meteor {
-      position: absolute;
-      z-index: 60; 
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722);
-      box-shadow: 0 0 10px #ff9800;
-      animation: spinMeteor 1s linear infinite;
-    }
-    .meteor::before {
-      content: '';
-      position: absolute;
-      top: -30px; right: -30px;
-      width: 80px; height: 80px;
-      background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8));
-      transform: rotate(45deg);
-      z-index: -1;
-      border-radius: 50%;
-      filter: blur(4px);
-    }
-    @keyframes spinMeteor {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+    /* ------------ 운석 ------------ */
+    .meteor { position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; }
+    .meteor::before { content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); }
+    @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* 아이템 */
-    .item {
-      position: absolute;
-      z-index: 45;
-      width: 48px; height: 48px;
-      image-rendering: pixelated;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: contain;
-      animation: itemFloat 1.5s ease-in-out infinite alternate;
-    }
-    @keyframes itemFloat {
-        from { transform: translateY(0); }
-        to { transform: translateY(-8px); }
-    }
+    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
+    @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
     /* HUD */
-    #hud {
-      position: fixed;
-      z-index: 900;
-      top: 12px; left: 12px;
-      color: #3a2513;
-      font-size: 18px; font-weight: 700;
-      background: var(--hud-bg);
-      border-radius: 10px;
-      padding: 8px 12px;
-      border: 3px solid var(--hud-border);
-    }
+    #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
     #hud span { display: inline-block; min-width: 60px; }
 
     /* 버프 상태창 */
-    #buffArea {
-      position: fixed;
-      z-index: 2147483647; 
-      bottom: 20px; 
-      right: 15px;
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: flex-end;
-      gap: 8px;
-      pointer-events: none;
-      transform: translateZ(0); 
-      -webkit-transform: translateZ(0);
-    }
-    .buff-tag {
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 700;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-      border-left: 5px solid;
-    }
+    #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
+    .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.5); border-left: 5px solid; }
 
     /* [신규] 액티브 스킬 버튼 스타일 */
     #abilityBtn {
-      position: fixed; 
-      bottom: 20px; 
-      right: 20px; 
-      width: 80px; 
-      height: 80px;
-      background: #ff5722; 
-      color: white; 
-      border-radius: 50%; 
-      border: 4px solid #fff;
-      font-weight: bold; 
-      font-size: 24px; 
-      display: none; /* 기본 숨김 (패시브 스킨일 때) */
-      justify-content: center; 
-      align-items: center; 
-      cursor: pointer; 
-      z-index: 1000;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.6); 
-      user-select: none;
-      flex-direction: column; 
-      text-align: center; 
-      line-height: 1.1;
+      position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px;
+      background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff;
+      font-weight: bold; font-size: 24px; display: none; /* 기본 숨김 */
+      justify-content: center; align-items: center; cursor: pointer; z-index: 1000;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.6); user-select: none;
+      flex-direction: column; text-align: center; line-height: 1.1;
     }
-    #abilityBtn.cooldown { 
-      filter: grayscale(1); 
-      opacity: 0.7; 
-      cursor: not-allowed; 
-      background: #555; 
-    }
-    #abilityBtn span { 
-      font-size: 12px; 
-      display: block; 
-      margin-top: 2px;
-    }
+    #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; background: #555; }
+    #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
     /* 스피드 라인 */
-    #speedLines {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 80;
-      background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%);
-      mix-blend-mode: overlay;
-      pointer-events: none;
-      animation: speedShake 0.1s infinite;
-    }
-    @keyframes speedShake {
-      0% { transform: translate(0, 0); }
-      25% { transform: translate(-2px, 2px); }
-      50% { transform: translate(2px, -2px); }
-      75% { transform: translate(-2px, -2px); }
-      100% { transform: translate(0, 0); }
-    }
+    #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
+    @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
 
-    .float-text {
-      position: absolute;
-      color: #ffe24f;
-      font-weight: 900;
-      font-size: 20px;
-      text-shadow: 2px 2px 0 #3a2513;
-      z-index: 1000;
-      pointer-events: none;
-      animation: floatUp 1s ease-out forwards;
-    }
-    @keyframes floatUp {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
-    }
+    .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
+    @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
 
-    #comboEffect, #correctEffect {
-      position: fixed;
-      left: 50%; transform: translateX(-50%);
-      z-index: 1000;
-      display: none;
-      pointer-events: none;
-    }
+    #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; }
     #comboEffect { top: 20%; font-size: 40px; font-weight: 900; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; font-weight: 900; color: #00ffcc; text-shadow: 3px 3px #006644; }
 
     /* 모달 */
-    .modal-bg {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.55);
-      display: none;
-      justify-content: center; align-items: center;
-      padding: 16px;
-      z-index: 20000; 
-    }
-    .modal-box {
-      width: 90%; max-width: 420px;
-      background: var(--panel-bg);
-      border-radius: 14px;
-      border: 4px solid #3a2513;
-      padding: 28px 24px;
-      box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76;
-      text-align: center;
-    }
+    .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
+    .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76; text-align: center; }
     .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
     .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
     
-    .choice-btn, .action-btn, .start-btn {
-      width: 100%; padding: 14px; margin: 8px 0;
-      background: var(--accent); border: 0; border-radius: 10px;
-      color: #fff; font-size: 18px; font-weight: 700;
-      box-shadow: 0 4px 0 var(--accent-dark); cursor: pointer;
-    }
-    .choice-btn:active, .action-btn:active, .start-btn:active {
-      transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark);
-    }
+    .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; box-shadow: 0 4px 0 var(--accent-dark); cursor: pointer; }
+    .choice-btn:active, .action-btn:active, .start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
     .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
     
-    .modal-input {
-      width: 85%; max-width: 320px;
-      padding: 12px; font-size: 16px;
-      border-radius: 8px; border: 2px solid #b8a792;
-      margin: 8px auto 18px; display: block;
-    }
-
-    #loadingQuiz {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center; align-items: center;
-      color: #fff; font-size: 22px; font-weight: 700;
-      backdrop-filter: blur(2px); z-index: 20001;
-    }
+    .modal-input { width: 85%; max-width: 320px; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #b8a792; margin: 8px auto 18px; display: block; }
+    #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; backdrop-filter: blur(2px); z-index: 20001; }
   </style>
 </head>
 
@@ -379,8 +153,8 @@
   <div id="player"></div>
 
   <div id="hud">
-    ❤️ <span id="lifeText"></span>
-    📏 <span id="distanceText">0m</span>
+    ❤️ <span id="lifeText"></span> 
+    📏 <span id="distanceText">0m</span> 
     ✝ <span id="faithText"></span>
   </div>
   
@@ -409,7 +183,6 @@
       <b><span id="finalDist"></span>m</b> 달렸습니다!
     </div>
     <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
-    
     <button class="action-btn" style="background:#5d4037;" onclick="location.reload()">🔄 다시하기</button>
     <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
   </div>
@@ -425,7 +198,7 @@
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
   if (!id) {
-    alert("로그인이 필요합니다.");
+    alert("로그인 필요");
     window.location.href = "/TrapGame/index.html";
   }
 
@@ -438,7 +211,7 @@
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
-  // --- 데이터 로드 ---
+  // --- 초기화 ---
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
@@ -447,9 +220,9 @@
   let lvlTurbo      = saveData.up_turbo || 0;
   let lvlSlow       = saveData.up_slow || 0;
   
-  let currentSkin   = saveData.equippedSkin || "default"; // 현재 장착된 스킨
+  let currentSkin   = saveData.equippedSkin || "default";
 
-  // 스킨 데이터 (타입, 쿨타임, 이름)
+  // [신규] 스킨 데이터 (타입, 쿨타임, 이름)
   const SKIN_DATA = {
     default: { type: "none" },
     noel: { type: "Active", cd: 60, name: "노엘" },
@@ -465,7 +238,7 @@
     jieun: { type: "Active", cd: 120, name: "지은" }
   };
 
-  // 액티브 스킬 버튼 표시
+  // 액티브 버튼 표시 여부
   const abilityBtn = document.getElementById('abilityBtn');
   if(SKIN_DATA[currentSkin].type === "Active") {
     abilityBtn.style.display = 'flex';
@@ -481,13 +254,21 @@
   const bg2 = document.getElementById("bgLayer2");
   const bg3 = document.getElementById("bgLayer3");
 
+  // [추가됨] 스킨 이미지 적용 (기존 코드에 없던 부분!)
+  if (currentSkin !== 'default') {
+      // 스킨 파일명 규칙: skin_이름.png (예: skin_noel.png)
+      player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
+  } else {
+      player.style.backgroundImage = `url('disciple.png')`;
+  }
+
+  // 요소 생성 (안전장치)
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
     buffArea.id = "buffArea";
     document.body.appendChild(buffArea);
   }
-
   let speedLines = document.getElementById("speedLines");
   if (!speedLines) {
     speedLines = document.createElement("div");
@@ -495,19 +276,21 @@
     gameArea.insertBefore(speedLines, document.getElementById("player"));
   }
 
+  // 물리 변수
   let playerY  = 40;
   let velocity = 0;
   let gravity  = -0.25; 
   let jumpPower = 6.5 - agility * 0.05;
   jumpPower     = Math.max(3, jumpPower);
 
-  let targetY = 0; // 비행 모드 목표 Y좌표
+  let targetY = 0; // 예준 스킨(비행)용
 
+  // 게임 상태
   let distance  = 0;
   let obstacles = [];
   let meteors   = [];
   let running   = false;
-  let invincible = false;
+  let invincible = false; // 기본 피격 무적
 
   const BASE_SPEED = 170; 
   let gameSpeed    = BASE_SPEED;
@@ -516,19 +299,20 @@
   let quizTimer = 0;
   let nextFaithMilestone = 100;
   
-  let obstacleTimer   = 0;
+  // 타이머들
+  let obstacleTimer = 0;
   let nextObstacleTime = 2.0;
-  let meteorTimer     = 0; 
+  let meteorTimer = 0; 
   let nextMeteorTime  = 4.0; 
-  let itemTimer       = 0;
-  let nextItemTime    = 8;
-  let skinTimer       = 0; // 패시브 스킨 타이머
-  let abilityCD       = 0; // 액티브 쿨타임
+  let itemTimer = 0;
+  let nextItemTime = 8;
+  let skinTimer = 0; // 패시브 스킨 타이머
+  let abilityCD = 0; // 액티브 스킬 쿨타임
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
-  let items        = [];
+  let items = [];
   let combo = 0;
   let obstacleSurviveCount = 0;
   let rankingSaved = false;
@@ -545,7 +329,7 @@
 
   function jump() {
     if (!running) return;
-    // 터보나 비행 중 점프 불가
+    // 터보나 비행 중엔 점프 불가
     if (activeEffects.turbo > 0 || activeEffects.fly > 0) return;
     velocity = jumpPower;
   }
@@ -557,7 +341,7 @@
   });
   document.body.addEventListener("touchstart", jump);
   
-  // 비행 모드 좌표 추적
+  // 비행용 마우스/터치 추적
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
 
@@ -587,7 +371,7 @@
       showFloatText("🛡️ 노엘 소환!");
     }
 
-    // 쿨타임 적용
+    // 쿨타임 시작
     abilityCD = s.cd;
   }
 
@@ -635,6 +419,7 @@
     }
   }
 
+  // 장애물 스케줄링
   function scheduleNextObstacle(speedMultiplier) {
     if (activeEffects.turbo > 0) return;
     let baseTime = randBetween(1.8, 2.6);
@@ -804,17 +589,15 @@
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    // 준 스킨 패시브 (20m마다 Faith)
-    if(currentSkin === 'jun' && Math.floor(distance) > 0 && Math.floor(distance) % 20 === 0) {
-        // 중복 획득 방지 로직 필요하나 단순 구현
-    }
-
+    /* ------------ 거리 비례 속도 (3000m -> 15배) ------------ */
     let progress = Math.min(distance / 3000, 1);
     let speedMultiplier = 1 + (progress * 14); 
+    
     let currentSpeed = BASE_SPEED * speedMultiplier;
 
     if (activeEffects.slow > 0) currentSpeed *= 0.5;
     if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
+
     gameSpeed = currentSpeed;
 
     if (distance >= nextFaithMilestone) {
@@ -848,8 +631,10 @@
         let x = parseFloat(m.dataset.x);
         let y = parseFloat(m.dataset.y);
         let mSpeed = parseFloat(m.dataset.speed);
+
         x -= mSpeed * delta * 0.8; 
         y += mSpeed * delta * 1.0; 
+
         m.style.left = x + "px";
         m.style.top = y + "px";
         m.dataset.x = x;
@@ -863,24 +648,20 @@
             const rectP = player.getBoundingClientRect();
             const rectM = m.getBoundingClientRect();
             const buffer = 15;
-            if (rectP.left + buffer < rectM.right - buffer &&
+            if (
+                rectP.left + buffer < rectM.right - buffer &&
                 rectP.right - buffer > rectM.left + buffer &&
                 rectP.top + buffer < rectM.bottom - buffer &&
-                rectP.bottom - buffer > rectM.top + buffer) {
+                rectP.bottom - buffer > rectM.top + buffer
+            ) {
                 damageLife();
                 m.remove(); meteors.splice(i, 1);
             }
         }
     }
 
-    if (activeEffects.fly > 0) {
-      // 비행 (마우스 추적)
-      playerY += (targetY - playerY) * 0.1;
-      velocity = 0;
-      if(speedLines) speedLines.style.display = "none";
-    } else if (activeEffects.turbo > 0) {
-      // 터보 (중앙 고정)
-      let tY = 200; playerY += (tY - playerY) * 0.1; velocity = 0;
+    if (activeEffects.turbo > 0) {
+      let targetY = 200; playerY += (targetY - playerY) * 0.1; velocity = 0;
       if(speedLines) speedLines.style.display = "block";
     } else {
       velocity += gravity; playerY += velocity;
@@ -934,7 +715,7 @@
 
     itemTimer += delta;
     if (itemTimer >= nextItemTime) {
-      let limit = (currentSkin==='jihye') ? 4 : 8; // 지혜 스킨은 자주 등장
+      let limit = (currentSkin==='jihye') ? 4 : 8; 
       if(itemTimer > limit) {
           spawnItem(); nextItemTime = Math.random() * 6 + 6; itemTimer = 0;
       }
