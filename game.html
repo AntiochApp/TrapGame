@@ -2,67 +2,102 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final Fix v2</title>
+  <title>Disciple Run – Stable Final</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* 스타일은 기존과 동일하게 유지 */
-    :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
+    /* UI 및 스타일 (가독성 좋게 유지) */
+    :root {
+      --hud-bg: rgba(255, 248, 235, 0.9);
+      --hud-border: #3a2513;
+      --accent: #c47a3f;
+      --accent-dark: #8b4f26;
+      --panel-bg: #fdfaf2;
+    }
+
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
-    
-    #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); }
-    
-    #bgLayer1, #bgLayer2, #bgLayer3 { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
+
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; overscroll-behavior: none; touch-action: none;
+      font-family: "Pretendard", system-ui, -apple-system, sans-serif;
+    }
+
+    #gameArea {
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+      background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
+    }
+
+    /* 배경 레이어 */
+    #bgLayer1, #bgLayer2, #bgLayer3 {
+      position: absolute; left: 0; top: 0; width: 200%; height: 100%;
+      background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
+      will-change: background-position;
+    }
     #bgLayer1 { background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer3 { background-image: url("https://antiochapp.github.io/TrapGame/bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
 
     #ground { display: none; }
 
+    /* 플레이어 */
     #player {
       position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px;
       background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat;
-      image-rendering: pixelated; transition: opacity 0.2s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); will-change: bottom;
+      image-rendering: pixelated; transition: opacity 0.2s, filter 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2));
     }
 
-    .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); will-change: left; }
+    /* 장애물 */
+    .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; border-radius: 4px; }
-    .obs-ground.obs-cap::after { top: -12px; } .obs-ceil.obs-cap::after { bottom: -12px; }
+    .obs-ground.obs-cap::after { top: -12px; } 
+    .obs-ceil.obs-cap::after { bottom: -12px; }
+    
     .obs-log { width: 60px; background-color: #8D6E63; border-left: 4px solid #5D4037; border-right: 4px solid #5D4037; background-image: linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%); }
     .obs-log.obs-cap::after { background-color: #66BB6A; border: 4px solid #1B5E20; }
+    
     .obs-rock { width: 60px; background-color: #9E9E9E; border-left: 4px solid #616161; border-right: 4px solid #616161; background-image: radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%); }
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
+    
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
-    @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
-
+    /* 투사체 (운석, 미사일) */
     .projectile { 
       position: absolute; z-index: 60; width: 40px; height: 40px; border-radius: 50%; 
       background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); 
-      box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; will-change: left, top;
+      box-shadow: 0 0 10px #ff9800; animation: spinMeteor 1s linear infinite; 
     }
     .projectile::before { content: ''; position: absolute; top: -30px; right: -30px; width: 80px; height: 80px; background: linear-gradient(45deg, transparent 60%, rgba(255,87,34,0.8)); transform: rotate(45deg); z-index: -1; border-radius: 50%; filter: blur(4px); }
+    
     .missile-style { filter: hue-rotate(220deg) brightness(1.2); }
     .boss-missile { filter: hue-rotate(290deg) brightness(0.8); }
     .reflected-missile { filter: hue-rotate(90deg) brightness(1.5); box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+    /* 아이템 */
+    .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
+    @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
+    /* HUD & UI */
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
+    #hud span { display: inline-block; min-width: 60px; }
+    
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; }
 
-    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
+    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 24px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); flex-direction: column; text-align: center; line-height: 1.1; }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; }
+    #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
     #shieldBtn { position: fixed; bottom: 150px; left: 20px; width: 90px; height: 90px; background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 16px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); text-align: center; }
     #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
     #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
+    .mission-item { margin-bottom: 4px; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
 
+    /* 보스 */
     #bossContainer { position: absolute; right: -200px; top: 50%; width: 120px; height: 120px; z-index: 55; display: none; transition: right 1s ease-out; }
     #bossBody { width: 100%; height: 100%; background: url('boss.png') no-repeat center/contain; image-rendering: pixelated; filter: drop-shadow(0 0 10px red); animation: bossFloat 2s ease-in-out infinite; }
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
@@ -71,6 +106,7 @@
     #bossWarning { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000; display: none; z-index: 2000; animation: blink 0.5s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+    /* 이펙트 */
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
@@ -78,11 +114,14 @@
     #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; font-weight: 900; text-shadow: 3px 3px #000; }
     #comboEffect { top: 20%; font-size: 40px; color: #ffe24f; } #correctEffect { top: 40%; font-size: 48px; color: #00ffcc; }
 
+    /* 모달 */
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; text-align: center; }
     .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
     .modal-desc { font-size: 17px; margin-bottom: 22px; line-height: 1.45; white-space: pre-line; }
-    .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
+    .choice-btn, .action-btn, .start-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 var(--accent-dark); }
+    .choice-btn:active, .action-btn:active, .start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
+    .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
     .modal-input { width: 85%; padding: 12px; border-radius: 8px; border: 2px solid #b8a792; display: block; margin: 8px auto; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
   </style>
@@ -92,14 +131,14 @@
 <div id="gameArea">
   <div id="startGuide" class="modal-bg" style="display:flex;">
     <div class="modal-box">
-      <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법 / How to Play</div>
-      <div style="text-align:left; font-size:15px; line-height:1.6;">
-        • <b>Space / 터치</b>: 점프<br>
-        • <b>A키 / 버튼</b>: 특수능력<br>
-        • <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)<br><br>
-        [아이템 효과]<br>
-        ✝️ <b>십자가:</b> 무적 / 🕊️ <b>날개:</b> 터보<br>
-        🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
+      <div class="modal-title">게임 방법 / How to Play</div>
+      <div class="modal-desc" style="text-align:left; font-size:15px;">
+• <b>Space / 터치</b>: 점프<br>
+• <b>A키 / 버튼</b>: 특수능력<br>
+• <b>방패 버튼</b>: 보스 미사일 반사! (200m 등장)<br><br>
+[아이템 효과]<br>
+✝️ <b>십자가:</b> 무적 / 🕊️ <b>날개:</b> 터보<br>
+🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -127,8 +166,8 @@
 
 <div id="quizModal" class="modal-bg">
   <div class="modal-box">
-    <div style="font-size:28px; font-weight:800;">성경 퀴즈</div>
-    <div id="quizQuestion" style="margin:20px 0; font-size:18px;"></div>
+    <div class="modal-title">성경 퀴즈</div>
+    <div class="modal-desc" id="quizQuestion"></div>
     <button class="choice-btn" onclick="answerQuiz('A')" id="btnA"></button>
     <button class="choice-btn" onclick="answerQuiz('B')" id="btnB"></button>
     <button class="choice-btn" onclick="answerQuiz('C')" id="btnC"></button>
@@ -137,8 +176,8 @@
 
 <div id="gameOverModal" class="modal-bg">
   <div class="modal-box">
-    <div style="font-size:28px; font-weight:800;">GAME OVER</div>
-    <div style="margin:20px 0;"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
+    <div class="modal-title">GAME OVER</div>
+    <div class="modal-desc"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
     <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
     <button class="action-btn" style="background:#5d4037;" onclick="location.reload()">🔄 다시하기</button>
     <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
@@ -156,11 +195,12 @@
 
   if (!id) { alert("로그인 필요"); window.location.href = "/TrapGame/index.html"; }
 
+  // 일일 미션 (버전 1.8: 강제 초기화)
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.10' };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.8' };
   }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.10') {
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.8') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
@@ -200,11 +240,11 @@
     return el;
   }
 
-  // [수정 1] 중력과 점프력 조정 (부드럽게)
+  // [수정] 중력과 점프력 완화
   let playerY = 40; let velocity = 0; 
-  let gravity = -0.16; // 기존 -0.25에서 완화
-  let jumpPower = Math.max(3, 5.5 - agility * 0.05); // 기존 6.5에서 완화
-
+  let gravity = -0.16; // 더 천천히 떨어짐
+  let jumpPower = Math.max(3, 5.5 - agility * 0.05); // 점프 높이 조절
+  
   let targetY = 0;
   let distance = 0;
   let obstacles = []; let projectiles = []; 
@@ -213,11 +253,9 @@
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
   let lastTime = performance.now();
   
-  let nextFaithMilestone = 100;
-  
-  // [수정 2] 퀴즈 거리 변수 추가
+  // [수정] 퀴즈: 35m 단위로 등장
   let nextQuizDistance = 35;
-  
+
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let meteorTimer = 0; let missileTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
@@ -261,7 +299,11 @@
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            const dist = Math.sqrt(Math.pow(p.x - 150, 2) + Math.pow(p.y - (window.innerHeight - playerY - 30), 2));
+            // 안전한 거리 계산 (DOM 기준)
+            const pRect = p.getBoundingClientRect();
+            const plRect = player.getBoundingClientRect();
+            const dist = Math.hypot((pRect.left+20) - (plRect.left+30), (pRect.top+20) - (plRect.top+30));
+            
             if (dist < 250) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
@@ -312,11 +354,9 @@
     const box = document.getElementById('dailyMissionBox');
     if (daily.completed || isBossBattle) { box.style.display = 'none'; return; }
     box.style.display = 'block';
-    
     const m1 = daily.run200 ? 'mission-done' : '';
     const m2 = daily.quiz3 >= 3 ? 'mission-done' : '';
     const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
-
     const newHTML = `
       <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
       <div class="mission-item ${m1}">🏃 200m 달리기</div>
@@ -329,7 +369,6 @@
   function checkMissions() {
     if (daily.completed) return;
     if(distance < 5) return; 
-
     let changed = false;
     if (!daily.run200 && distance >= 200) { daily.run200 = true; changed = true; }
     if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
@@ -345,7 +384,7 @@
     if (!running) return;
     const delta = (now - lastTime) / 1000;
     lastTime = now;
-    const safeDelta = Math.min(delta, 0.05);
+    const safeDelta = Math.min(delta, 0.1); // 렉 방지
 
     try {
         updateBuffUI(safeDelta);
@@ -358,6 +397,7 @@
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
             distance += safeDelta * 1 * distMultiplier;
             document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
+            
             let progress = Math.min(distance / 3000, 1);
             let speedMultiplier = 1 + (progress * 14);
             let currentSpeed = BASE_SPEED * speedMultiplier;
@@ -370,19 +410,17 @@
 
         if (!isBossBattle && distance >= 200 && boss.hp > 0) { startBossBattle(); }
 
-        /* [수정 2] 퀴즈 거리 기반 로직 (35m 마다) */
+        /* [수정] 퀴즈 거리 기반 (35m 단위) */
         if (!isBossBattle && distance >= nextQuizDistance) {
-            pauseForQuiz();
-            nextQuizDistance += 35; // 다음 퀴즈 거리 설정
-            return;
+            nextQuizDistance += 35; 
+            pauseForQuiz(); return; 
         }
 
         if (isBossBattle) {
             updateBoss(safeDelta);
         } else {
             obstacleTimer += safeDelta;
-            // 퀴즈 직전(5m 전) 장애물 생성 금지
-            if (obstacleTimer >= nextObstacleTime && (nextQuizDistance - distance > 5)) {
+            if (obstacleTimer >= nextObstacleTime) {
                 spawnObstacle(); obstacleTimer = 0; 
                 let sm = gameSpeed / BASE_SPEED;
                 let baseTime = randBetween(1.8, 2.6);
@@ -401,26 +439,30 @@
 
         updatePhysics(safeDelta);
         
-        /* [수정 3] 아이템 생성 로직 (확실하게 등장하도록) */
+        /* [수정] 아이템 생성 로직 단순화 (무조건 등장) */
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) {
-            spawnItem();
-            itemTimer = 0;
-            let baseT = (currentSkin === 'jihye') ? 4 : 8;
-            nextItemTime = baseT + Math.random() * 4; // 8~12초 간격
+            spawnItem(); 
+            itemTimer = 0; 
+            nextItemTime = 8 + Math.random() * 4; 
         }
 
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
-            if(it.x === undefined) it.x = parseFloat(it.style.left) || window.innerWidth;
-            it.x -= gameSpeed * safeDelta;
-            it.style.left = it.x + "px";
-            if (it.x < -60) { it.remove(); items.splice(i, 1); continue; }
-            if (120 < it.x + 48 && 120 + 60 > it.x && playerY < 48 + 40 && playerY + 60 > 40) {
+            // 아이템 이동 (DOM 읽기 기반)
+            let left = parseFloat(it.style.left) || window.innerWidth;
+            left -= gameSpeed * safeDelta;
+            it.style.left = left + "px";
+            if (left < -60) { it.remove(); items.splice(i, 1); continue; }
+            
+            const rP = player.getBoundingClientRect();
+            const rI = it.getBoundingClientRect();
+            if (rP.left < rI.right && rP.right > rI.left && rP.top < rI.bottom && rP.bottom > rI.top) {
                 activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
             }
         }
         
+        // 배경 이동 (게임 멈추지 않게)
         let speedMult = (gameSpeed / BASE_SPEED); 
         bg1X -= BG1_SPEED * speedMult * safeDelta;
         bg2X -= BG2_SPEED * speedMult * safeDelta;
@@ -499,6 +541,7 @@
     }
   }
 
+  // [안정화] 충돌 로직: getBoundingClientRect 사용 (정확도 100%)
   function updatePhysics(delta) {
     if (activeEffects.fly > 0) {
       playerY += (targetY - playerY) * 0.1; velocity = 0;
@@ -515,28 +558,33 @@
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
-    const px = 120, py = window.innerHeight - playerY - 60, pw = 60, ph = 60;
-
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
-        p.x += p.vx * delta; p.y += p.vy * delta;
-        p.style.left = p.x + "px"; p.style.top = p.y + "px";
+        
+        // DOM 기반 이동 업데이트 (끊김 방지)
+        let cx = parseFloat(p.style.left);
+        let cy = parseFloat(p.style.top);
+        if(isNaN(cx)) { cx = p.x; cy = p.y; } // 초기값
+        
+        cx += p.vx * delta; cy += p.vy * delta;
+        p.style.left = cx + "px"; p.style.top = cy + "px";
 
-        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > window.innerHeight + 100) {
+        if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) {
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
         if (!p.isReflected && !activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
-            if (px < p.x + 40 - 10 && px + pw > p.x + 10 &&
-                py < p.y + 40 - 10 && py + ph > p.y + 10) {
+            const rP = player.getBoundingClientRect();
+            const rM = p.getBoundingClientRect();
+            if (rP.right > rM.left + 10 && rP.left < rM.right - 10 && rP.bottom > rM.top + 10 && rP.top < rM.bottom - 10) {
                 damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
 
         if (isBossBattle && p.isReflected) {
-            const bX = window.innerWidth - 150; 
-            const bY = (boss.y / 100) * window.innerHeight;
-            if (p.x > bX && p.x < bX + 120 && p.y > bY && p.y < bY + 120) {
+            const bRect = bossContainer.getBoundingClientRect();
+            const pRect = p.getBoundingClientRect();
+            if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
@@ -544,12 +592,13 @@
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
-        if(o.x === undefined) o.x = parseFloat(o.style.left) || window.innerWidth;
-        o.x -= gameSpeed * delta;
-        o.style.left = o.x + "px";
+        let left = parseFloat(o.style.left) || window.innerWidth;
+        left -= gameSpeed * delta;
+        o.style.left = left + "px";
+        
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
 
-        if (o.x + rw < 0) {
+        if (left + rw < 0) {
             o.remove(); obstacles.splice(i, 1);
             obstacleSurviveCount++;
             if (obstacleSurviveCount >= 5) {
@@ -564,15 +613,13 @@
         }
         
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
-            if (o.x < 180 && o.x > 50) {
-                const rP = player.getBoundingClientRect();
-                const rO = o.getBoundingClientRect();
-                if (rP.right > rO.left + 10 && rP.left < rO.right - 10 && rP.bottom > rO.top + 10 && rP.top < rO.bottom - 10) {
-                    damageLife(); break;
-                }
+            const rP = player.getBoundingClientRect();
+            const rO = o.getBoundingClientRect();
+            if (rP.right > rO.left + 10 && rP.left < rO.right - 10 && rP.bottom > rO.top + 10 && rP.top < rO.bottom - 10) {
+                damageLife(); break;
             }
         }
-        if(currentSkin === 'stephanie' && o.x < 50 && !o.passed) {
+        if(currentSkin === 'stephanie' && left < 50 && !o.passed) {
             faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true;
         }
     }
@@ -605,7 +652,7 @@
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
             const b = document.createElement("div"); b.classList.add("obstacle", "obs-long");
-            b.x = window.innerWidth+80; b.style.left = b.x+"px";
+            b.style.left = (window.innerWidth+80)+"px";
             let sh = window.innerHeight;
             if(cnt===2) { if(k===0) b.style.bottom=randBetween(30, sh*0.35)+"px"; else b.style.bottom=randBetween(sh*0.55, sh*0.85)+"px"; }
             else { let r=Math.random(); if(r<0.2) b.style.bottom="0px"; else if(r<0.4) b.style.top="0px"; else b.style.bottom=randBetween(50, sh-120)+"px"; }
@@ -617,14 +664,14 @@
     const sx = window.innerWidth+80;
     if(Math.random()<0.5) {
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height=randi(90,220)+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
+        b.style.height=randi(90,220)+"px"; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(b); obstacles.push(b);
     } else {
         let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, window.innerHeight-th-gap);
         const t = document.createElement("div"); t.classList.add("obstacle", "obs-cap", "obs-ceil", type);
-        t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
+        t.style.height=th+"px"; t.style.left=sx+"px"; t.style.top="0";
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height=bh+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
+        b.style.height=bh+"px"; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(t); obstacles.push(t); gameArea.appendChild(b); obstacles.push(b);
     }
   }
@@ -635,6 +682,50 @@
     life--; document.getElementById("lifeText").innerText=life;
     invincible=true; player.style.opacity="0.4"; setTimeout(()=>{invincible=false; player.style.opacity="1";},800);
     if(life<=0) gameOver();
+  }
+
+  // [수정] 퀴즈 로딩 안전장치 (3초 후 강제 재개)
+  async function pauseForQuiz() {
+    if (!running) return;
+    running = false; document.getElementById("loadingQuiz").style.display = "flex";
+    
+    const safetyTimeout = setTimeout(() => {
+        if(document.getElementById("loadingQuiz").style.display === "flex") {
+            document.getElementById("loadingQuiz").style.display = "none";
+            running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
+        }
+    }, 3000);
+
+    try {
+      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getQuiz" }) });
+      const txt = await res.text();
+      clearTimeout(safetyTimeout); // 로딩 성공 시 타임아웃 해제
+      
+      document.getElementById("loadingQuiz").style.display = "none";
+      if (txt === "noquiz") { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); return; }
+      const quiz = JSON.parse(txt);
+      document.getElementById("quizQuestion").innerText = quiz.question;
+      document.getElementById("btnA").innerText = "A) " + quiz.A;
+      document.getElementById("btnB").innerText = "B) " + quiz.B;
+      document.getElementById("btnC").innerText = "C) " + quiz.C;
+      window.correctAnswer = quiz.answer;
+      document.getElementById("quizModal").style.display = "flex";
+    } catch (err) {
+      clearTimeout(safetyTimeout);
+      document.getElementById("loadingQuiz").style.display = "none";
+      running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop);
+    }
+  }
+
+  function answerQuiz(sel) {
+    document.getElementById("quizModal").style.display = "none";
+    if (sel === window.correctAnswer) {
+      const ef = document.getElementById("correctEffect");
+      ef.style.display = "block"; setTimeout(() => (ef.style.display = "none"), 800);
+      faith += 5; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
+      daily.quiz3++; localStorage.setItem("dailyMission", JSON.stringify(daily)); saveProgress();
+    } else { damageLife(); }
+    if (life > 0) { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); }
   }
 
   function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
