@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Disciple Run – Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
 <style>
   :root {
@@ -49,7 +50,7 @@
 
   h1 { text-align: center; color: #4b2e12; margin-bottom: 15px; }
 
-  /* [신규] 탭 버튼 스타일 */
+  /* 탭 버튼 스타일 */
   .tab-container { display: flex; gap: 10px; margin-bottom: 20px; }
   .tab-btn {
     flex: 1; padding: 12px; border: none; border-radius: 8px;
@@ -67,8 +68,22 @@
   .item {
     border: 3px solid #cfb99a; padding: 14px; border-radius: 10px;
     margin-bottom: 12px; background: #faf8f3; position: relative;
+    display: flex; flex-direction: column; gap: 6px;
   }
-  .item h2 { font-size: 17px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; }
+  
+  /* 스킨 전용 레이아웃 */
+  .skin-item {
+    flex-direction: row; align-items: center; gap: 12px;
+  }
+  .skin-img-box {
+    width: 64px; height: 64px; background: #eaddcf; border-radius: 8px;
+    border: 2px solid #cbb6a3; display: flex; justify-content: center; align-items: center;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .skin-img-box img { width: 80%; height: 80%; object-fit: contain; image-rendering: pixelated; }
+  .skin-info { flex: 1; }
+
+  .item h2 { font-size: 17px; margin: 0; display: flex; justify-content: space-between; align-items: center; }
   
   /* 레벨 배지 */
   .lvl-badge { font-size: 12px; background: #8b4f26; color: #fff; padding: 2px 6px; border-radius: 4px; }
@@ -78,22 +93,17 @@
   /* 스킨 태그 */
   .skin-tag {
     font-size: 11px; padding: 3px 6px; border-radius: 4px; color: #fff; font-weight: bold;
-    margin-right: 5px; vertical-align: middle;
+    margin-left: 6px; vertical-align: middle; display: inline-block;
   }
-  .tag-active { background: #d32f2f; }
-  .tag-passive { background: #1976D2; }
-
+  
   .buy-btn {
     width: 100%; padding: 12px; border: none; border-radius: 8px;
     background: var(--accent); color: white; font-size: 15px; font-weight: bold;
-    cursor: pointer; margin-top: 8px; box-shadow: 0 3px 0 var(--accent-dark);
+    cursor: pointer; margin-top: 4px; box-shadow: 0 3px 0 var(--accent-dark);
   }
   .buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dark); }
-  
-  /* [신규] 비활성화 버튼 (Max 레벨 등) */
   .buy-btn:disabled { background-color: #aaa; color: #eee; cursor: not-allowed; box-shadow: none; transform: none; }
   
-  /* [신규] 장착 버튼 스타일 */
   .btn-equip { background: #4CAF50; box-shadow: 0 3px 0 #2E7D32; }
   .btn-equip:active { transform: translateY(2px); box-shadow: 0 1px 0 #2E7D32; }
   .btn-equipped { background: #555; cursor: default; box-shadow: none; }
@@ -109,7 +119,6 @@
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   #gachaResult { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 22px; border-radius: 12px; text-align: center; box-shadow: 0 8px 12px rgba(0,0,0,0.35); border: 4px solid var(--border-dark); z-index: 1000; min-width: 300px; }
 
-  /* 탭 내용 표시 제어 */
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 </style>
@@ -126,58 +135,52 @@
   <h1>상점</h1>
 
   <div class="tab-container">
-    <button class="tab-btn active" onclick="switchTab('upgrade')">능력치 강화</button>
-    <button class="tab-btn" onclick="switchTab('skin')">스킨 상점</button>
+    <button class="tab-btn active" onclick="switchTab('upgrade')">능력치</button>
+    <button class="tab-btn" onclick="switchTab('skin')">스킨</button>
   </div>
 
   <div id="tab-upgrade" class="tab-content active">
     
     <div class="item">
       <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
-      <p>점프 반응 속도가 빨라집니다. (Max 100)</p>
-      <p><b>가격: 30 Faith</b></p>
-      <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매하기</button>
+      <p>점프력이 상승합니다. (Max 100)</p>
+      <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매</button>
     </div>
 
     <div class="item">
       <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
       <p>기본 생명력이 증가합니다. (Max 10)</p>
-      <p><b>가격: 200 Faith</b></p>
-      <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매하기</button>
+      <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매</button>
     </div>
 
     <div class="item">
       <h2>🛡️ 무적 시간 +1초 <span class="lvl-badge" id="lvl-invincible">Lv.0</span></h2>
       <p>십자가 아이템 효과가 길어집니다. (Max 20)</p>
-      <p><b>가격: 40 Faith</b></p>
-      <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매하기</button>
+      <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매</button>
     </div>
 
     <div class="item">
       <h2>🚀 터보 시간 +1초 <span class="lvl-badge" id="lvl-turbo">Lv.0</span></h2>
       <p>날개 아이템 효과가 길어집니다. (Max 20)</p>
-      <p><b>가격: 40 Faith</b></p>
-      <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매하기</button>
+      <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매</button>
     </div>
 
     <div class="item">
       <h2>🍃 감속 시간 +1초 <span class="lvl-badge" id="lvl-slow">Lv.0</span></h2>
       <p>바람 아이템 효과가 길어집니다. (Max 20)</p>
-      <p><b>가격: 40 Faith</b></p>
-      <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매하기</button>
+      <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매</button>
     </div>
 
-    <div class="item">
+    <div class="item" style="background:#fff8e1; border-color:#eec048;">
       <h2>🎁 랜덤 뽑기</h2>
       <p>Faith 200으로 특별한 보상을 뽑아 보세요!</p>
       <p style="font-size:12px; color:#8a735a;">(특별 당첨은 교역자님이 따로 알려줍니다 😊)</p>
-      <button class="buy-btn" onclick="buyGacha()">뽑기 (200 Faith)</button>
+      <button class="buy-btn" style="background:#ffa000; border-color:#ff6f00;" onclick="buyGacha()">뽑기 (200 F)</button>
     </div>
   </div>
 
   <div id="tab-skin" class="tab-content">
-    <div id="skinListArea">
-      </div>
+    <div id="skinListArea"></div>
   </div>
 
   <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
@@ -204,40 +207,36 @@
   saveData.up_turbo = saveData.up_turbo || 0;
   saveData.up_slow = saveData.up_slow || 0;
   
-  // 스킨 데이터 초기화
   if(!saveData.ownedSkins) saveData.ownedSkins = ["default"];
   if(!saveData.equippedSkin) saveData.equippedSkin = "default";
 
-  // 설정값 (가격 및 최대레벨)
+  // 설정값 (key: 실제 저장될 변수명)
   const CONFIG = {
-    agility: { price: 30, max: 100 },
-    life: { price: 200, max: 10 },
-    up_invincible: { price: 40, max: 20 },
-    up_turbo: { price: 40, max: 20 },
-    up_slow: { price: 40, max: 20 }
+    agility: { name:"민첩성", price: 30, max: 100, key: "agility" },
+    life: { name:"라이프", price: 200, max: 10, key: "extraLife" },
+    up_invincible: { name:"무적시간", price: 40, max: 20, key: "up_invincible" },
+    up_turbo: { name:"터보시간", price: 40, max: 20, key: "up_turbo" },
+    up_slow: { name:"감속시간", price: 40, max: 20, key: "up_slow" }
   };
 
-  // 스킨 목록 데이터 (가격: 10,000 고정)
   const SKIN_LIST = [
-    { code: "noel", name: "노엘", type: "Active", desc: "쿨타임 1분: 전방 장애물 길 열기" },
-    { code: "jeonchan", name: "전찬", type: "Passive", desc: "40초마다 랜덤 버프 발동 (15초간)" },
-    { code: "haeun", name: "하은", type: "Passive", desc: "30초마다 화면 전체 장애물 제거" },
-    { code: "jaeguk", name: "재국", type: "Active", desc: "쿨타임 2분: 30초간 자동부활 버프" },
-    { code: "hahwi", name: "하휘", type: "Passive", desc: "20초마다 5초 무적 (십자가 효과 2배)" },
-    { code: "jihye", name: "지혜", type: "Passive", desc: "아이템 출현 확률 100% 증가" },
-    { code: "jun", name: "준", type: "Passive", desc: "20m 달릴 때마다 Faith +1" },
-    { code: "stephanie", name: "스테파니", type: "Passive", desc: "장애물 통과 시 Faith +1" },
-    { code: "yejun", name: "예준", type: "Active", desc: "쿨타임 3분: 30초간 무중력 비행" },
-    { code: "ganghui", name: "강희", type: "Passive", desc: "20초마다 정면 장애물 파괴 (불꽃)" },
-    { code: "jieun", name: "지은", type: "Active", desc: "쿨타임 2분: 20초간 소환수 탱킹 (무적)" }
+    { code: "noel", name: "노엘", type: "Active", desc: "1분 쿨: 전방 길 열기" },
+    { code: "jeonchan", name: "전찬", type: "Passive", desc: "40초마다 랜덤 버프" },
+    { code: "haeun", name: "하은", type: "Passive", desc: "30초마다 전체 정화" },
+    { code: "jaeguk", name: "재국", type: "Active", desc: "2분 쿨: 자동부활 대기" },
+    { code: "hahwi", name: "하휘", type: "Passive", desc: "20초마다 5초 무적" },
+    { code: "jihye", name: "지혜", type: "Passive", desc: "아이템 확률 2배" },
+    { code: "jun", name: "준", type: "Passive", desc: "20m마다 Faith 획득" },
+    { code: "stephanie", name: "스테파니", type: "Passive", desc: "장애물 통과 보너스" },
+    { code: "yejun", name: "예준", type: "Active", desc: "3분 쿨: 자유 비행" },
+    { code: "ganghui", name: "강희", type: "Passive", desc: "20초마다 전방 파괴" },
+    { code: "jieun", name: "지은", type: "Active", desc: "2분 쿨: 소환수 탱킹" }
   ];
   const SKIN_PRICE = 10000;
 
-  // 초기 실행
   updateUI();
   loadLatestSave();
 
-  // 탭 전환 함수
   function switchTab(tabName) {
     const btns = document.querySelectorAll('.tab-btn');
     btns.forEach(btn => btn.classList.remove('active'));
@@ -249,7 +248,6 @@
     document.getElementById('tab-' + tabName).classList.add('active');
   }
 
-  // 서버 동기화
   async function loadLatestSave() {
     try {
       const res = await fetch(API_URL, {
@@ -260,11 +258,8 @@
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
         saveData = { ...saveData, ...loaded };
-        
-        // 스킨 데이터 병합
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
-
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
       }
@@ -272,56 +267,44 @@
   }
 
   function updateUI() {
-    document.getElementById("faithText").innerText = saveData.faith;
+    document.getElementById("faithText").innerText = saveData.faith.toLocaleString(); // 콤마 표시
 
-    // 1. 업그레이드 버튼 상태 업데이트
-    updateItemState('agility', 'btn-agility', 'lvl-agility');
-    updateItemState('life', 'btn-life', 'lvl-life'); 
-    updateItemState('up_invincible', 'btn-invincible', 'lvl-invincible');
-    updateItemState('up_turbo', 'btn-turbo', 'lvl-turbo');
-    updateItemState('up_slow', 'btn-slow', 'lvl-slow');
+    // 업그레이드 UI
+    Object.keys(CONFIG).forEach(type => {
+      const conf = CONFIG[type];
+      const currentLvl = saveData[conf.key] || 0;
+      const btn = document.getElementById(`btn-${type.replace('up_','')}`); // btn-invincible 등 매핑
+      const badge = document.getElementById(`lvl-${type.replace('up_','')}`);
+      
+      if(badge) badge.innerText = `Lv.${currentLvl}`;
+      
+      if(btn) {
+        if (currentLvl >= conf.max) {
+          btn.innerText = "MAX (완료)";
+          btn.disabled = true;
+        } else {
+          btn.innerText = `구매 (${conf.price.toLocaleString()} F)`;
+          btn.disabled = false;
+        }
+      }
+    });
 
-    // 2. 스킨 목록 렌더링
     renderSkins();
   }
 
-  function updateItemState(type, btnId, badgeId) {
-    let key = (type === 'life') ? 'extraLife' : type;
-    const currentLvl = saveData[key] || 0;
-    const info = CONFIG[type];
-    const btn = document.getElementById(btnId);
-    
-    document.getElementById(badgeId).innerText = `Lv.${currentLvl}`;
-
-    if (currentLvl >= info.max) {
-      btn.innerText = "MAX (완료)";
-      btn.disabled = true;
-    } else {
-      btn.innerText = `구매 (${info.price} F)`;
-      btn.disabled = false;
-    }
-  }
-
-  // 스킨 목록 자동 생성 함수
   function renderSkins() {
     const listArea = document.getElementById('skinListArea');
     listArea.innerHTML = "";
 
-    // 기본 스킨 표시
+    // 기본 스킨
     const defaultEquipped = (saveData.equippedSkin === 'default');
-    let defaultBtn = defaultEquipped 
+    const defBtn = defaultEquipped 
       ? `<button class="buy-btn btn-equipped" disabled>장착 중</button>`
-      : `<button class="buy-btn btn-equip" onclick="equipSkin('default')">기본 스킨 장착</button>`;
+      : `<button class="buy-btn btn-equip" onclick="equipSkin('default')">장착하기</button>`;
     
-    listArea.innerHTML += `
-      <div class="item">
-        <h2>😊 기본 캐릭터 <span class="skin-tag" style="background:#888;">Normal</span></h2>
-        <p>기본 능력치입니다.</p>
-        ${defaultBtn}
-      </div>
-    `;
+    listArea.innerHTML += createSkinHTML('disciple', '😊 기본 캐릭터', 'Normal', '#888', '기본 능력치입니다.', defBtn);
 
-    // 판매 스킨 표시
+    // 판매 스킨
     SKIN_LIST.forEach(skin => {
       const isOwned = saveData.ownedSkins.includes(skin.code);
       const isEquipped = (saveData.equippedSkin === skin.code);
@@ -333,66 +316,78 @@
       } else if (isOwned) {
         btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
       } else {
-        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">구매 (10,000 F)</button>`;
+        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
       }
-
-      listArea.innerHTML += `
-        <div class="item">
-          <h2>${skin.name} <span class="skin-tag" style="background:${tagColor}">${skin.type}</span></h2>
-          <p>${skin.desc}</p>
-          ${btnHtml}
-        </div>
-      `;
+      
+      // 이미지 파일명 규칙: skin_코드.png (없으면 disciple.png가 뜨도록 onerror 처리)
+      const imgName = `skin_${skin.code}`;
+      createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
+      listArea.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
     });
   }
 
-  // ---------------- 구매 로직 ----------------
+  // HTML 생성 헬퍼 함수
+  function createSkinHTML(imgName, name, type, color, desc, btn) {
+    // imgName이 'disciple'이면 그냥 disciple.png 사용, 아니면 skin_xxx.png
+    const imgSrc = (imgName === 'disciple') ? 'disciple.png' : `${imgName}.png`;
+    
+    return `
+      <div class="item skin-item">
+        <div class="skin-img-box">
+           <img src="${imgSrc}" onerror="this.src='disciple.png'" alt="${name}">
+        </div>
+        <div class="skin-info">
+          <h2>${name} <span class="skin-tag" style="background:${color}">${type}</span></h2>
+          <p>${desc}</p>
+          ${btn}
+        </div>
+      </div>
+    `;
+  }
+
   function buyItem(type) {
-    const info = CONFIG[type];
-    let key = (type === 'life') ? 'extraLife' : type;
+    const conf = CONFIG[type];
+    const key = conf.key;
 
-    if (saveData[key] >= info.max) return alert("이미 최대 레벨입니다!");
-    if (saveData.faith < info.price) return alert("신앙포인트가 부족합니다!");
+    if (saveData[key] >= conf.max) return alert("이미 최대 레벨입니다!");
+    if (saveData.faith < conf.price) return alert("Faith가 부족합니다!");
 
-    saveData.faith -= info.price;
+    saveData.faith -= conf.price;
     saveData[key]++;
-    alert("업그레이드 완료!");
+    
+    // UI 즉시 갱신 (반응성 향상)
+    updateUI(); 
     saveProgress();
   }
 
   function buySkin(code) {
-    if (saveData.faith < SKIN_PRICE) return alert("신앙포인트가 부족합니다! (10,000 필요)");
+    if (saveData.faith < SKIN_PRICE) return alert(`Faith가 부족합니다! (${SKIN_PRICE.toLocaleString()} 필요)`);
     
-    if(confirm("10,000 Faith를 사용하여 스킨을 구매하시겠습니까?")) {
+    if(confirm(`${SKIN_PRICE.toLocaleString()} Faith를 사용하여 구매하시겠습니까?`)) {
       saveData.faith -= SKIN_PRICE;
       saveData.ownedSkins.push(code);
-      alert("스킨 구매 완료! [장착하기]를 눌러주세요.");
+      alert("구매 완료! 장착해보세요.");
+      updateUI();
       saveProgress();
     }
   }
 
   function equipSkin(code) {
     saveData.equippedSkin = code;
-    alert("스킨이 장착되었습니다.");
+    updateUI(); // UI 갱신으로 버튼 상태 변경
     saveProgress();
   }
 
-  // ---------------- 저장 ----------------
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
-    updateUI();
     try {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ type: "save", id, saveData })
-      });
+      await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "save", id, saveData }) });
     } catch (e) { console.warn(e); }
-    document.getElementById("faithText").innerText = saveData.faith;
   }
 
-  // ---------------- 가챠 (기존 로직 유지) ----------------
+  // 가챠
   function buyGacha() {
-    if (saveData.faith < 200) { alert("신앙포인트가 부족합니다!"); return; }
+    if (saveData.faith < 200) { alert("Faith가 부족합니다!"); return; }
     saveData.faith -= 200;
     updateUI();
     document.getElementById("gachaModal").style.display = "flex";
@@ -408,6 +403,7 @@
     let isSpecial = false;
     let specialName = "";
 
+    // 확률 로직 유지
     if (r < 40) { 
         if(saveData.agility < CONFIG.agility.max) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
         else { saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith"; }
@@ -418,23 +414,18 @@
     }
     else if (r < 85) { 
         if(saveData.agility + 2 <= CONFIG.agility.max) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
-        else { saveData.agility = CONFIG.agility.max; prizeText = "⚡ 민첩성 MAX 도달!"; }
+        else { saveData.agility = CONFIG.agility.max; prizeText = "⚡ 민첩성 MAX!"; }
     }
     else if (r < 90) { 
         if(saveData.extraLife + 2 <= CONFIG.life.max) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
-        else { saveData.extraLife = CONFIG.life.max; prizeText = "❤️ 생명력 MAX 도달!"; }
+        else { saveData.extraLife = CONFIG.life.max; prizeText = "❤️ 생명력 MAX!"; }
     }
-    else if (r < 94.9) { 
-        saveData.faith += 300; prizeText = "💎 300 Faith 당첨!";
-    }
-    else if (r < 94.91) { prizeText = "🎁 스타벅스 $5 기프트카드!"; isSpecial = true; specialName = "Starbucks $5"; }
-    else if (r < 94.92) { prizeText = "🎁 스타벅스 $10 기프트카드!"; isSpecial = true; specialName = "Starbucks $10"; }
-    else if (r < 94.93) { prizeText = "🎁 아마존 $5 기프트카드!"; isSpecial = true; specialName = "Amazon $5"; }
-    else if (r < 94.94) { prizeText = "🎁 아마존 $10 기프트카드!"; isSpecial = true; specialName = "Amazon $10"; }
-    else {
-      prizeText = "📘 QT 책 당첨 (특별 상품)";
-      isSpecial = true; specialName = "QT Book";
-    }
+    else if (r < 94.9) { saveData.faith += 300; prizeText = "💎 300 Faith 당첨!"; }
+    else if (r < 94.91) { prizeText = "🎁 스타벅스 $5!"; isSpecial = true; specialName = "Starbucks $5"; }
+    else if (r < 94.92) { prizeText = "🎁 스타벅스 $10!"; isSpecial = true; specialName = "Starbucks $10"; }
+    else if (r < 94.93) { prizeText = "🎁 아마존 $5!"; isSpecial = true; specialName = "Amazon $5"; }
+    else if (r < 94.94) { prizeText = "🎁 아마존 $10!"; isSpecial = true; specialName = "Amazon $10"; }
+    else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
 
     if (isSpecial) {
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
@@ -443,6 +434,7 @@
     const box = document.getElementById("gachaResult");
     box.innerHTML = `<h2>🎉 결과!</h2><p style="font-size:20px;"><b>${prizeText}</b></p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
+    updateUI();
     saveProgress();
   }
 
