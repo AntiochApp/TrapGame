@@ -28,7 +28,7 @@
       background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%);
     }
 
-    /* 배경 */
+    /* 배경 레이어 (z-index 1, 2, 3) */
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute; left: 0; top: 0; width: 200%; height: 100%;
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
@@ -40,14 +40,25 @@
 
     #ground { display: none; }
 
-    /* 플레이어 */
+    /* 플레이어 (z-index 50) */
     #player {
-      position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px;
-      background: url("disciple.png") center/contain no-repeat; image-rendering: pixelated;
-      transition: opacity 0.2s, filter 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
+      position: absolute; 
+      z-index: 50; 
+      left: 120px; bottom: 40px; 
+      width: 60px; height: 60px;
+      
+      /* [중요] 배경 속성 분리 (이미지 교체 시 사이즈 유지용) */
+      background-image: url("disciple.png");
+      background-position: center;
+      background-size: contain;
+      background-repeat: no-repeat;
+      
+      image-rendering: pixelated;
+      transition: opacity 0.2s, filter 0.3s; 
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
 
-    /* ------------ 장애물 공통 ------------ */
+    /* ------------ 장애물 공통 (z-index 40) ------------ */
     .obstacle {
       position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
     }
@@ -85,11 +96,11 @@
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 8px rgba(0,0,0,0.5); border-left: 5px solid; }
 
-    /* [신규] 액티브 스킬 버튼 스타일 */
+    /* 액티브 스킬 버튼 */
     #abilityBtn {
       position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px;
       background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff;
-      font-weight: bold; font-size: 24px; display: none; /* 기본 숨김 */
+      font-weight: bold; font-size: 24px; display: none;
       justify-content: center; align-items: center; cursor: pointer; z-index: 1000;
       box-shadow: 0 6px 12px rgba(0,0,0,0.6); user-select: none;
       flex-direction: column; text-align: center; line-height: 1.1;
@@ -222,7 +233,7 @@
   
   let currentSkin   = saveData.equippedSkin || "default";
 
-  // [신규] 스킨 데이터 (타입, 쿨타임, 이름)
+  // 스킨 데이터
   const SKIN_DATA = {
     default: { type: "none" },
     noel: { type: "Active", cd: 60, name: "노엘" },
@@ -238,7 +249,6 @@
     jieun: { type: "Active", cd: 120, name: "지은" }
   };
 
-  // 액티브 버튼 표시 여부
   const abilityBtn = document.getElementById('abilityBtn');
   if(SKIN_DATA[currentSkin].type === "Active") {
     abilityBtn.style.display = 'flex';
@@ -254,15 +264,13 @@
   const bg2 = document.getElementById("bgLayer2");
   const bg3 = document.getElementById("bgLayer3");
 
-  // [추가됨] 스킨 이미지 적용 (기존 코드에 없던 부분!)
+  // [수정] 스킨 적용 로직
   if (currentSkin !== 'default') {
-      // 스킨 파일명 규칙: skin_이름.png (예: skin_noel.png)
       player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
   } else {
       player.style.backgroundImage = `url('disciple.png')`;
   }
 
-  // 요소 생성 (안전장치)
   let buffArea = document.getElementById("buffArea");
   if (!buffArea) {
     buffArea = document.createElement("div");
@@ -276,21 +284,19 @@
     gameArea.insertBefore(speedLines, document.getElementById("player"));
   }
 
-  // 물리 변수
   let playerY  = 40;
   let velocity = 0;
   let gravity  = -0.25; 
   let jumpPower = 6.5 - agility * 0.05;
   jumpPower     = Math.max(3, jumpPower);
 
-  let targetY = 0; // 예준 스킨(비행)용
+  let targetY = 0;
 
-  // 게임 상태
   let distance  = 0;
   let obstacles = [];
   let meteors   = [];
   let running   = false;
-  let invincible = false; // 기본 피격 무적
+  let invincible = false;
 
   const BASE_SPEED = 170; 
   let gameSpeed    = BASE_SPEED;
@@ -299,15 +305,14 @@
   let quizTimer = 0;
   let nextFaithMilestone = 100;
   
-  // 타이머들
   let obstacleTimer = 0;
   let nextObstacleTime = 2.0;
   let meteorTimer = 0; 
   let nextMeteorTime  = 4.0; 
   let itemTimer = 0;
   let nextItemTime = 8;
-  let skinTimer = 0; // 패시브 스킨 타이머
-  let abilityCD = 0; // 액티브 스킬 쿨타임
+  let skinTimer = 0;
+  let abilityCD = 0;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -317,73 +322,61 @@
   let obstacleSurviveCount = 0;
   let rankingSaved = false;
 
-  // 버프 상태
   let activeEffects = { 
     turbo: 0, invincible: 0, slow: 0, 
-    fly: 0,    // 예준(비행)
-    revive: 0, // 재국(부활)
-    summon: 0  // 지은(소환수)
+    fly: 0, revive: 0, summon: 0 
   };
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
   function jump() {
     if (!running) return;
-    // 터보나 비행 중엔 점프 불가
     if (activeEffects.turbo > 0 || activeEffects.fly > 0) return;
     velocity = jumpPower;
   }
   
-  // 키보드 A키 = 스킬
   document.body.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility(); 
   });
   document.body.addEventListener("touchstart", jump);
   
-  // 비행용 마우스/터치 추적
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
 
-  /* ------------ [핵심] 스킨 능력 구현 (액티브) ------------ */
   function useAbility() {
     if(!running || abilityCD > 0) return;
     const s = SKIN_DATA[currentSkin];
     
-    if(currentSkin === 'noel') { // 길 열기
+    if(currentSkin === 'noel') {
       showFloatText("🌊 길 열림!");
       document.querySelectorAll('.obstacle').forEach(el => {
-        // 장애물 위/아래로 치우기
         if(el.style.bottom === '0px') el.style.bottom = '-150px'; 
         else el.style.top = '-150px';
       });
     }
-    else if(currentSkin === 'jaeguk') { // 자동 부활
+    else if(currentSkin === 'jaeguk') {
       activeEffects.revive = 30;
       showFloatText("👼 자동 부활 On");
     }
-    else if(currentSkin === 'yejun') { // 비행
+    else if(currentSkin === 'yejun') {
       activeEffects.fly = 30;
       showFloatText("✈️ 자유 비행");
     }
-    else if(currentSkin === 'jieun') { // 소환수 (무적)
+    else if(currentSkin === 'jieun') {
       activeEffects.summon = 20;
       showFloatText("🛡️ 노엘 소환!");
     }
-
-    // 쿨타임 시작
     abilityCD = s.cd;
   }
 
-  /* ------------ [핵심] 스킨 능력 구현 (패시브) ------------ */
   function handleSkinPassive(dt) {
     skinTimer += dt;
-    
     if(currentSkin === 'jeonchan' && skinTimer >= 40) { 
       const rand = Math.floor(Math.random()*4);
       if(rand==0) { activeEffects.slow = 15; showFloatText("랜덤: 감속"); }
       else if(rand==1) { activeEffects.fly = 15; showFloatText("랜덤: 무중력"); }
-      else if(rand==2) { showFloatText("랜덤: Faith X2"); /* 로직 생략 */ }
+      else if(rand==2) { showFloatText("랜덤: Faith X2"); }
       else { spawnItem(); showFloatText("랜덤: 아이템"); }
       skinTimer = 0;
     }
@@ -400,9 +393,7 @@
     }
     else if(currentSkin === 'ganghui' && skinTimer >= 20) { 
       if(obstacles.length > 0) {
-        obstacles[0].remove(); // DOM 제거
-        obstacles.shift();     // 배열 제거
-        showFloatText("🔥 파괴!");
+        obstacles[0].remove(); obstacles.shift(); showFloatText("🔥 파괴!");
       }
       skinTimer = 0;
     }
@@ -419,7 +410,6 @@
     }
   }
 
-  // 장애물 스케줄링
   function scheduleNextObstacle(speedMultiplier) {
     if (activeEffects.turbo > 0) return;
     let baseTime = randBetween(1.8, 2.6);
@@ -433,8 +423,6 @@
 
     const randi = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     let pattern;
-    
-    // 가로 장애물 (100m 이상, 35%)
     let spawnHorizontal = (distance > 100) && (Math.random() < 0.35);
 
     if (spawnHorizontal) {
@@ -557,7 +545,6 @@
     if (activeEffects.slow > 0) activeEffects.slow -= delta;
     if (activeEffects.fly > 0) activeEffects.fly -= delta;
     if (activeEffects.summon > 0) activeEffects.summon -= delta;
-    // revive는 시간 감소 X (1회성)
 
     let html = "";
     if (activeEffects.turbo > 0) html += `<div class="buff-tag" style="color:#00ffff; border-color:#00ffff">🚀 터보 모드: ${Math.ceil(activeEffects.turbo)}s</div>`;
@@ -578,7 +565,7 @@
     try { 
       updateBuffUI(delta);
       updateAbilityBtn(delta);
-      handleSkinPassive(delta); // 패시브 체크
+      handleSkinPassive(delta); 
     } catch(e) {}
 
     if (!daily.run200 && distance >= 200) daily.run200 = true;
@@ -589,15 +576,12 @@
     distance += delta * 1 * distMultiplier;
     document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
 
-    /* ------------ 거리 비례 속도 (3000m -> 15배) ------------ */
     let progress = Math.min(distance / 3000, 1);
     let speedMultiplier = 1 + (progress * 14); 
-    
     let currentSpeed = BASE_SPEED * speedMultiplier;
 
     if (activeEffects.slow > 0) currentSpeed *= 0.5;
     if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
-
     gameSpeed = currentSpeed;
 
     if (distance >= nextFaithMilestone) {
@@ -610,9 +594,7 @@
     if (!quizSoon) {
       obstacleTimer += delta;
       if (obstacleTimer >= nextObstacleTime) {
-        spawnObstacle(); 
-        obstacleTimer = 0; 
-        scheduleNextObstacle(speedMultiplier); 
+        spawnObstacle(); obstacleTimer = 0; scheduleNextObstacle(speedMultiplier); 
       }
     }
 
@@ -621,8 +603,7 @@
         let meteorSpawnRate = 3.0 / speedMultiplier;
         if (meteorSpawnRate < 0.2) meteorSpawnRate = 0.2;
         if (meteorTimer > meteorSpawnRate) {
-            spawnMeteor(speedMultiplier);
-            meteorTimer = 0;
+            spawnMeteor(speedMultiplier); meteorTimer = 0;
         }
     }
 
@@ -631,10 +612,8 @@
         let x = parseFloat(m.dataset.x);
         let y = parseFloat(m.dataset.y);
         let mSpeed = parseFloat(m.dataset.speed);
-
         x -= mSpeed * delta * 0.8; 
         y += mSpeed * delta * 1.0; 
-
         m.style.left = x + "px";
         m.style.top = y + "px";
         m.dataset.x = x;
@@ -692,9 +671,7 @@
         continue;
       }
 
-      if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible || activeEffects.summon > 0 || activeEffects.revive > 0) {
-         // 무적
-      } else {
+      if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible || activeEffects.summon > 0 || activeEffects.revive > 0) {} else {
         const rectP = player.getBoundingClientRect();
         const rectO = obs.getBoundingClientRect();
         const buffer = 10;
@@ -706,7 +683,6 @@
         }
       }
       
-      // 스테파니 패시브
       if(currentSkin === 'stephanie' && left < 50 && !obs.passed) {
          faith++; document.getElementById("faithText").innerText = faith;
          obs.passed = true;
@@ -751,15 +727,12 @@
   }
 
   function damageLife() {
-    // 부활(재국)
     if(activeEffects.revive > 0) {
         life = 3; document.getElementById("lifeText").innerText = life;
-        activeEffects.revive = 0; 
-        activeEffects.invincible = 3; 
+        activeEffects.revive = 0; activeEffects.invincible = 3; 
         showFloatText("👼 부활 발동!");
         return;
     }
-
     if (activeEffects.turbo > 0 || activeEffects.invincible > 0 || invincible || !running) return;
     life--; document.getElementById("lifeText").innerText = life;
     invincible = true; player.style.opacity = "0.4";
