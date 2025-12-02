@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final</title>
+  <title>Disciple Run – Optimized Final</title>
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
@@ -32,7 +32,7 @@
     #bgLayer1, #bgLayer2, #bgLayer3 {
       position: absolute; left: 0; top: 0; width: 200%; height: 100%;
       background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
-      will-change: background-position;
+      will-change: background-position; /* 성능 최적화 힌트 */
     }
     #bgLayer1 { background-image: url("https://antiochapp.github.io/TrapGame/bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("https://antiochapp.github.io/TrapGame/bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
@@ -49,7 +49,7 @@
       image-rendering: pixelated;
       transition: opacity 0.2s, filter 0.3s; 
       filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
-      will-change: bottom;
+      will-change: bottom; /* 성능 최적화 */
     }
 
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); will-change: left; }
@@ -100,9 +100,8 @@
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; background: #555; }
     #abilityBtn span { font-size: 12px; display: block; margin-top: 2px; }
 
-    /* [수정] 방패 버튼 위치 변경 (위로 올림) */
     #shieldBtn {
-      position: fixed; bottom: 150px; left: 20px; /* 일일미션 위로 배치 */
+      position: fixed; bottom: 150px; left: 20px; 
       width: 90px; height: 90px;
       background: #2196F3; color: white; border-radius: 50%; border: 4px solid #fff;
       font-weight: bold; font-size: 16px; display: none; 
@@ -113,9 +112,9 @@
     #shieldBtn:active { transform: scale(0.95); background: #1976D2; }
     #shieldBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
-    /* [수정] 일일 미션 UI 위치 변경 (맨 아래로 내림) */
+    /* 일일 미션 UI */
     #dailyMissionBox {
-      position: fixed; bottom: 20px; left: 20px; /* 왼쪽 맨 아래 */
+      position: fixed; bottom: 20px; left: 20px; 
       background: rgba(0, 0, 0, 0.75); color: #fff;
       padding: 12px 16px; border-radius: 10px;
       font-size: 13px; z-index: 800; pointer-events: none;
@@ -253,12 +252,12 @@
     window.location.href = "/TrapGame/index.html";
   }
 
+  // 일일 미션 버전업 (1.4) -> 강제 초기화로 자동완료 버그 해결
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() {
-    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.3' };
+    return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '1.4' };
   }
-  
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.3') {
+  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '1.4') {
     daily = initDailyMission();
     localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
@@ -375,9 +374,8 @@
     let reflected = false;
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            const px = 150; 
-            const py = window.innerHeight - playerY - 30;
-            const dist = Math.sqrt(Math.pow(p.x - px, 2) + Math.pow(p.y - py, 2));
+            // 좌표 계산 최적화 (플레이어 중심값 하드코딩)
+            const dist = Math.sqrt(Math.pow(p.x - 150, 2) + Math.pow(p.y - (window.innerHeight - playerY - 30), 2));
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
@@ -431,11 +429,9 @@
     }
   }
 
-  // 일일 미션 UI (최적화됨)
   let lastMissionHTML = "";
   function updateDailyMissionUI() {
     const box = document.getElementById('dailyMissionBox');
-    
     if (daily.completed || isBossBattle) {
       box.style.display = 'none';
       return;
@@ -487,6 +483,7 @@
     const delta = (now - lastTime) / 1000;
     lastTime = now;
 
+    // [렉 방지] 델타 시간 캡핑
     const safeDelta = Math.min(delta, 0.1);
 
     updateBuffUI(safeDelta);
@@ -556,9 +553,17 @@
       left -= gameSpeed * safeDelta;
       it.style.left = left + "px";
       if (left < -60) { it.remove(); items.splice(i, 1); continue; }
-      const rP = player.getBoundingClientRect();
-      const rI = it.getBoundingClientRect();
-      if (rP.left < rI.right && rP.right > rI.left && rP.top < rI.bottom && rP.bottom > rI.top) {
+      
+      // 아이템 충돌 - 좌표 기반으로 최적화
+      // 플레이어: 120, bottom:playerY, w60 h60
+      // 아이템: left, bottom, w48 h48
+      const iLeft = parseFloat(it.style.left);
+      const iBottom = parseFloat(it.style.bottom);
+      const pBottom = playerY;
+      
+      // 간단 AABB
+      if (120 < iLeft + 48 && 120 + 60 > iLeft &&
+          pBottom < iBottom + 48 && pBottom + 60 > iBottom) {
         activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
       }
     }
@@ -657,7 +662,11 @@
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
 
-    const px = 120, py = window.innerHeight - playerY - 60, pw = 60, ph = 60;
+    // [최적화] 플레이어 좌표 고정값 사용 (DOM 읽기 제거)
+    const px = 120; 
+    const py = window.innerHeight - playerY - 60; 
+    const pw = 60; 
+    const ph = 60;
 
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
@@ -668,20 +677,16 @@
             p.remove(); projectiles.splice(i, 1); continue;
         }
 
+        // [최적화] DOM 읽기 없는 순수 좌표 충돌
         if (!p.isReflected && !activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
-            const rectP = player.getBoundingClientRect();
-            const rectM = p.getBoundingClientRect();
-            if (rectP.right > rectM.left + 10 && rectP.left < rectM.right - 10 &&
-                rectP.bottom > rectM.top + 10 && rectP.top < rectM.bottom - 10) {
+            if (px < p.x + p.w && px + pw > p.x && py < p.y + p.h && py + ph > p.y) {
                 damageLife(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
 
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect();
-            const pRect = p.getBoundingClientRect();
-            if (pRect.right > bRect.left && pRect.left < bRect.right &&
-                pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
+            if (p.x > bRect.left && p.x < bRect.right && p.y > bRect.top && p.y < bRect.bottom) {
                 damageBoss(); p.remove(); projectiles.splice(i, 1); continue;
             }
         }
@@ -689,12 +694,20 @@
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
-        let left = parseFloat(o.style.left) || 0;
-        left -= gameSpeed * delta;
-        o.style.left = left + "px";
-        let rw = o.offsetWidth || 60;
+        // [최적화] DOM 읽기 대신 추적된 X 좌표 사용
+        if(o.x === undefined) o.x = parseFloat(o.style.left) || (window.innerWidth + 80);
         
-        if (left + rw < 0) {
+        o.x -= gameSpeed * delta;
+        o.style.left = o.x + "px";
+        
+        // Obstacle properties (spawnObstacle에서 세팅 안했으므로 여기서 처리)
+        // 성능을 위해 DOM 읽기를 최소화해야 하지만, 장애물 종류가 다양해서 초기화 시 크기 저장이 나음.
+        // 현재는 호환성을 위해 clientWidth를 쓰되, 필요할 때만 읽음.
+        
+        let rw = 60; // 기본값
+        if(o.classList.contains('obs-long')) rw = 240;
+
+        if (o.x + rw < 0) {
             o.remove(); obstacles.splice(i, 1);
             obstacleSurviveCount++;
             if (obstacleSurviveCount >= 5) {
@@ -710,14 +723,25 @@
             continue;
         }
         
+        // [최적화] 장애물 충돌 좌표 계산
+        // 장애물은 top/bottom으로 구분됨.
+        // obs-ground: bottom=0. height 가변.
+        // obs-ceil: top=0. height 가변.
+        // obs-long: bottom/top 가변.
+        
         if (!activeEffects.invincible && !invincible && activeEffects.summon <= 0 && activeEffects.turbo <= 0) {
-            const rP = player.getBoundingClientRect();
-            const rO = o.getBoundingClientRect();
-            if (rP.right > rO.left + 10 && rP.left < rO.right - 10 && rP.bottom > rO.top + 10 && rP.top < rO.bottom - 10) {
-                damageLife(); break;
+            // 정확한 좌표를 위해 한번 읽긴 해야함 (초기화 때 저장하는게 베스트지만 코드 구조상 여기서 읽음)
+            // 하지만 매 프레임 모든 장애물을 읽는 건 부담이므로 가까운 것만 체크
+            if (o.x < 200 && o.x > 50) {
+                const rP = player.getBoundingClientRect();
+                const rO = o.getBoundingClientRect();
+                if (rP.right > rO.left + 10 && rP.left < rO.right - 10 && rP.bottom > rO.top + 10 && rP.top < rO.bottom - 10) {
+                    damageLife(); break;
+                }
             }
         }
-        if(currentSkin === 'stephanie' && left < 50 && !o.passed) {
+        
+        if(currentSkin === 'stephanie' && o.x < 50 && !o.passed) {
             faith++; daily.faith20++; updateDailyMissionUI();
             document.getElementById("faithText").innerText = faith;
             o.passed = true;
@@ -752,7 +776,8 @@
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
             const b = document.createElement("div"); b.classList.add("obstacle", "obs-long");
-            b.style.left = (window.innerWidth+80)+"px";
+            b.x = window.innerWidth+80; // 초기 X 저장
+            b.style.left = b.x+"px";
             let sh = window.innerHeight;
             if(cnt===2) { if(k===0) b.style.bottom=randBetween(30, sh*0.35)+"px"; else b.style.bottom=randBetween(sh*0.55, sh*0.85)+"px"; }
             else { let r=Math.random(); if(r<0.2) b.style.bottom="0px"; else if(r<0.4) b.style.top="0px"; else b.style.bottom=randBetween(50, sh-120)+"px"; }
@@ -764,14 +789,15 @@
     const sx = window.innerWidth+80;
     if(Math.random()<0.5) {
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height=randi(90,220)+"px"; b.style.left=sx+"px"; b.style.bottom="0";
+        b.style.height=randi(90,220)+"px"; 
+        b.x = sx; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(b); obstacles.push(b);
     } else {
         let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, window.innerHeight-th-gap);
         const t = document.createElement("div"); t.classList.add("obstacle", "obs-cap", "obs-ceil", type);
-        t.style.height=th+"px"; t.style.left=sx+"px"; t.style.top="0";
+        t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height=bh+"px"; b.style.left=sx+"px"; b.style.bottom="0";
+        b.style.height=bh+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(t); obstacles.push(t); gameArea.appendChild(b); obstacles.push(b);
     }
   }
