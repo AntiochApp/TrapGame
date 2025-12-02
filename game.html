@@ -189,10 +189,10 @@
     }
     #hud span { display: inline-block; min-width: 60px; }
 
-    /* 버프 상태창 (화면 고정) */
+    /* ------------ [수정됨] 버프 상태창 ------------ */
     #buffArea {
       position: fixed;
-      z-index: 2147483647; 
+      z-index: 2147483647; /* 최상위 */
       bottom: 20px; 
       right: 15px;
       display: flex;
@@ -200,6 +200,7 @@
       align-items: flex-end;
       gap: 8px;
       pointer-events: none;
+      /* GPU 가속 */
       transform: translateZ(0); 
       -webkit-transform: translateZ(0);
     }
@@ -211,12 +212,8 @@
       font-size: 16px;
       font-weight: 700;
       box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      /* [핵심 수정] 애니메이션 제거 -> 이제 사라지지 않음! */
       border-left: 5px solid;
-    }
-    @keyframes popIn {
-      from { transform: scale(0.5); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
     }
 
     /* 스피드 라인 */
@@ -264,6 +261,7 @@
     #comboEffect { top: 20%; font-size: 40px; font-weight: 900; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; font-weight: 900; color: #00ffcc; text-shadow: 3px 3px #006644; }
 
+    /* 모달 */
     .modal-bg {
       position: fixed;
       top: 0; left: 0;
@@ -406,7 +404,6 @@
   let life  = 3 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
   
-  // 추가된 업그레이드 스탯 로딩
   let lvlInvincible = saveData.up_invincible || 0;
   let lvlTurbo      = saveData.up_turbo || 0;
   let lvlSlow       = saveData.up_slow || 0;
@@ -595,20 +592,16 @@
     setTimeout(() => el.remove(), 1000);
   }
 
-  /* ------------ [수정됨] 아이템 효과 (업그레이드 반영) ------------ */
   function activateItem(type) {
     if (type === "cross") {
-      // 기본 10초 + 레벨당 1초
       let duration = 10 + lvlInvincible;
       activeEffects.invincible = duration; 
       showFloatText(`🛡️ 무적! (${duration}s)`);
     } else if (type === "wings") {
-      // 기본 5초 + 레벨당 1초
       let duration = 5 + lvlTurbo;
       activeEffects.turbo = duration; 
       showFloatText(`🚀 터보 모드! (${duration}s)`);
     } else if (type === "wind") {
-      // 기본 10초 + 레벨당 1초
       let duration = 10 + lvlSlow;
       activeEffects.slow = duration; 
       showFloatText(`🍃 속도 감소 (${duration}s)`);
