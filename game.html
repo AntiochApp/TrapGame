@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Balance Patch</title>
+  <title>Disciple Run – Obstacle Balance Patch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -24,7 +24,6 @@
     #ground { display: none; }
 
     /* 플레이어 */
-    /* [수정] transition에 left 속성 추가 (보스전 이동 애니메이션) */
     #player { 
         position: absolute; z-index: 50; 
         left: 120px; bottom: 40px; 
@@ -32,7 +31,7 @@
         background-image: url("disciple.png"); 
         background-position: center; background-size: contain; background-repeat: no-repeat; 
         image-rendering: pixelated; 
-        transition: opacity 0.2s, transform 0.3s, left 1.0s ease-in-out; /* 위치 이동 부드럽게 */
+        transition: opacity 0.2s, transform 0.3s, left 1.0s ease-in-out; 
         filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
     
@@ -176,7 +175,7 @@
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
         [업데이트]<br>
         🛡️ <b>보스전:</b> 캐릭터가 뒤로 물러나 회피가 쉬워집니다!<br>
-        👶 <b>초반:</b> 50m까지는 쉬운 장애물만 나옵니다.
+        👶 <b>초반:</b> 50m까지는 지상 장애물만 나옵니다.
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -961,20 +960,23 @@
 
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
 
-    // [수정] 50m 미만에서는 쉬운 난이도 적용
+    // [수정] 50m 미만에서는 쉬운 난이도 적용 (지상 장애물만, 그러나 높이는 다양하게)
     if (distance < 50) {
-        // 복잡한 패턴(공중 발판, 천장) 스킵하고 지상 장애물만 생성
         const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
         const sx = window.innerWidth + 80;
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height = randi(80, 150) + "px"; // 높이도 낮춰서 점프하기 쉽게
+        
+        // 높이 랜덤 설정 (80~230px 범위로 다양하게)
+        b.style.height = randi(80, 230) + "px"; 
+        
         b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
         gameArea.appendChild(b);
         obstacles.push(b);
-        return; // 여기서 함수 종료하여 아래 복잡한 로직 실행 안함
+        return; 
     }
 
+    // 50m 이상부터는 기존 로직 (공중 발판, 천장 장애물 포함)
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
