@@ -105,7 +105,6 @@
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
-    /* [수정] 일시정지 버튼 스타일 개선 */
     #pauseBtn { 
         position: fixed; z-index: 900; top: 15px; right: 15px; 
         width: 50px; height: 50px; 
@@ -766,7 +765,6 @@
                spawnFaithCoins(e.x + 30, e.y + 30, 5); 
                showFloatText("💥 적군 섬멸!");
                
-               // [수정] 사망 처리 및 레이저 제거
                e.isDead = true;
                if(e.laserWarning) e.laserWarning.remove();
                if(e.laserBeam) e.laserBeam.remove();
@@ -778,19 +776,28 @@
 
         if(e.state === 'enter') {
             e.x -= 100 * dt;
-            if (e.x < window.innerWidth - 150) { e.state = 'attack'; e.timer = 0; }
+            if (e.x < window.innerWidth - 150) { 
+                e.state = 'attack'; 
+                // [수정] 등장하자마자 즉시 공격을 위해 타이머를 강제 설정 (1.0 이상이면 발사)
+                e.timer = 1.1; 
+            }
         } else if (e.state === 'attack') {
             if (e.type === 1) { 
                 if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; 
                 else e.x -= 300 * dt; 
             }
-            // [수정] spawnEnemyProjectile 호출 시 'e'(자신)를 주인으로 전달
-            else if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
+            // [수정] Enemy 2~5: 앞으로 가지 않고 위아래로만 움직임
+            else if (e.type >= 2 && e.type <= 5) {
+                e.y += Math.sin(Date.now() / 400) * 1.5;
+            }
+
+            // [수정] 1초마다 공격
+            if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
             else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
             else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
-            else if (e.type === 5 && e.timer > 1.0) { fireEnemyLaser(e); e.timer = 0; }
+            else if (e.type === 5 && e.timer > 1.0 && !e.isFiring) { fireEnemyLaser(e); } // [수정] 레이저 쿨타임 체크 추가
             
-            if(e.type !== 1) e.x -= 50 * dt; 
+            // 2~5는 앞으로 전진하지 않음 (e.x 감소 로직 제거)
         }
         e.style.left = e.x + "px"; e.style.top = e.y + "px";
         
@@ -817,10 +824,11 @@
   }
 
   function fireEnemyLaser(e) {
+      e.isFiring = true; // [수정] 발사 중 상태 설정
       const warning = document.createElement("div"); warning.className = "enemy-laser-warning";
       warning.style.left = "0px"; warning.style.width = e.x + "px"; warning.style.top = (e.y + 30) + "px";
       gameArea.appendChild(warning);
-      e.laserWarning = warning; // 참조 저장
+      e.laserWarning = warning; 
 
       setTimeout(() => {
           if(e.isDead) { warning.remove(); return; } 
@@ -828,7 +836,7 @@
           const laser = document.createElement("div"); laser.className = "enemy-laser-beam";
           laser.style.left = "0px"; laser.style.width = e.x + "px"; laser.style.top = (e.y + 15) + "px";
           gameArea.appendChild(laser);
-          e.laserBeam = laser; // 참조 저장
+          e.laserBeam = laser; 
           
           let duration = 0;
           let check = setInterval(() => {
@@ -836,7 +844,18 @@
 
               duration += 0.1; let laserY = parseFloat(laser.style.top);
               if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) damageLife();
-              if(duration > 4.0) { clearInterval(check); laser.remove(); e.laserBeam = null; }
+              // [수정] 레이저 지속시간 5초로 증가
+              if(duration > 5.0) { 
+                  clearInterval(check); 
+                  laser.remove(); 
+                  e.laserBeam = null;
+                  
+                  // [수정] 2초 뒤에 다시 쏠 수 있도록 쿨타임 부여
+                  setTimeout(() => {
+                      e.isFiring = false; 
+                      e.timer = 0;
+                  }, 2000); 
+              }
           }, 100);
       }, 1000); 
   }
@@ -982,7 +1001,6 @@
                 gameArea.appendChild(ex); setTimeout(()=>ex.remove(), 500);
 
                 if (e.hp <= 0) { 
-                    // [수정] 적군 사망 플래그 -> 투사체 소멸 트리거
                     e.isDead = true;
                     if(e.laserWarning) e.laserWarning.remove();
                     if(e.laserBeam) e.laserBeam.remove();
@@ -1000,7 +1018,6 @@
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         
-        // [수정] 주인이 죽은 투사체는 서서히 사라짐
         if (p.owner && p.owner.isDead) {
             p.style.opacity = (parseFloat(p.style.opacity) || 1) - 0.05; 
             p.isFading = true; 
@@ -1014,11 +1031,15 @@
         p.style.left = cx + "px"; p.style.top = cy + "px";
         if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
         
-        if (p.isExplosive && !p.exploded && Math.abs(cx - 120) < 100) { 
+        // [수정] Enemy 4 폭발 로직 변경: 캐릭터 가로선(120) 도달 시 폭발
+        if (p.isExplosive && !p.exploded && cx <= 120) { 
              p.exploded = true;
              const boom = document.createElement("div"); boom.className = "explosion-area";
-             boom.style.width = "150px"; boom.style.height = "150px"; boom.style.left = (cx - 50) + "px"; boom.style.top = (cy - 50) + "px";
+             // [수정] 폭발 범위 넓게 (260px)
+             boom.style.width = "260px"; boom.style.height = "260px"; 
+             boom.style.left = (cx - 100) + "px"; boom.style.top = (cy - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
+             
              const pRect = player.getBoundingClientRect(); const bRect = boom.getBoundingClientRect();
              if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
                  if(!invincible && !safeActive(activeEffects.invincible)) damageLife();
