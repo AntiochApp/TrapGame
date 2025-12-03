@@ -5,166 +5,229 @@
 <title>Disciple Run – Store</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff">
+
 <style>
+  /* 폰트 정의 */
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
   :root {
     --bg-main: #f4f0e4;
-    --bg-panel: #fdfaf2;
-    --border-dark: #3a2513;
-    --accent: #c47a3f;
-    --accent-dark: #8b4f26;
-    --text-main: #3a2513;
+    --bg-panel: #fdf6e3;
+    --border-color: #5d4037;
+    --primary-color: #ff9800;
+    --primary-shadow: #e65100;
+    --secondary-color: #8d6e63;
+    --text-color: #3e2723;
+    --accent-blue: #29b6f6;
+    --accent-green: #66bb6a;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0; padding: 0; min-height: 100vh;
-    background:
-      linear-gradient(90deg, #f4f0e4 16px, #f4f0e4 16px),
-      linear-gradient(#f9f5eb 16px, #f9f5eb 16px);
-    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
-    color: var(--text-main);
+    background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
+    background-size: cover;
+    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    color: var(--text-color);
     display: flex; flex-direction: column;
+  }
+
+  /* 배경 패턴 오버레이 (통일감) */
+  body::before {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: -1;
+    pointer-events: none;
   }
 
   /* 상단바 */
   .top-bar {
     width: 100%; display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 18px; background: #3b2614; color: #fbe8c4;
-    font-size: 14px; border-bottom: 4px solid #1f130b; flex-shrink: 0;
+    padding: 12px 18px; 
+    background: rgba(93, 64, 55, 0.95); 
+    color: #fff8e1;
+    font-size: 16px; border-bottom: 4px solid #3e2723; flex-shrink: 0;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    z-index: 10;
   }
   .top-bar button {
-    padding: 6px 14px; font-size: 12px; border-radius: 8px; border: 0;
-    background: var(--accent); color: #fff; cursor: pointer;
-    box-shadow: 0 3px 0 var(--accent-dark);
+    padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 2px solid #000;
+    background: #ef5350; color: #fff; cursor: pointer;
+    font-family: 'DungGeunMo', monospace;
+    box-shadow: 2px 2px 0 #b71c1c;
   }
-  .top-bar button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dark); }
+  .top-bar button:active { transform: translate(2px, 2px); box-shadow: none; }
 
   /* 컨테이너 */
   .container {
     max-width: 480px; width: 95%; margin: 20px auto;
-    background: var(--bg-panel); padding: 20px;
-    border-radius: 12px; border: 4px solid var(--border-dark);
-    box-shadow: 0 0 0 4px #fff, 0 8px 0 0 #b79b76;
+    background: var(--bg-panel); padding: 24px;
+    border-radius: 8px; border: 4px solid var(--border-color);
+    /* 3D 픽셀 그림자 */
+    box-shadow: 
+      inset 4px 4px 0px #ffffff,
+      inset -4px -4px 0px #d7ccc8,
+      8px 8px 0px rgba(0,0,0,0.3);
+    position: relative;
+    animation: float 3s ease-in-out infinite;
   }
 
-  h1 { text-align: center; color: #4b2e12; margin-bottom: 15px; }
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+
+  h1 { 
+    text-align: center; color: var(--text-color); margin-bottom: 20px; 
+    font-size: 32px; text-shadow: 3px 3px 0 #ffe0b2; 
+    letter-spacing: 2px;
+  }
 
   /* 탭 버튼 스타일 */
-  .tab-container { display: flex; gap: 6px; margin-bottom: 20px; }
+  .tab-container { display: flex; gap: 8px; margin-bottom: 20px; }
   .tab-btn {
-    flex: 1; padding: 10px; border: none; border-radius: 8px;
-    font-size: 14px; font-weight: bold; cursor: pointer;
-    background: #e0d8c8; color: #776e65;
-    box-shadow: 0 4px 0 #bcaaa4; transition: all 0.1s;
-    white-space: nowrap;
+    flex: 1; padding: 12px; border: 3px solid #000; border-radius: 6px;
+    font-size: 16px; cursor: pointer;
+    background: #d7ccc8; color: #5d4037;
+    font-family: 'DungGeunMo', monospace;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.5), 4px 4px 0 rgba(0,0,0,0.2);
+    transition: all 0.1s;
   }
   .tab-btn.active {
-    background: var(--accent); color: white;
-    box-shadow: 0 4px 0 var(--accent-dark);
+    background: var(--primary-color); color: white;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.4), 2px 2px 0 var(--primary-shadow);
+    transform: translateY(2px);
   }
-  .tab-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
+  .tab-btn:active { transform: translateY(4px); box-shadow: none; }
 
   /* 아이템 카드 스타일 */
   .item {
-    border: 3px solid #cfb99a; padding: 14px; border-radius: 10px;
-    margin-bottom: 12px; background: #faf8f3; position: relative;
-    display: flex; flex-direction: column; gap: 6px;
+    border: 3px solid #bcaaa4; padding: 16px; border-radius: 8px;
+    margin-bottom: 12px; background: #fff; position: relative;
+    display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+    transition: transform 0.1s;
   }
+  .item:hover { transform: translateY(-2px); }
   
   /* 스킨 전용 레이아웃 */
   .skin-item {
     flex-direction: row; align-items: center; gap: 12px;
   }
   .skin-img-box {
-    width: 64px; height: 64px; background: #eaddcf; border-radius: 8px;
-    border: 2px solid #cbb6a3; display: flex; justify-content: center; align-items: center;
+    width: 64px; height: 64px; background: #ffe0b2; border-radius: 4px;
+    border: 3px solid #ffb74d; display: flex; justify-content: center; align-items: center;
     flex-shrink: 0; overflow: hidden;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.5);
   }
   .skin-img-box img { width: 80%; height: 80%; object-fit: contain; image-rendering: pixelated; }
   .skin-info { flex: 1; }
 
-  .item h2 { font-size: 17px; margin: 0; display: flex; justify-content: space-between; align-items: center; }
+  .item h2 { font-size: 20px; margin: 0; display: flex; justify-content: space-between; align-items: center; color: #4e342e; }
   
   /* 레벨 배지 */
-  .lvl-badge { font-size: 12px; background: #8b4f26; color: #fff; padding: 2px 6px; border-radius: 4px; }
+  .lvl-badge { font-size: 12px; background: #795548; color: #fff; padding: 2px 6px; border-radius: 4px; box-shadow: 1px 1px 0 #3e2723; }
   
-  .item p { margin: 4px 0; color: #4b3b2a; font-size: 13px; line-height: 1.4; }
+  .item p { margin: 4px 0; color: #6d4c41; font-size: 14px; line-height: 1.4; }
 
   /* 스킨 태그 */
   .skin-tag {
-    font-size: 11px; padding: 3px 6px; border-radius: 4px; color: #fff; font-weight: bold;
+    font-size: 12px; padding: 2px 6px; border-radius: 4px; color: #fff; 
     margin-left: 6px; vertical-align: middle; display: inline-block;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.3); border: 1px solid rgba(0,0,0,0.1);
   }
   
+  /* 버튼 공통 */
   .buy-btn {
-    width: 100%; padding: 12px; border: none; border-radius: 8px;
-    background: var(--accent); color: white; font-size: 15px; font-weight: bold;
-    cursor: pointer; margin-top: 4px; box-shadow: 0 3px 0 var(--accent-dark);
+    width: 100%; padding: 12px; border: 3px solid #000; border-radius: 6px;
+    background: var(--primary-color); color: white; font-size: 16px; 
+    cursor: pointer; margin-top: 6px; font-family: 'DungGeunMo', monospace;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--primary-shadow);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
   }
-  .buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-dark); }
-  .buy-btn:disabled { background-color: #aaa; color: #eee; cursor: not-allowed; box-shadow: none; transform: none; }
+  .buy-btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: none; }
+  .buy-btn:disabled { 
+    background: #bdbdbd; color: #757575; cursor: not-allowed; 
+    box-shadow: none; border-color: #757575; top: 2px; left: 2px;
+  }
   
-  .btn-equip { background: #4CAF50; box-shadow: 0 3px 0 #2E7D32; }
-  .btn-equip:active { transform: translateY(2px); box-shadow: 0 1px 0 #2E7D32; }
-  .btn-equipped { background: #555; cursor: default; box-shadow: none; }
+  .btn-equip { background: var(--accent-green); box-shadow: inset 2px 2px 0 rgba(255,255,255,0.4), 4px 4px 0 #2e7d32; }
+  .btn-equipped { background: #555; cursor: default; box-shadow: none; border-color: #333; }
 
   .back-btn {
-    width: 100%; padding: 12px; margin-top: 10px; background: #444; color: white;
-    font-size: 14px; border-radius: 9px; cursor: pointer; border: 0; box-shadow: 0 3px 0 #222;
+    width: 100%; padding: 14px; margin-top: 15px; background: #5d4037; color: white;
+    font-size: 16px; border-radius: 6px; cursor: pointer; border: 3px solid #3e2723;
+    font-family: 'DungGeunMo', monospace;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.2), 4px 4px 0 #3e2723;
   }
+  .back-btn:active { transform: translate(4px, 4px); box-shadow: none; }
 
   /* 인벤토리 스타일 */
   .inv-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4열 고정 */
     gap: 8px;
-    padding: 10px;
-    background: #eaddcf;
-    border-radius: 10px;
-    border: 3px solid #cbb6a3;
+    padding: 12px;
+    background: #d7ccc8;
+    border-radius: 8px;
+    border: 3px solid #8d6e63;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
   }
   .inv-slot {
     aspect-ratio: 1 / 1;
-    background: #faf8f3;
-    border: 2px solid #d7ccc8;
+    background: #f5f5f5;
+    border: 2px solid #a1887f;
     border-radius: 6px;
     position: relative;
     display: flex; justify-content: center; align-items: center;
     cursor: pointer;
     overflow: hidden;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
   }
-  .inv-slot:active { background: #eee; }
+  .inv-slot:active { background: #e0e0e0; transform: translate(1px, 1px); box-shadow: none; }
   
-  /* [수정] 조각이 0개일 때 흐리게 표시하는 스타일 추가 */
+  /* 조각이 0개일 때 흐리게 표시하는 스타일 */
   .inv-slot img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; transition: 0.2s; }
-  .inv-slot img.locked { opacity: 0.25; filter: grayscale(100%); }
+  .inv-slot img.locked { opacity: 0.3; filter: grayscale(100%); }
 
   .inv-count {
-    position: absolute; bottom: 2px; right: 4px;
-    font-size: 11px; color: #3a2513; font-weight: bold;
-    background: rgba(255,255,255,0.8);
-    padding: 0 3px; border-radius: 4px;
+    position: absolute; bottom: 2px; right: 2px;
+    font-size: 10px; color: #fff; font-weight: bold;
+    background: rgba(0,0,0,0.6);
+    padding: 1px 3px; border-radius: 3px;
   }
 
   /* 천장 마일리지 스타일 */
   .mileage-box {
-    margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #ddd;
+    margin-bottom: 12px; background: #fff; padding: 12px; border-radius: 8px; border: 3px solid #bcaaa4;
   }
   .mileage-bar-bg {
-    width: 100%; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; margin-top: 5px;
+    width: 100%; height: 16px; background: #eee; border-radius: 8px; overflow: hidden; margin-top: 6px; border: 2px solid #9e9e9e;
   }
   .mileage-bar-fill {
-    height: 100%; background: linear-gradient(90deg, #673ab7, #9c27b0); width: 0%; transition: width 0.3s;
+    height: 100%; background: repeating-linear-gradient(45deg, #7b1fa2, #7b1fa2 10px, #8e24aa 10px, #8e24aa 20px); 
+    width: 0%; transition: width 0.3s;
   }
   .mileage-btn {
-    width: 100%; background: #9c27b0; color: white; border:0; padding: 8px; border-radius: 6px; 
-    margin-top: 5px; cursor: pointer; opacity: 0.5; pointer-events: none; font-weight: bold;
+    width: 100%; background: #9c27b0; color: white; border: 3px solid #000; padding: 10px; border-radius: 6px; 
+    margin-top: 8px; cursor: pointer; opacity: 0.5; pointer-events: none; font-family: 'DungGeunMo', monospace;
+    font-size: 14px;
   }
   .mileage-btn.active {
-    opacity: 1; pointer-events: auto; box-shadow: 0 3px 0 #7b1fa2;
+    opacity: 1; pointer-events: auto; box-shadow: inset 2px 2px 0 rgba(255,255,255,0.3), 4px 4px 0 #4a148c;
   }
-  .mileage-btn.active:active { transform: translateY(2px); box-shadow: 0 1px 0 #7b1fa2; }
+  .mileage-btn.active:active { transform: translate(4px, 4px); box-shadow: none; }
 
   /* 폭죽 효과 스타일 */
   .confetti {
@@ -177,13 +240,14 @@
   }
 
   /* 가챠 모달 */
-  #gachaModal, #fragmentModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 999; }
-  #gachaBox { width: 220px; height: 220px; background-color: #c47a3f; background-image: url('giftbox.png'); background-position: center; background-size: cover; border-radius: 8px; border: 4px solid #2b1a0f; animation: spin 1.2s steps(8) infinite; }
+  #gachaModal, #fragmentModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(4px); }
+  #gachaBox { width: 220px; height: 220px; background-color: #c47a3f; background-image: url('giftbox.png'); background-position: center; background-size: cover; border-radius: 12px; border: 6px solid #3e2723; animation: spin 1.2s steps(8) infinite; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  #gachaResult, .modal-content { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 22px; border-radius: 12px; text-align: center; box-shadow: 0 8px 12px rgba(0,0,0,0.35); border: 4px solid var(--border-dark); z-index: 1000; min-width: 300px; }
+  #gachaResult, .modal-content { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 24px; border-radius: 12px; text-align: center; box-shadow: 10px 10px 0 rgba(0,0,0,0.5); border: 4px solid var(--border-color); z-index: 1000; min-width: 300px; }
   
   /* 조각 상세 모달 컨텐츠 */
   .modal-content { display: block; max-width: 320px; }
+  .modal-content h2 { margin-top: 0; color: #3e2723; text-shadow: 2px 2px 0 #fff; border-bottom: 3px dashed #bcaaa4; padding-bottom: 10px; }
 
   .tab-content { display: none; }
   .tab-content.active { display: block; }
@@ -198,7 +262,7 @@
 </div>
 
 <div class="container">
-  <h1>상점</h1>
+  <h1>상점 (STORE)</h1>
 
   <div class="tab-container">
     <button class="tab-btn active" onclick="switchTab('upgrade')">능력치</button>
@@ -237,13 +301,13 @@
       <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매</button>
     </div>
 
-    <div class="item" style="background:#fff8e1; border-color:#eec048;">
+    <div class="item" style="background:#fff8e1; border-color:#ffcc80;">
       <h2>🎁 랜덤 뽑기</h2>
       <p>Faith 200으로 능력치, 희귀 조각을 얻어보세요!</p>
       
       <div class="mileage-box">
-        <div style="display:flex; justify-content:space-between; font-size:12px; color:#555;">
-           <span>Mileage (천장)</span> <span id="mileageText">0/100</span>
+        <div style="display:flex; justify-content:space-between; font-size:14px; color:#5d4037;">
+           <span>마일리지 (천장)</span> <span id="mileageText">0/100</span>
         </div>
         <div class="mileage-bar-bg">
             <div class="mileage-bar-fill" id="mileageFill"></div>
@@ -251,8 +315,8 @@
         <button id="mileageBtn" class="mileage-btn" onclick="claimMileage()">💎 확정 보상 받기 (희귀 조각 5개)</button>
       </div>
 
-      <p style="font-size:12px; color:#8a735a;">(확률: 희귀조각 5%, 능력치/Faith 95%, 경품 별도)</p>
-      <button class="buy-btn" style="background:#ffa000; border-color:#ff6f00;" onclick="buyGacha()">뽑기 (200 F)</button>
+      <p style="font-size:12px; color:#8d6e63;">(확률: 희귀조각 5%, 능력치/Faith 95%, 경품 별도)</p>
+      <button class="buy-btn" style="background:#ffa726; border-color:#000; color:#fff;" onclick="buyGacha()">뽑기 (200 F)</button>
     </div>
   </div>
 
@@ -261,15 +325,15 @@
   </div>
 
   <div id="tab-inventory" class="tab-content">
-    <div style="text-align:center; font-size:13px; color:#666; margin-bottom:10px;">
-      조각 100개를 모아 클릭하면 스킨을 완성합니다!<br>
-      (클릭 시 스토리 확인 및 교환 가능)
+    <div style="text-align:center; font-size:14px; color:#5d4037; margin-bottom:12px; background:#fff; padding:8px; border-radius:6px; border:2px dashed #bcaaa4;">
+      <b>[조각 보관함]</b><br>
+      조각 100개를 모아 클릭하면 스킨을 완성합니다!
     </div>
     <div class="inv-grid" id="inventoryArea">
       </div>
   </div>
 
-  <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
+  <button class="back-btn" onclick="goMenu()">↩ 메뉴로 돌아가기</button>
 </div>
 
 <div id="gachaModal"><div id="gachaBox"></div></div>
@@ -277,14 +341,14 @@
 
 <div id="fragmentModal">
   <div class="modal-content">
-    <h2 id="fragModalTitle" style="margin-top:0; color:#3a2513;"></h2>
-    <div id="fragModalImg" style="margin:10px auto; width:64px; height:64px;"></div>
-    <p id="fragModalDesc" style="font-size:14px; color:#555; font-style:italic; margin-bottom:15px;"></p>
-    <p id="fragModalCount" style="font-weight:bold;"></p>
+    <h2 id="fragModalTitle" style="margin-top:0; color:#3e2723;"></h2>
+    <div id="fragModalImg" style="margin:15px auto; width:80px; height:80px; background:#fff3e0; border-radius:8px; border:3px solid #ffcc80; display:flex; justify-content:center; align-items:center;"></div>
+    <p id="fragModalDesc" style="font-size:16px; color:#5d4037; font-style:italic; margin-bottom:20px;"></p>
+    <p id="fragModalCount" style="font-weight:bold; font-size:18px; color:#e65100; margin-bottom:20px;"></p>
     
-    <button id="btnCombine" class="buy-btn" style="background:#9c27b0; margin-bottom:8px;" onclick="doCombine()">스킨 조합하기 (100개)</button>
+    <button id="btnCombine" class="buy-btn" style="background:#9c27b0; margin-bottom:10px;" onclick="doCombine()">스킨 조합하기 (100개)</button>
     <button id="btnExchange" class="buy-btn" style="background:#4caf50;" onclick="doExchange()">교환하기 (10개 → 50 Faith)</button>
-    <button class="back-btn" style="margin-top:8px;" onclick="closeFragModal()">닫기</button>
+    <button class="back-btn" style="margin-top:10px;" onclick="closeFragModal()">닫기</button>
   </div>
 </div>
 
@@ -385,7 +449,7 @@
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
         saveData = { ...saveData, ...loaded };
-        // 깊은 병합 필요한 부분 처리
+        
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
         if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
@@ -443,7 +507,7 @@
       ? `<button class="buy-btn btn-equipped" disabled>장착 중</button>`
       : `<button class="buy-btn btn-equip" onclick="equipSkin('default')">장착하기</button>`;
     
-    listArea.innerHTML += createSkinHTML('disciple', '😊 기본 캐릭터', 'Normal', '#888', '기본 능력치입니다.', defBtn);
+    listArea.innerHTML += createSkinHTML('disciple', '😊 기본 캐릭터', 'Normal', '#795548', '기본 능력치입니다.', defBtn);
 
     // 일반 판매 스킨
     SKIN_LIST.forEach(skin => {
