@@ -273,7 +273,7 @@
   <div id="tab-upgrade" class="tab-content active">
     <div class="item">
       <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
-      <p>점프력이 상승합니다. (Max 100)</p>
+      <p>점프력이 상승합니다. (Max 45)</p>
       <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매</button>
     </div>
 
@@ -388,9 +388,11 @@
   if(!saveData.fragments) saveData.fragments = {};
   if(!saveData.mileage) saveData.mileage = 0; 
 
-  // 설정값 (라이프 Max 제한 해제)
+  // ==========================================
+  // [수정] 민첩성 Max를 45로 변경 (게임 밸런스)
+  // ==========================================
   const CONFIG = {
-    agility: { name:"민첩성", price: 30, max: 100, key: "agility" },
+    agility: { name:"민첩성", price: 30, max: 45, key: "agility" },
     life: { name:"라이프", price: 200, max: 9999, key: "extraLife" }, 
     up_invincible: { name:"무적시간", price: 40, max: 20, key: "up_invincible" },
     up_turbo: { name:"터보시간", price: 40, max: 20, key: "up_turbo" },
