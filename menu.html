@@ -7,13 +7,15 @@
 
 <style>
   :root {
-    --bg-panel: #fdfaf2;
-    --border-dark: #3a2513;
-    --accent: #c47a3f;
-    --accent-dark: #8b4f26;
-    --primary-btn: #4CAF50;
-    --primary-dark: #2E7D32;
-    --text-main: #3a2513;
+    --bg-main: #f4f1ea;
+    --bg-panel: rgba(255, 253, 248, 0.92);
+    --border-color: #5d4037;
+    --accent-color: #ff9800;
+    --accent-dark: #e65100;
+    --primary-btn: #66bb6a;
+    --primary-dark: #388e3c;
+    --text-main: #4e342e;
+    --text-sub: #795548;
   }
 
   * { box-sizing: border-box; }
@@ -25,125 +27,235 @@
     color: var(--text-main);
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
+    overflow: hidden; /* 스크롤 방지 */
   }
 
+  /* 배경 오버레이 부드럽게 */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 248, 235, 0.4); z-index: -1;
+    background: rgba(253, 247, 230, 0.3); z-index: -1;
   }
 
+  /* 상단 바 디자인 개선 */
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; background: rgba(59, 38, 20, 0.95); color: #fbe8c4;
-    font-size: 14px; border-bottom: 4px solid #1f130b; backdrop-filter: blur(4px);
+    padding: 12px 20px; 
+    background: rgba(78, 52, 46, 0.95); 
+    color: #fff8e1;
+    font-size: 14px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 10;
   }
 
-  .game-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: 0.05em; }
+  .game-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; letter-spacing: 0.05em; }
   .logo-pixel {
-    width: 24px; height: 24px; border-radius: 4px; background: #f7cf70;
-    border: 2px solid #fff; image-rendering: pixelated;
+    width: 28px; height: 28px; border-radius: 6px; background: #ffca28;
+    border: 2px solid #fff; 
     background-image: url("pixel_cross.png"); background-size: cover;
+    box-shadow: 0 0 5px rgba(255, 202, 40, 0.5);
   }
 
-  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-info { display: flex; align-items: center; gap: 12px; }
   .logout-btn {
-    padding: 4px 8px; font-size: 11px; background: #d32f2f; color: white;
-    border: 0; border-radius: 4px; cursor: pointer;
+    padding: 6px 10px; font-size: 11px; background: #ef5350; color: white;
+    border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
+    transition: background 0.2s;
   }
+  .logout-btn:hover { background: #d32f2f; }
 
-  /* [NEW] 뉴스 티커 스타일 추가 */
+  /* [개선] 뉴스 티커 스타일 */
   .news-ticker {
     width: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.75);
     color: #fff;
     overflow: hidden;
-    padding: 6px 0;
-    font-size: 12px;
+    padding: 8px 0;
+    font-size: 13px;
     white-space: nowrap;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 9;
+  }
+  .ticker-wrap {
+    width: 100%;
+    overflow: hidden;
   }
   .ticker-content {
     display: inline-block;
-    animation: tickerScroll 20s linear infinite;
     padding-left: 100%;
+    animation: tickerScroll 25s linear infinite;
   }
   @keyframes tickerScroll {
     0% { transform: translate3d(0, 0, 0); }
     100% { transform: translate3d(-100%, 0, 0); }
   }
   .ticker-item {
-    margin-right: 40px;
-    color: #ffd700;
-    font-weight: bold;
+    margin-right: 50px;
+    color: #ffd54f;
+    font-weight: 600;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
   }
 
-  #menuWrapper { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; }
+  /* 메인 메뉴 컨테이너 */
+  #menuWrapper { 
+    flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; 
+    padding: 20px;
+  }
   
   .container {
-    width: 90%; max-width: 400px;
-    padding: 32px 24px;
-    background: rgba(253, 250, 242, 0.95);
-    border-radius: 16px;
-    border: 4px solid var(--border-dark);
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.5), 0 12px 20px rgba(0,0,0,0.3);
+    width: 100%; max-width: 420px;
+    padding: 30px 24px;
+    background: var(--bg-panel);
+    border-radius: 24px;
+    border: 3px solid var(--border-color);
+    box-shadow: 
+      inset 0 0 20px rgba(255,255,255,0.8),
+      0 10px 30px rgba(62, 39, 35, 0.3);
     text-align: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
+    position: relative;
   }
 
-  h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; color: #3a2513; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
-  .sub { font-size: 13px; color: #7d6a4c; margin-bottom: 28px; font-weight: 600; }
+  /* 장식 요소 */
+  .container::after {
+    content: "★"; position: absolute; top: 15px; right: 20px;
+    font-size: 24px; color: #ffb74d; transform: rotate(15deg);
+  }
+
+  h1 { 
+    font-size: 32px; font-weight: 900; margin: 0; 
+    color: var(--text-main); 
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+    letter-spacing: -1px;
+  }
+  .sub { 
+    font-size: 13px; color: var(--accent-dark); 
+    margin-top: 5px; margin-bottom: 30px; 
+    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* 그리드 레이아웃 버튼 */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
 
   .pixel-btn {
-    width: 100%; padding: 16px; font-size: 18px; margin-bottom: 12px;
-    border: 0; border-radius: 12px; color: #fff; cursor: pointer;
-    font-weight: 800; transition: transform 0.1s;
-    display: flex; justify-content: center; align-items: center; gap: 8px;
+    position: relative;
+    border: none; border-radius: 16px; 
+    color: #fff; cursor: pointer;
+    font-weight: 800; transition: transform 0.1s, filter 0.1s;
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; gap: 6px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    overflow: hidden;
   }
-  .pixel-btn:active { transform: translateY(3px); }
+  .pixel-btn:active { transform: translateY(4px); box-shadow: none !important; }
+  .pixel-btn:hover { filter: brightness(1.1); }
 
+  /* 게임 시작 (가로 꽉 참) */
   .btn-start {
-    background: var(--primary-btn);
-    box-shadow: 0 5px 0 var(--primary-dark);
-    font-size: 20px; padding: 18px;
+    grid-column: span 2;
+    background: linear-gradient(135deg, #66bb6a, #43a047);
+    box-shadow: 0 5px 0 #2e7d32;
+    padding: 20px; font-size: 22px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
   }
-  .btn-start:active { box-shadow: 0 2px 0 var(--primary-dark); }
+  .btn-start span { display: flex; align-items: center; gap: 10px; }
 
+  /* 일반 버튼 */
   .btn-normal {
-    background: var(--accent);
-    box-shadow: 0 5px 0 var(--accent-dark);
+    background: linear-gradient(135deg, #ffa726, #fb8c00);
+    box-shadow: 0 4px 0 #e65100;
+    padding: 15px; font-size: 16px; height: 90px;
+    color: #fff;
   }
-  .btn-normal:active { box-shadow: 0 2px 0 var(--accent-dark); }
+  .btn-icon { font-size: 24px; margin-bottom: 2px; }
 
-  .version { margin-top: 24px; font-size: 11px; color: #9a8970; opacity: 0.7; }
+  /* 출석체크 버튼 (특별함) */
+  .btn-checkin {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #42a5f5, #1e88e5);
+    box-shadow: 0 4px 0 #1565c0;
+    padding: 14px; font-size: 16px;
+    display: flex; flex-direction: row; justify-content: center;
+  }
+  .btn-checkin.disabled {
+    background: #cfd8dc; color: #90a4ae; box-shadow: none; cursor: default;
+    transform: none;
+  }
 
+  /* 공지사항 버튼 */
+  .btn-notice {
+    background: linear-gradient(135deg, #8d6e63, #6d4c41);
+    box-shadow: 0 4px 0 #4e342e;
+    padding: 15px; font-size: 16px; height: 90px;
+  }
+
+  .version { margin-top: 24px; font-size: 11px; color: #a1887f; opacity: 0.8; }
+
+  /* 모달 공통 */
   .modal-bg {
     display: none; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%; background: rgba(0,0,0,0.6);
     justify-content: center; align-items: center; padding: 16px; z-index: 999;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
   }
   .modal {
-    width: 100%; max-width: 420px; background: var(--bg-panel);
-    padding: 24px; border-radius: 14px; border: 4px solid var(--border-dark);
-    box-shadow: 0 10px 0 #b79b76; text-align: center;
-    max-height: 80vh; overflow-y: auto;
+    width: 100%; max-width: 420px; background: #fff;
+    padding: 24px; border-radius: 20px; border: 4px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    text-align: center;
+    max-height: 85vh; overflow-y: auto;
+    position: relative;
   }
+  .modal h2 { margin-top: 0; color: var(--text-main); font-size: 22px; border-bottom: 2px dashed #ddd; padding-bottom: 12px; margin-bottom: 12px; }
+  
+  /* 랭킹 스타일 */
   .rank-item {
     display: flex; justify-content: space-between; align-items: center;
-    margin: 8px 0; padding: 10px 14px;
-    background: #fff; border-radius: 8px; border: 2px solid #e0d8c8;
+    margin: 8px 0; padding: 12px 14px;
+    background: #fafafa; border-radius: 12px; border: 1px solid #eee;
     font-size: 14px; text-align: left;
+    box-shadow: 0 2px 0 #eee;
   }
-  .rank-rank { font-weight: 900; color: var(--accent-dark); width: 40px; }
-  .rank-info { flex: 1; }
-  .rank-score { font-weight: bold; color: #d32f2f; }
-  .msg { font-size: 12px; color: #888; display: block; margin-top: 2px; font-style: italic;}
+  .rank-rank { font-weight: 900; color: var(--accent-dark); width: 30px; font-size: 16px; }
+  .rank-info { flex: 1; margin-left: 8px; }
+  .rank-score { font-weight: bold; color: #d32f2f; background: #ffebee; padding: 4px 8px; border-radius: 6px; font-size: 13px; }
+  
+  /* 공지사항 스타일 */
+  .notice-list { text-align: left; min-height: 150px; font-size: 14px; }
+  .notice-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+  .notice-title { font-weight: bold; color: #333; display:block; margin-bottom: 4px;}
+  .notice-date { font-size: 11px; color: #999; }
+  .notice-content { font-size: 13px; color: #555; margin-top: 4px; white-space: pre-wrap; line-height: 1.4; }
+  
+  .admin-controls { margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-mini { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; cursor: pointer; font-weight: bold; color: white; }
+  .btn-write { background: #5c6bc0; }
+  .btn-del { background: #ef5350; margin-left: auto; } /* 게시물 내 삭제 버튼용 */
 
   .close-btn {
-    margin-top: 18px; padding: 12px 24px; background: #555;
-    color: #fff; border-radius: 8px; cursor: pointer; border: 0;
-    box-shadow: 0 4px 0 #333; font-weight: bold; width: 100%;
+    margin-top: 18px; padding: 14px; background: #555;
+    color: #fff; border-radius: 12px; cursor: pointer; border: 0;
+    font-weight: bold; width: 100%; font-size: 16px;
+    transition: background 0.1s;
   }
+  .close-btn:hover { background: #333; }
+
+  /* 스피너 */
+  .spinner {
+    width: 24px; height: 24px; border: 3px solid #eee;
+    border-top: 3px solid var(--accent-color); border-radius: 50%;
+    margin: 20px auto; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* 입력창 */
+  .input-group { margin-top: 10px; text-align: left; display: none; background: #f9f9f9; padding: 10px; border-radius: 8px;}
+  .input-field { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; }
+  textarea.input-field { height: 80px; resize: none; }
 </style>
 </head>
 
@@ -161,8 +273,11 @@
 </div>
 
 <div class="news-ticker">
-  <div class="ticker-content" id="tickerArea">
-    <span class="ticker-item">🔔 환영합니다! 안디옥 청년부 홀리 스파크 런!</span>
+  <div class="ticker-wrap">
+    <div class="ticker-content" id="tickerArea">
+      <span class="ticker-item">🔔 환영합니다! 안디옥 청년부 홀리 스파크 런!</span>
+      <span class="ticker-item">💒 오늘도 주님 안에서 승리하세요!</span>
+    </div>
   </div>
 </div>
 
@@ -171,24 +286,67 @@
     <h1>메인 메뉴</h1>
     <div class="sub">ANTIOCH HOLY SPARK RUN</div>
 
-    <button class="pixel-btn btn-start" onclick="startGame()">
-      <span>▶ 게임 시작</span>
-    </button>
-    
-    <div style="display:flex; gap:10px;">
-      <button class="pixel-btn btn-normal" onclick="openStore()">🛒 상점</button>
-      <button class="pixel-btn btn-normal" onclick="showRanking()">🏆 랭킹</button>
+    <div class="menu-grid">
+      <button class="pixel-btn btn-start" onclick="startGame()">
+        <span>🚀 게임 시작 RUN!</span>
+      </button>
+
+      <button class="pixel-btn btn-checkin" id="checkinBtn" onclick="dailyCheckIn()">
+        <span id="checkinText">📅 출석체크 (+조각)</span>
+      </button>
+
+      <button class="pixel-btn btn-normal" onclick="openStore()">
+        <div class="btn-icon">🛒</div>
+        <span>상점</span>
+      </button>
+      <button class="pixel-btn btn-normal" onclick="showRanking()">
+        <div class="btn-icon">🏆</div>
+        <span>랭킹</span>
+      </button>
+
+      <button class="pixel-btn btn-notice" onclick="openNotice()">
+        <div class="btn-icon">📢</div>
+        <span>공지사항</span>
+      </button>
+      
+      <button class="pixel-btn" style="background:#bcaaa4; cursor:default;">
+        <div class="btn-icon">🔒</div>
+        <span>준비중</span>
+      </button>
     </div>
 
-    <div class="version">v2.0 · Antioch Youth</div>
+    <div class="version">v2.1 · Antioch Youth (Updated)</div>
   </div>
 </div>
 
 <div id="rankingModal" class="modal-bg">
   <div class="modal">
-    <h2 style="margin-top:0;">🏆 명예의 전당</h2>
+    <h2>🏆 명예의 전당</h2>
     <div id="rankingList"></div>
-    <button class="close-btn" onclick="closeRanking()">닫기</button>
+    <button class="close-btn" onclick="closeModal('rankingModal')">닫기</button>
+  </div>
+</div>
+
+<div id="noticeModal" class="modal-bg">
+  <div class="modal">
+    <h2>📢 안디옥 게시판</h2>
+    <div id="noticeList" class="notice-list">
+      <p style="color:#999; text-align:center; padding:20px;">등록된 공지사항이 없습니다.</p>
+    </div>
+    
+    <div id="writeForm" class="input-group">
+      <input type="text" id="noticeTitle" class="input-field" placeholder="제목을 입력하세요">
+      <textarea id="noticeContent" class="input-field" placeholder="내용을 입력하세요"></textarea>
+      <div style="display:flex; gap:5px;">
+        <button class="btn-mini btn-write" style="flex:1" onclick="saveNotice()">등록 완료</button>
+        <button class="btn-mini" style="background:#999; flex:1" onclick="cancelWrite()">취소</button>
+      </div>
+    </div>
+
+    <div class="admin-controls">
+      <button class="btn-mini btn-write" onclick="tryWrite()">✏️ 관리자 글쓰기</button>
+    </div>
+    <button class="close-btn" onclick="closeModal('noticeModal')">닫기</button>
   </div>
 </div>
 
@@ -205,7 +363,9 @@
   });
 
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
+  const ADMIN_PW = "Antioch1004"; // 관리자 비밀번호
 
+  // 로컬 스토리지 데이터 로드
   const name = localStorage.getItem("run_name");
   const id = localStorage.getItem("run_id");
 
@@ -216,9 +376,223 @@
 
   document.getElementById("playerName").innerText = name || "Guest";
 
+  // ==========================================
+  // [수정2] 출석체크 로직 (매일 밤 11시 초기화)
+  // ==========================================
+  function initAttendance() {
+    const btn = document.getElementById("checkinBtn");
+    const txt = document.getElementById("checkinText");
+    const lastCheckTime = localStorage.getItem("last_checkin_time");
+    
+    // 현재 시간 구하기
+    const now = new Date();
+    
+    // 오늘 밤 11시 (23:00) 계산
+    const todayReset = new Date();
+    todayReset.setHours(23, 0, 0, 0);
+
+    // 어제 밤 11시 계산 (비교용)
+    const yesterdayReset = new Date(todayReset);
+    yesterdayReset.setDate(yesterdayReset.getDate() - 1);
+
+    let canCheckIn = true;
+
+    if (lastCheckTime) {
+      const last = new Date(parseInt(lastCheckTime));
+      
+      // 마지막 체크인 시간이 '어제 밤 11시' 보다 이후라면, 
+      // 즉 오늘 밤 11시가 되기 전까지는 이미 출석한 것임.
+      // (단, 현재 시간이 오늘 밤 11시를 넘었다면 다시 가능)
+      
+      if (now < todayReset) {
+        // 아직 오늘 23시 안됨 -> 어제 23시 이후에 찍었는지 확인
+        if (last > yesterdayReset) canCheckIn = false;
+      } else {
+        // 오늘 23시 넘음 -> 오늘 23시 이후에 찍었는지 확인
+        if (last > todayReset) canCheckIn = false;
+      }
+    }
+
+    if (!canCheckIn) {
+      btn.classList.add("disabled");
+      txt.innerText = "✅ 출석완료 (내일 23시)";
+      btn.onclick = null;
+    }
+  }
+
+  async function dailyCheckIn() {
+    const btn = document.getElementById("checkinBtn");
+    const txt = document.getElementById("checkinText");
+
+    // 보상 지급 (로컬 저장 데이터 수정)
+    let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
+    
+    // 히든 스킨 조각 데이터가 없으면 초기화
+    if (!saveData.fragments) saveData.fragments = 0;
+    
+    // +5 지급
+    saveData.fragments += 5;
+    localStorage.setItem("run_save", JSON.stringify(saveData));
+
+    // 출석 시간 저장
+    localStorage.setItem("last_checkin_time", Date.now().toString());
+
+    // UI 변경
+    alert("🎁 출석체크 완료!\n[히든 스킨 조각 +5]를 획득했습니다!");
+    btn.classList.add("disabled");
+    txt.innerText = "✅ 출석완료 (내일 23시)";
+    btn.onclick = null;
+
+    // 서버 동기화 (저장)
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ 
+          type: "saveGameData", // 기존 저장 함수 활용
+          id: id,
+          saveData: saveData
+        })
+      });
+    } catch(e) { console.warn("Checkin Sync Fail"); }
+  }
+
+  // 페이지 로드시 출석 상태 확인
+  initAttendance();
+
+
+  // ==========================================
+  // [수정4] 티커 로드 개선 (이어붙이기)
+  // ==========================================
+  async function loadTicker() {
+    try {
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ type: "getRecentLog" }) 
+      });
+      const txt = await res.text();
+      const logs = JSON.parse(txt);
+      
+      if(logs && logs.length > 0) {
+        const area = document.getElementById("tickerArea");
+        let html = "";
+        logs.forEach(l => {
+           let msg = l.reward;
+           if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
+           if(msg.includes("QT Book")) msg = "QT책 당첨!";
+           
+           html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
+        });
+        // [핵심] 기존 내용을 지우지 않고 뒤에 추가함 (innerHTML +=)
+        area.innerHTML += html;
+      }
+    } catch(e) {
+      console.log("Ticker Load Fail", e);
+    }
+  }
+  loadTicker();
+
+
+  // ==========================================
+  // [수정3] 공지사항 (관리자 기능 포함)
+  // ==========================================
+  // ※ 실제로는 서버(GAS)에 notices 배열을 저장해야 합니다.
+  // 현재는 데모를 위해 localStorage 'temp_notices'를 사용하거나 
+  // 서버 API 호출 코드를 작성해 둡니다.
+  
+  function openNotice() {
+    document.getElementById("noticeModal").style.display = "flex";
+    loadNotices();
+  }
+  
+  // 공지 로드 (지금은 로컬스토리지 시뮬레이션 + 추후 API 연결)
+  function loadNotices() {
+    const listDiv = document.getElementById("noticeList");
+    // 시뮬레이션 데이터 가져오기
+    let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
+    
+    if (notices.length === 0) {
+      listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
+      return;
+    }
+
+    let html = "";
+    // 최신순 정렬
+    notices.reverse().forEach((n, idx) => {
+      // 원본 인덱스 계산 (reverse 했으므로)
+      const realIdx = notices.length - 1 - idx;
+      
+      html += `
+        <div class="notice-item">
+          <span class="notice-title">📢 ${n.title}</span>
+          <div class="notice-content">${n.content}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span class="notice-date">${n.date}</span>
+            <button class="btn-mini btn-del" onclick="deleteNotice(${realIdx})">삭제</button>
+          </div>
+        </div>
+      `;
+    });
+    listDiv.innerHTML = html;
+  }
+
+  function tryWrite() {
+    const input = prompt("관리자 비밀번호를 입력하세요:", "");
+    if (input === ADMIN_PW) {
+      document.getElementById("writeForm").style.display = "block";
+      document.querySelector(".admin-controls").style.display = "none"; // 글쓰기 버튼 숨김
+    } else {
+      if(input !== null) alert("비밀번호가 틀렸습니다.");
+    }
+  }
+
+  function cancelWrite() {
+    document.getElementById("writeForm").style.display = "none";
+    document.querySelector(".admin-controls").style.display = "flex";
+    document.getElementById("noticeTitle").value = "";
+    document.getElementById("noticeContent").value = "";
+  }
+
+  function saveNotice() {
+    const title = document.getElementById("noticeTitle").value.trim();
+    const content = document.getElementById("noticeContent").value.trim();
+
+    if (!title || !content) { alert("제목과 내용을 입력해주세요."); return; }
+
+    const now = new Date();
+    const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
+    
+    const newNotice = { title, content, date: dateStr };
+
+    // [중요] 실제로는 여기서 fetch(API_URL, { type: "addNotice", ... }) 해야 함
+    // 현재는 로컬 스토리지에 저장
+    let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
+    notices.push(newNotice);
+    localStorage.setItem("temp_notices", JSON.stringify(notices));
+
+    alert("공지사항이 등록되었습니다.");
+    cancelWrite();
+    loadNotices();
+  }
+
+  function deleteNotice(index) {
+    const input = prompt("삭제하려면 관리자 비밀번호를 입력하세요:", "");
+    if (input === ADMIN_PW) {
+      let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
+      notices.splice(index, 1);
+      localStorage.setItem("temp_notices", JSON.stringify(notices));
+      alert("삭제되었습니다.");
+      loadNotices();
+    } else {
+      if(input !== null) alert("비밀번호가 틀렸습니다.");
+    }
+  }
+
+
+  // ==========================================
+  // 기본 기능들 (이동, 랭킹 등)
+  // ==========================================
   function startGame() { window.location.href = "/TrapGame/game.html"; }
   function openStore() { window.location.href = "/TrapGame/store.html"; }
-  
   function logout() {
     if(confirm("로그아웃 하시겠습니까?")) {
       localStorage.removeItem("run_id");
@@ -226,8 +600,9 @@
       window.location.href = "/TrapGame/index.html";
     }
   }
+  function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
-  // 서버 동기화
+  // 서버 저장데이터 동기화
   async function refreshSave() {
     try {
       const res = await fetch(API_URL, {
@@ -242,43 +617,12 @@
   }
   refreshSave();
 
-  // [NEW] 티커 데이터 로드 함수
-  async function loadTicker() {
-    try {
-      const res = await fetch(API_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ type: "getRecentLog" }) 
-      });
-      const txt = await res.text();
-      const logs = JSON.parse(txt);
-      
-      if(logs && logs.length > 0) {
-        const area = document.getElementById("tickerArea");
-        let html = "";
-        logs.forEach(l => {
-           // 메시지 조금 더 보기 좋게 가공
-           let msg = l.reward;
-           if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
-           if(msg.includes("QT Book")) msg = "QT책 당첨!";
-           // 조각 메시지는 그대로 사용
-           
-           html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
-        });
-        area.innerHTML = html;
-      }
-    } catch(e) {
-      console.log("Ticker Load Fail", e);
-    }
-  }
-  // 페이지 로드 시 티커 실행
-  loadTicker();
-
   // 랭킹 불러오기
   async function showRanking() {
     const modal = document.getElementById("rankingModal");
     modal.style.display = "flex";
     const listDiv = document.getElementById("rankingList");
-    listDiv.innerHTML = "<p style='padding:20px;'>데이터를 불러오는 중...</p>";
+    listDiv.innerHTML = "<div class='spinner'></div>";
 
     try {
       const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getRanking" }) });
@@ -299,8 +643,8 @@
             <div class="rank-item">
               <div class="rank-rank">${rankIcon}</div>
               <div class="rank-info">
-                <div>${item.name}</div>
-                <span class="msg">${item.message || "한마디 없음"}</span>
+                <div style="font-weight:bold;">${item.name}</div>
+                <span class="msg" style="font-size:12px; color:#666;">${item.message || "한마디 없음"}</span>
               </div>
               <div class="rank-score">${item.distance}m</div>
             </div>
@@ -312,8 +656,6 @@
       listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
     }
   }
-
-  function closeRanking() { document.getElementById("rankingModal").style.display = "none"; }
 </script>
 
 </body>
