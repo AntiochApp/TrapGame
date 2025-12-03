@@ -142,11 +142,43 @@
     padding: 0 3px; border-radius: 4px;
   }
 
+  /* [NEW] 천장 마일리지 스타일 */
+  .mileage-box {
+    margin-bottom: 12px; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #ddd;
+  }
+  .mileage-bar-bg {
+    width: 100%; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; margin-top: 5px;
+  }
+  .mileage-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #673ab7, #9c27b0); width: 0%; transition: width 0.3s;
+  }
+  .mileage-btn {
+    width: 100%; background: #9c27b0; color: white; border:0; padding: 8px; border-radius: 6px; 
+    margin-top: 5px; cursor: pointer; opacity: 0.5; pointer-events: none; font-weight: bold;
+  }
+  .mileage-btn.active {
+    opacity: 1; pointer-events: auto; box-shadow: 0 3px 0 #7b1fa2;
+  }
+  .mileage-btn.active:active { transform: translateY(2px); box-shadow: 0 1px 0 #7b1fa2; }
+
+  /* [NEW] 폭죽 효과 스타일 */
+  .confetti {
+    position: fixed; width: 8px; height: 8px; background: #f00; 
+    animation: fall 1.5s linear forwards; z-index: 2000; pointer-events: none;
+  }
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
   /* 가챠 모달 */
-  #gachaModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 999; }
+  #gachaModal, #fragmentModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 999; }
   #gachaBox { width: 220px; height: 220px; background-color: #c47a3f; background-image: url('giftbox.png'); background-position: center; background-size: cover; border-radius: 8px; border: 4px solid #2b1a0f; animation: spin 1.2s steps(8) infinite; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  #gachaResult { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 22px; border-radius: 12px; text-align: center; box-shadow: 0 8px 12px rgba(0,0,0,0.35); border: 4px solid var(--border-dark); z-index: 1000; min-width: 300px; }
+  #gachaResult, .modal-content { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-panel); padding: 22px; border-radius: 12px; text-align: center; box-shadow: 0 8px 12px rgba(0,0,0,0.35); border: 4px solid var(--border-dark); z-index: 1000; min-width: 300px; }
+  
+  /* 조각 상세 모달 컨텐츠 */
+  .modal-content { display: block; max-width: 320px; }
 
   .tab-content { display: none; }
   .tab-content.active { display: block; }
@@ -203,6 +235,17 @@
     <div class="item" style="background:#fff8e1; border-color:#eec048;">
       <h2>🎁 랜덤 뽑기</h2>
       <p>Faith 200으로 능력치, 희귀 조각을 얻어보세요!</p>
+      
+      <div class="mileage-box">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:#555;">
+           <span>Mileage (천장)</span> <span id="mileageText">0/100</span>
+        </div>
+        <div class="mileage-bar-bg">
+            <div class="mileage-bar-fill" id="mileageFill"></div>
+        </div>
+        <button id="mileageBtn" class="mileage-btn" onclick="claimMileage()">💎 확정 보상 받기 (희귀 조각 5개)</button>
+      </div>
+
       <p style="font-size:12px; color:#8a735a;">(확률: 희귀조각 5%, 능력치/Faith 95%, 경품 별도)</p>
       <button class="buy-btn" style="background:#ffa000; border-color:#ff6f00;" onclick="buyGacha()">뽑기 (200 F)</button>
     </div>
@@ -214,7 +257,8 @@
 
   <div id="tab-inventory" class="tab-content">
     <div style="text-align:center; font-size:13px; color:#666; margin-bottom:10px;">
-      조각 100개를 모아 클릭하면 스킨을 완성합니다!
+      조각 100개를 모아 클릭하면 스킨을 완성합니다!<br>
+      (클릭 시 스토리 확인 및 교환 가능)
     </div>
     <div class="inv-grid" id="inventoryArea">
       </div>
@@ -225,6 +269,19 @@
 
 <div id="gachaModal"><div id="gachaBox"></div></div>
 <div id="gachaResult"></div>
+
+<div id="fragmentModal">
+  <div class="modal-content">
+    <h2 id="fragModalTitle" style="margin-top:0; color:#3a2513;"></h2>
+    <div id="fragModalImg" style="margin:10px auto; width:64px; height:64px;"></div>
+    <p id="fragModalDesc" style="font-size:14px; color:#555; font-style:italic; margin-bottom:15px;"></p>
+    <p id="fragModalCount" style="font-weight:bold;"></p>
+    
+    <button id="btnCombine" class="buy-btn" style="background:#9c27b0; margin-bottom:8px;" onclick="doCombine()">스킨 조합하기 (100개)</button>
+    <button id="btnExchange" class="buy-btn" style="background:#4caf50;" onclick="doExchange()">교환하기 (10개 → 50 Faith)</button>
+    <button class="back-btn" style="margin-top:8px;" onclick="closeFragModal()">닫기</button>
+  </div>
+</div>
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
@@ -247,8 +304,9 @@
   if(!saveData.ownedSkins) saveData.ownedSkins = ["default"];
   if(!saveData.equippedSkin) saveData.equippedSkin = "default";
 
-  // 조각 인벤토리 초기화 (key: 스킨코드, value: 개수)
+  // 조각 인벤토리 및 마일리지 초기화
   if(!saveData.fragments) saveData.fragments = {};
+  if(!saveData.mileage) saveData.mileage = 0; // [NEW] 마일리지
 
   // 설정값 (라이프 Max 제한 해제)
   const CONFIG = {
@@ -273,13 +331,13 @@
     { code: "jieun", name: "지은", type: "Active", desc: "2분 쿨: 소환수 탱킹" }
   ];
   
-  // 희귀 스킨 목록
+  // [NEW] 스토리 및 Lore 추가
   const HIDDEN_SKINS = [
-    { code: "Hidden_Skin1", name: "히든 스킨 1" },
-    { code: "Hidden_Skin2", name: "히든 스킨 2" },
-    { code: "Hidden_Skin3", name: "히든 스킨 3" },
-    { code: "Hidden_Skin4", name: "히든 스킨 4" },
-    { code: "Hidden_Skin5", name: "히든 스킨 5" }
+    { code: "Hidden_Skin1", name: "히든 스킨 1", story: "믿음의 시작. 작은 조각들이 모여 큰 기적을 만듭니다." },
+    { code: "Hidden_Skin2", name: "히든 스킨 2", story: "소망의 인내. 보이지 않는 것을 믿고 달리는 자에게 주어집니다." },
+    { code: "Hidden_Skin3", name: "히든 스킨 3", story: "사랑의 수고. 서로를 위해 희생할 줄 아는 마음입니다." },
+    { code: "Hidden_Skin4", name: "히든 스킨 4", story: "겸손의 미덕. 가장 낮은 곳에서 가장 높이 날아오릅니다." },
+    { code: "Hidden_Skin5", name: "히든 스킨 5", story: "순종의 열매. 끝까지 포기하지 않고 완주한 상급입니다." }
   ];
 
   const SKIN_PRICE = 10000;
@@ -311,11 +369,11 @@
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
         saveData = { ...saveData, ...loaded };
-        
         // 깊은 병합 필요한 부분 처리
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
         if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
+        if(loaded.mileage) saveData.mileage = loaded.mileage;
         
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
@@ -345,6 +403,15 @@
         }
       }
     });
+
+    // [NEW] 마일리지 UI 업데이트
+    const m = saveData.mileage || 0;
+    const mPer = Math.min(100, m);
+    document.getElementById("mileageText").innerText = `${m}/100`;
+    document.getElementById("mileageFill").style.width = `${mPer}%`;
+    const mBtn = document.getElementById("mileageBtn");
+    if(m >= 100) mBtn.classList.add("active");
+    else mBtn.classList.remove("active");
 
     renderSkins();
     renderInventory();
@@ -436,7 +503,8 @@
               <img src="${imgSrc}" onerror="this.src='${fallbackSrc}'; this.onerror=null; this.src='disciple.png';" alt="조각">
               <span class="inv-count">${count}</span>
             `;
-            onClick = `onclick="combineSkin('${skin.code}', '${skin.name}')"`;
+            // [NEW] 클릭 시 상세 모달 열기
+            onClick = `onclick="openFragModal('${skin.code}', '${skin.name}', '${skin.story}')"`;
         }
       }
       
@@ -444,28 +512,81 @@
     }
   }
 
-  function combineSkin(code, name) {
+  // [NEW] 조각 상세 모달 관련 변수 및 함수
+  let selectedFragment = null;
+
+  function openFragModal(code, name, story) {
+    selectedFragment = { code, name };
     const count = saveData.fragments[code] || 0;
     
-    if (saveData.ownedSkins.includes(code)) {
-      alert("이미 완성하여 보유 중인 스킨입니다!");
-      return;
+    document.getElementById("fragModalTitle").innerText = name;
+    document.getElementById("fragModalDesc").innerText = story;
+    document.getElementById("fragModalCount").innerText = `보유량: ${count}개`;
+    document.getElementById("fragModalImg").innerHTML = `<img src="fragment_${code}.png" onerror="this.src='skin_${code}.png'" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;">`;
+    
+    // 버튼 상태 업데이트
+    const btnCombine = document.getElementById("btnCombine");
+    const btnExchange = document.getElementById("btnExchange");
+    
+    // 이미 보유중이면 조합 버튼 숨김
+    if(saveData.ownedSkins.includes(code)) {
+        btnCombine.style.display = "none"; 
+    } else {
+        btnCombine.style.display = "block";
+        btnCombine.disabled = (count < 100);
+        btnCombine.innerText = count >= 100 ? "스킨 조합하기 (100개)" : `조합불가 (${count}/100)`;
+        if(count < 100) btnCombine.style.backgroundColor = "#aaa";
+        else btnCombine.style.backgroundColor = "#9c27b0";
     }
 
-    if (count >= 100) {
-      if(confirm(`${name} 조각 100개를 사용하여 스킨을 완성하시겠습니까?`)) {
-        saveData.fragments[code] -= 100;
-        saveData.ownedSkins.push(code);
-        alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
-        
-        // [수정] 스킨 완성 시 로그 전송
-        fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) });
-        
-        updateUI();
-        saveProgress();
-      }
-    } else {
-      alert(`[${name}] 조각이 부족합니다.\n현재: ${count}개 / 필요: 100개\n(부족: ${100 - count}개)`);
+    // 교환 버튼
+    btnExchange.disabled = (count < 10);
+    if(count < 10) btnExchange.style.backgroundColor = "#aaa";
+    else btnExchange.style.backgroundColor = "#4caf50";
+
+    document.getElementById("fragmentModal").style.display = "flex";
+  }
+
+  function closeFragModal() {
+    document.getElementById("fragmentModal").style.display = "none";
+  }
+
+  // [NEW] 조합하기 실행
+  function doCombine() {
+    if(!selectedFragment) return;
+    const { code, name } = selectedFragment;
+    
+    if(saveData.fragments[code] >= 100) {
+        if(confirm(`${name} 스킨을 완성하시겠습니까?`)) {
+            saveData.fragments[code] -= 100;
+            saveData.ownedSkins.push(code);
+            alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
+            
+            // 로그 전송
+            fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) });
+            
+            updateUI();
+            saveProgress();
+            closeFragModal();
+        }
+    }
+  }
+
+  // [NEW] 교환하기 실행
+  function doExchange() {
+    if(!selectedFragment) return;
+    const { code } = selectedFragment;
+    
+    if(saveData.fragments[code] >= 10) {
+        if(confirm(`조각 10개를 50 Faith로 교환하시겠습니까?`)) {
+            saveData.fragments[code] -= 10;
+            saveData.faith += 50;
+            alert("교환 완료! (+50 Faith)");
+            
+            updateUI();
+            saveProgress();
+            closeFragModal();
+        }
     }
   }
 
@@ -512,6 +633,10 @@
   function buyGacha() {
     if (saveData.faith < 200) { alert("Faith가 부족합니다!"); return; }
     saveData.faith -= 200;
+    
+    // [NEW] 뽑기 시 마일리지 증가
+    saveData.mileage = (saveData.mileage || 0) + 1;
+    
     updateUI();
     document.getElementById("gachaModal").style.display = "flex";
     setTimeout(() => {
@@ -520,12 +645,35 @@
     }, 1800);
   }
 
+  // [NEW] 천장 보상 수령 함수
+  function claimMileage() {
+    if ((saveData.mileage || 0) < 100) return;
+    
+    if (!confirm("마일리지 100을 사용하여 희귀 조각 5개를 랜덤으로 획득하시겠습니까?")) return;
+    
+    saveData.mileage -= 100;
+    let msg = "💎 [확정 보상 획득]\n";
+    
+    // 조각 5개 랜덤 지급
+    for(let i=0; i<5; i++) {
+        const rIdx = Math.floor(Math.random() * HIDDEN_SKINS.length);
+        const skin = HIDDEN_SKINS[rIdx];
+        saveData.fragments[skin.code] = (saveData.fragments[skin.code] || 0) + 1;
+        msg += `- ${skin.name} 조각 +1\n`;
+    }
+    
+    alert(msg);
+    updateUI();
+    saveProgress();
+  }
+
   function rollGacha() {
     const r = Math.random() * 100;
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
-    let fragmentInfo = null; // [수정] 조각 로그용 변수
+    let fragmentInfo = null; // 조각 로그용
+    let isRare = false;      // 폭죽 효과용
 
     // 1. 희귀 조각 (0 ~ 5%)
     if (r < 5) {
@@ -536,8 +684,9 @@
       saveData.fragments[targetSkin.code] = (saveData.fragments[targetSkin.code] || 0) + qty;
       prizeText = `💎 [${targetSkin.name}] 조각 ${qty}개 획득!`;
       
-      // [수정] 조각 당첨 정보 기록
+      // 조각 당첨 정보 기록
       fragmentInfo = `[조각] ${targetSkin.name} (${qty}개)`;
+      isRare = true; // 폭죽 효과 트리거
     }
     // 2. 능력치 - 민첩성 (5 ~ 47%)
     else if (r < 47) {
@@ -577,16 +726,42 @@
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
     }
     
-    // [수정] 조각 획득 시에도 로그 전송 (이 부분이 추가됨)
+    // 조각 획득 시에도 로그 전송
     if (fragmentInfo) {
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) });
     }
 
+    // [NEW] 대박이나 희귀 조각일 때 폭죽 효과 발사
+    if (isRare || isSpecial) {
+        fireConfetti();
+    }
+
     const box = document.getElementById("gachaResult");
-    box.innerHTML = `<h2>🎉 결과!</h2><p style="font-size:20px;"><b>${prizeText}</b></p><button onclick="closeResult()" class="buy-btn">확인</button>`;
+    // 텍스트 스타일 약간 강조
+    let title = "🎉 결과";
+    if (isSpecial) title = "🎊 대박 경품 당첨!";
+    else if (isRare) title = "✨ 희귀 아이템!";
+
+    box.innerHTML = `<h2>${title}</h2><p style="font-size:20px; font-weight:bold; color:${isRare ? '#9c27b0' : '#333'}">${prizeText}</p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
     updateUI();
     saveProgress();
+  }
+
+  // [NEW] 폭죽 효과 함수
+  function fireConfetti() {
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+    for(let i=0; i<50; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDuration = (Math.random() * 1 + 1) + 's'; // 1~2초
+        document.body.appendChild(c);
+        
+        // 애니메이션 끝나면 삭제
+        setTimeout(() => { c.remove(); }, 2000);
+    }
   }
 
   function getWeightedFragmentCount() {
