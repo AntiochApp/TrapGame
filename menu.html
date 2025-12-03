@@ -315,7 +315,7 @@
       </button>
     </div>
 
-    <div class="version">v2.1 · Antioch Youth (Updated)</div>
+    <div class="version">v2.1 · Antioch Youth (Fixed)</div>
   </div>
 </div>
 
@@ -363,9 +363,8 @@
   });
 
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
-  const ADMIN_PW = "Antioch1004"; // 관리자 비밀번호
+  const ADMIN_PW = "Antioch1004"; 
 
-  // 로컬 스토리지 데이터 로드
   const name = localStorage.getItem("run_name");
   const id = localStorage.getItem("run_id");
 
@@ -377,38 +376,26 @@
   document.getElementById("playerName").innerText = name || "Guest";
 
   // ==========================================
-  // [수정2] 출석체크 로직 (매일 밤 11시 초기화)
+  // [수정] 출석체크 로직 개선 (랜덤 스킨 조각 지급)
   // ==========================================
   function initAttendance() {
     const btn = document.getElementById("checkinBtn");
     const txt = document.getElementById("checkinText");
     const lastCheckTime = localStorage.getItem("last_checkin_time");
     
-    // 현재 시간 구하기
     const now = new Date();
-    
-    // 오늘 밤 11시 (23:00) 계산
     const todayReset = new Date();
     todayReset.setHours(23, 0, 0, 0);
 
-    // 어제 밤 11시 계산 (비교용)
     const yesterdayReset = new Date(todayReset);
     yesterdayReset.setDate(yesterdayReset.getDate() - 1);
 
     let canCheckIn = true;
-
     if (lastCheckTime) {
       const last = new Date(parseInt(lastCheckTime));
-      
-      // 마지막 체크인 시간이 '어제 밤 11시' 보다 이후라면, 
-      // 즉 오늘 밤 11시가 되기 전까지는 이미 출석한 것임.
-      // (단, 현재 시간이 오늘 밤 11시를 넘었다면 다시 가능)
-      
       if (now < todayReset) {
-        // 아직 오늘 23시 안됨 -> 어제 23시 이후에 찍었는지 확인
         if (last > yesterdayReset) canCheckIn = false;
       } else {
-        // 오늘 23시 넘음 -> 오늘 23시 이후에 찍었는지 확인
         if (last > todayReset) canCheckIn = false;
       }
     }
@@ -424,31 +411,38 @@
     const btn = document.getElementById("checkinBtn");
     const txt = document.getElementById("checkinText");
 
-    // 보상 지급 (로컬 저장 데이터 수정)
+    // 보상 지급
     let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
     
-    // 히든 스킨 조각 데이터가 없으면 초기화
-    if (!saveData.fragments) saveData.fragments = 0;
+    // [중요 수정] fragments가 없거나 숫자형태면 객체로 초기화 (자동 데이터 복구)
+    if (!saveData.fragments || typeof saveData.fragments !== 'object') {
+      saveData.fragments = {}; 
+    }
     
-    // +5 지급
-    saveData.fragments += 5;
-    localStorage.setItem("run_save", JSON.stringify(saveData));
+    // 랜덤으로 스킨 선택 (히든 스킨 1~5)
+    const hiddenSkins = ["Hidden_Skin1", "Hidden_Skin2", "Hidden_Skin3", "Hidden_Skin4", "Hidden_Skin5"];
+    const randomSkin = hiddenSkins[Math.floor(Math.random() * hiddenSkins.length)];
+    const randomSkinName = "히든 스킨 " + randomSkin.slice(-1); // "히든 스킨 1"
 
-    // 출석 시간 저장
+    // 해당 스킨 조각 +5
+    saveData.fragments[randomSkin] = (saveData.fragments[randomSkin] || 0) + 5;
+    
+    localStorage.setItem("run_save", JSON.stringify(saveData));
     localStorage.setItem("last_checkin_time", Date.now().toString());
 
-    // UI 변경
-    alert("🎁 출석체크 완료!\n[히든 스킨 조각 +5]를 획득했습니다!");
+    // 알림 메시지 개선
+    alert(`🎁 출석체크 완료!\n[${randomSkinName} 조각 +5]를 획득했습니다!`);
+    
     btn.classList.add("disabled");
     txt.innerText = "✅ 출석완료 (내일 23시)";
     btn.onclick = null;
 
-    // 서버 동기화 (저장)
+    // 서버 동기화
     try {
       await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ 
-          type: "saveGameData", // 기존 저장 함수 활용
+          type: "saveGameData", 
           id: id,
           saveData: saveData
         })
@@ -456,12 +450,12 @@
     } catch(e) { console.warn("Checkin Sync Fail"); }
   }
 
-  // 페이지 로드시 출석 상태 확인
+  // 페이지 로드 시 실행
   initAttendance();
 
 
   // ==========================================
-  // [수정4] 티커 로드 개선 (이어붙이기)
+  // 티커 로드 (이어붙이기)
   // ==========================================
   async function loadTicker() {
     try {
@@ -479,10 +473,8 @@
            let msg = l.reward;
            if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
            if(msg.includes("QT Book")) msg = "QT책 당첨!";
-           
            html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
         });
-        // [핵심] 기존 내용을 지우지 않고 뒤에 추가함 (innerHTML +=)
         area.innerHTML += html;
       }
     } catch(e) {
@@ -493,53 +485,53 @@
 
 
   // ==========================================
-  // [수정3] 공지사항 (관리자 기능 포함)
+  // 공지사항 (관리자 기능)
   // ==========================================
-  // ※ 실제로는 서버(GAS)에 notices 배열을 저장해야 합니다.
-  // 현재는 데모를 위해 localStorage 'temp_notices'를 사용하거나 
-  // 서버 API 호출 코드를 작성해 둡니다.
-  
   function openNotice() {
     document.getElementById("noticeModal").style.display = "flex";
     loadNotices();
   }
   
-  // 공지 로드 (지금은 로컬스토리지 시뮬레이션 + 추후 API 연결)
-  function loadNotices() {
+  async function loadNotices() {
     const listDiv = document.getElementById("noticeList");
-    // 시뮬레이션 데이터 가져오기
-    let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
-    
-    if (notices.length === 0) {
-      listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
-      return;
-    }
+    // 서버에서 실제 공지 가져오기
+    try {
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ type: "getNotices" }) 
+      });
+      const txt = await res.text();
+      const notices = JSON.parse(txt);
 
-    let html = "";
-    // 최신순 정렬
-    notices.reverse().forEach((n, idx) => {
-      // 원본 인덱스 계산 (reverse 했으므로)
-      const realIdx = notices.length - 1 - idx;
-      
-      html += `
-        <div class="notice-item">
-          <span class="notice-title">📢 ${n.title}</span>
-          <div class="notice-content">${n.content}</div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            <span class="notice-date">${n.date}</span>
-            <button class="btn-mini btn-del" onclick="deleteNotice(${realIdx})">삭제</button>
+      if (!notices || notices.length === 0) {
+        listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
+        return;
+      }
+
+      let html = "";
+      notices.forEach((n) => {
+        html += `
+          <div class="notice-item">
+            <span class="notice-title">📢 ${n.title}</span>
+            <div class="notice-content">${n.content}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <span class="notice-date">${n.date} · ${n.writer}</span>
+              <button class="btn-mini btn-del" onclick="deleteNotice(${n.rowIndex})">삭제</button>
+            </div>
           </div>
-        </div>
-      `;
-    });
-    listDiv.innerHTML = html;
+        `;
+      });
+      listDiv.innerHTML = html;
+    } catch(e) {
+      listDiv.innerHTML = "<p>공지 로드 실패</p>";
+    }
   }
 
   function tryWrite() {
     const input = prompt("관리자 비밀번호를 입력하세요:", "");
     if (input === ADMIN_PW) {
       document.getElementById("writeForm").style.display = "block";
-      document.querySelector(".admin-controls").style.display = "none"; // 글쓰기 버튼 숨김
+      document.querySelector(".admin-controls").style.display = "none";
     } else {
       if(input !== null) alert("비밀번호가 틀렸습니다.");
     }
@@ -552,36 +544,42 @@
     document.getElementById("noticeContent").value = "";
   }
 
-  function saveNotice() {
+  async function saveNotice() {
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
 
     if (!title || !content) { alert("제목과 내용을 입력해주세요."); return; }
 
-    const now = new Date();
-    const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
-    
-    const newNotice = { title, content, date: dateStr };
+    if(!confirm("공지사항을 등록하시겠습니까?")) return;
 
-    // [중요] 실제로는 여기서 fetch(API_URL, { type: "addNotice", ... }) 해야 함
-    // 현재는 로컬 스토리지에 저장
-    let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
-    notices.push(newNotice);
-    localStorage.setItem("temp_notices", JSON.stringify(notices));
-
-    alert("공지사항이 등록되었습니다.");
-    cancelWrite();
-    loadNotices();
+    try {
+      await fetch(API_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ type: "addNotice", title, content, writer: "관리자" }) 
+      });
+      alert("공지사항이 등록되었습니다.");
+      cancelWrite();
+      loadNotices();
+    } catch(e) { alert("등록 실패"); }
   }
 
-  function deleteNotice(index) {
+  async function deleteNotice(rowIndex) {
     const input = prompt("삭제하려면 관리자 비밀번호를 입력하세요:", "");
     if (input === ADMIN_PW) {
-      let notices = JSON.parse(localStorage.getItem("temp_notices") || "[]");
-      notices.splice(index, 1);
-      localStorage.setItem("temp_notices", JSON.stringify(notices));
-      alert("삭제되었습니다.");
-      loadNotices();
+       if(!confirm("정말 삭제하시겠습니까?")) return;
+       try {
+         const res = await fetch(API_URL, { 
+           method: "POST", 
+           body: JSON.stringify({ type: "deleteNotice", rowIndex }) 
+         });
+         const txt = await res.text();
+         if(txt === "success") {
+           alert("삭제되었습니다.");
+           loadNotices();
+         } else {
+           alert("삭제 실패");
+         }
+       } catch(e) { alert("오류 발생"); }
     } else {
       if(input !== null) alert("비밀번호가 틀렸습니다.");
     }
@@ -589,7 +587,7 @@
 
 
   // ==========================================
-  // 기본 기능들 (이동, 랭킹 등)
+  // 기본 기능
   // ==========================================
   function startGame() { window.location.href = "/TrapGame/game.html"; }
   function openStore() { window.location.href = "/TrapGame/store.html"; }
@@ -602,7 +600,7 @@
   }
   function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
-  // 서버 저장데이터 동기화
+  // 서버 동기화
   async function refreshSave() {
     try {
       const res = await fetch(API_URL, {
@@ -617,7 +615,7 @@
   }
   refreshSave();
 
-  // 랭킹 불러오기
+  // 랭킹
   async function showRanking() {
     const modal = document.getElementById("rankingModal");
     modal.style.display = "flex";
