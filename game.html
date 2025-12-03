@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Fever & Boss Update</title>
+  <title>Disciple Run – Final Stable Version</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -76,7 +76,7 @@
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
     /* 투사체 */
-    .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; }
+    .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; transition: opacity 0.2s; }
     .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
     .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
     
@@ -105,15 +105,22 @@
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
-    /* 일시정지 버튼 스타일 */
+    /* [수정] 일시정지 버튼 스타일 개선 */
     #pauseBtn { 
-        position: fixed; z-index: 900; top: 12px; right: 12px; 
-        width: 44px; height: 44px; 
-        background: var(--hud-bg); 
-        border: 3px solid var(--hud-border); 
-        border-radius: 10px; 
+        position: fixed; z-index: 900; top: 15px; right: 15px; 
+        width: 50px; height: 50px; 
+        background: #fdfaf2; 
+        border: 4px solid #3a2513; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 0 #8b4f26; 
         display: flex; justify-content: center; align-items: center; 
         font-size: 24px; cursor: pointer; 
+        color: #3a2513;
+        transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #pauseBtn:active {
+        transform: translateY(4px); 
+        box-shadow: 0 0 0 #8b4f26;
     }
 
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
@@ -291,14 +298,12 @@
   let name = localStorage.getItem("run_name") || "Tester";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
-  // [NEW] 컬렉션 완성 여부 체크 (히든 스킨 5종)
   function hasFullCollection() {
     const hiddenSkins = ["Hidden_Skin1", "Hidden_Skin2", "Hidden_Skin3", "Hidden_Skin4", "Hidden_Skin5"];
     if(!saveData.ownedSkins) return false;
     return hiddenSkins.every(skin => saveData.ownedSkins.includes(skin));
   }
   
-  // 컬렉션 완성 시 버프 변수
   const collectionBuff = hasFullCollection();
 
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
@@ -334,7 +339,6 @@
 
   let buffArea = document.getElementById("buffArea");
   
-  // [NEW] 컬렉션 버프가 있다면 UI에 표시
   if(collectionBuff) {
     buffArea.innerHTML += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스 (Faith +10%)</div>`;
   }
@@ -380,7 +384,6 @@
   let isBossBattle = false;
   let nextBossTrigger = 200; 
   let bossLevel = 0;
-  // [수정: 보스 위아래 속도 vy 1 -> 0.5]
   let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 0.5, state: 'idle', shootTimer: 0, actionTimer: 0 }; 
   let bossContainer = document.getElementById('bossContainer');
   let bossBody = document.getElementById('bossBody');
@@ -530,7 +533,6 @@
 
   function updateBuffUI(delta) {
     const buffContainer = document.getElementById("buffArea"); 
-    // [NEW] 기존 버프 태그 리셋 방식 유지하되 컬렉션 버프 추가
     let html = "";
     if(collectionBuff) html += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스</div>`;
 
@@ -712,7 +714,6 @@
               cx += dx * 8 * dt; cy += dy * 8 * dt;
               
               if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-                  // [NEW] 컬렉션 버프 적용: 10% 확률로 Faith 1 추가 획득 (평균 1.1배 효과)
                   let gain = 1;
                   if(collectionBuff && Math.random() < 0.1) gain = 2;
 
@@ -744,47 +745,74 @@
   }
 
   function updateEnemies(dt) {
-      for (let i = enemies.length - 1; i >= 0; i--) {
-          let e = enemies[i]; e.timer += dt;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i]; e.timer += dt;
 
-          if (isFeverTime) {
-             if (!e.feverTimer) e.feverTimer = 0;
-             if (e.x < window.innerWidth) e.feverTimer += dt;
-             if (e.feverTimer > 1.0) {
-                 spawnExplosionEffect(e.x + 30, e.y + 30);
-                 spawnFaithCoins(e.x + 30, e.y + 30, 5); 
-                 showFloatText("💥 적군 섬멸!");
-                 e.remove(); enemies.splice(i, 1);
-                 continue;
-             }
-          }
+        // [수정] 레이저 동기화: 적의 위치를 따라다님
+        if(e.laserWarning) {
+            e.laserWarning.style.width = e.x + "px";
+            e.laserWarning.style.top = (e.y + 30) + "px";
+        }
+        if(e.laserBeam) {
+            e.laserBeam.style.width = e.x + "px";
+            e.laserBeam.style.top = (e.y + 15) + "px";
+        }
 
-          if(e.state === 'enter') {
-              e.x -= 100 * dt;
-              if (e.x < window.innerWidth - 150) { e.state = 'attack'; e.timer = 0; }
-          } else if (e.state === 'attack') {
-              // [수정: 적군 2~5번의 미사일 쿨타임을 모두 1.0초로 변경]
-              if (e.type === 1) { if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; else e.x -= 300 * dt; }
-              else if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single'); e.timer = 0; }
-              else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan'); e.timer = 0; }
-              else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode'); e.timer = 0; }
-              else if (e.type === 5 && e.timer > 1.0) { fireEnemyLaser(e); e.timer = 0; }
-              if(e.type !== 1) e.x -= 50 * dt; 
-          }
-          e.style.left = e.x + "px"; e.style.top = e.y + "px";
-          if (e.x < -100) { e.remove(); enemies.splice(i, 1); }
-      }
+        if (isFeverTime) {
+           if (!e.feverTimer) e.feverTimer = 0;
+           if (e.x < window.innerWidth) e.feverTimer += dt;
+           if (e.feverTimer > 1.0) {
+               spawnExplosionEffect(e.x + 30, e.y + 30);
+               spawnFaithCoins(e.x + 30, e.y + 30, 5); 
+               showFloatText("💥 적군 섬멸!");
+               
+               // [수정] 사망 처리 및 레이저 제거
+               e.isDead = true;
+               if(e.laserWarning) e.laserWarning.remove();
+               if(e.laserBeam) e.laserBeam.remove();
+               
+               e.remove(); enemies.splice(i, 1);
+               continue;
+           }
+        }
+
+        if(e.state === 'enter') {
+            e.x -= 100 * dt;
+            if (e.x < window.innerWidth - 150) { e.state = 'attack'; e.timer = 0; }
+        } else if (e.state === 'attack') {
+            if (e.type === 1) { 
+                if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; 
+                else e.x -= 300 * dt; 
+            }
+            // [수정] spawnEnemyProjectile 호출 시 'e'(자신)를 주인으로 전달
+            else if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
+            else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
+            else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
+            else if (e.type === 5 && e.timer > 1.0) { fireEnemyLaser(e); e.timer = 0; }
+            
+            if(e.type !== 1) e.x -= 50 * dt; 
+        }
+        e.style.left = e.x + "px"; e.style.top = e.y + "px";
+        
+        if (e.x < -100) { 
+            e.isDead = true; 
+            if(e.laserWarning) e.laserWarning.remove();
+            if(e.laserBeam) e.laserBeam.remove();
+            e.remove(); enemies.splice(i, 1); 
+        }
+    }
   }
 
-  function spawnEnemyProjectile(x, y, pattern) {
-      if(pattern === 'single') createProj(x, y, -200, 0); 
-      else if (pattern === 'fan') { createProj(x, y, -300, 0); createProj(x, y, -280, 100); createProj(x, y, -280, -100); }
-      else if (pattern === 'explode') { let p = createProj(x, y, -250, 0); p.isExplosive = true; }
+  function spawnEnemyProjectile(x, y, pattern, ownerEnemy) {
+      if(pattern === 'single') createProj(x, y, -200, 0, ownerEnemy); 
+      else if (pattern === 'fan') { createProj(x, y, -300, 0, ownerEnemy); createProj(x, y, -280, 100, ownerEnemy); createProj(x, y, -280, -100, ownerEnemy); }
+      else if (pattern === 'explode') { let p = createProj(x, y, -250, 0, ownerEnemy); p.isExplosive = true; }
   }
 
-  function createProj(x, y, vx, vy) {
+  function createProj(x, y, vx, vy, owner) {
       const p = document.createElement("div"); p.classList.add("projectile", "enemy-missile");
       p.style.left = x + "px"; p.style.top = y + "px"; p.x = x; p.y = y; p.vx = vx; p.vy = vy;
+      if(owner) p.owner = owner; // 주인 등록
       gameArea.appendChild(p); projectiles.push(p); return p;
   }
 
@@ -792,16 +820,23 @@
       const warning = document.createElement("div"); warning.className = "enemy-laser-warning";
       warning.style.left = "0px"; warning.style.width = e.x + "px"; warning.style.top = (e.y + 30) + "px";
       gameArea.appendChild(warning);
+      e.laserWarning = warning; // 참조 저장
+
       setTimeout(() => {
-          warning.remove();
+          if(e.isDead) { warning.remove(); return; } 
+          warning.remove(); e.laserWarning = null;
           const laser = document.createElement("div"); laser.className = "enemy-laser-beam";
           laser.style.left = "0px"; laser.style.width = e.x + "px"; laser.style.top = (e.y + 15) + "px";
           gameArea.appendChild(laser);
+          e.laserBeam = laser; // 참조 저장
+          
           let duration = 0;
           let check = setInterval(() => {
+              if(e.isDead) { clearInterval(check); laser.remove(); return; }
+
               duration += 0.1; let laserY = parseFloat(laser.style.top);
               if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) damageLife();
-              if(duration > 4.0) { clearInterval(check); laser.remove(); }
+              if(duration > 4.0) { clearInterval(check); laser.remove(); e.laserBeam = null; }
           }, 100);
       }, 1000); 
   }
@@ -820,7 +855,6 @@
     else if(type === 'turbo') { activeEffects.turbo = 5; showFloatText("🚀 터보!"); }
     else if(type === 'slow') { activeEffects.slow = 10; showFloatText("🍃 감속"); }
     else if(type === 'faith') { 
-        // [NEW] 컬렉션 버프 적용 (기본 10 -> 버프시 11)
         let gain = 10;
         if(collectionBuff) gain = 11;
         faith += gain; daily.faith20 += gain; 
@@ -858,9 +892,21 @@
     boss.state = 'dash'; bossBody.classList.add('boss-charging'); showFloatText("💢 돌진 준비!");
     setTimeout(() => {
         bossBody.classList.remove('boss-charging'); bossBody.classList.add('boss-dashing');
-        bossContainer.style.transition = "right 0.5s ease-in"; bossContainer.style.right = "80%"; 
-        setTimeout(() => { if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) damageLife(); }, 250);
-        setTimeout(() => { bossContainer.style.right = "20px"; bossBody.classList.remove('boss-dashing'); boss.state = 'idle'; boss.actionTimer = 0; }, 800);
+        bossContainer.style.transition = "right 0.4s ease-in"; 
+        
+        // [수정] 플레이어 위치까지 돌진 (화면 너비 - 100px 지점)
+        bossContainer.style.right = (window.innerWidth - 100) + "px"; 
+        
+        setTimeout(() => { 
+            if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) {
+                damageLife(); 
+            }
+        }, 200);
+
+        setTimeout(() => { 
+            bossContainer.style.transition = "right 0.8s ease-out"; 
+            bossContainer.style.right = "20px"; bossBody.classList.remove('boss-dashing'); boss.state = 'idle'; boss.actionTimer = 0; 
+        }, 800);
     }, 1000);
   }
 
@@ -930,11 +976,17 @@
             
             if (rM.right > rE.left && rM.left < rE.right && rM.bottom > rE.top && rM.top < rE.bottom) {
                 e.hp--; m.remove(); playerMissiles.splice(i, 1);
+                
                 const ex = document.createElement('div'); ex.className = 'explosion-area';
                 ex.style.left = rE.left + 'px'; ex.style.top = rE.top + 'px'; ex.style.width='60px'; ex.style.height='60px';
                 gameArea.appendChild(ex); setTimeout(()=>ex.remove(), 500);
 
                 if (e.hp <= 0) { 
+                    // [수정] 적군 사망 플래그 -> 투사체 소멸 트리거
+                    e.isDead = true;
+                    if(e.laserWarning) e.laserWarning.remove();
+                    if(e.laserBeam) e.laserBeam.remove();
+                    
                     e.remove(); enemies.splice(j, 1); 
                     spawnFaithCoins(rE.left, rE.top, 5); 
                     showFloatText("💥 적군 격파! (+5)"); 
@@ -947,6 +999,16 @@
 
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
+        
+        // [수정] 주인이 죽은 투사체는 서서히 사라짐
+        if (p.owner && p.owner.isDead) {
+            p.style.opacity = (parseFloat(p.style.opacity) || 1) - 0.05; 
+            p.isFading = true; 
+            if (p.style.opacity <= 0) {
+                p.remove(); projectiles.splice(i, 1); continue;
+            }
+        }
+
         let cx = parseFloat(p.style.left) || p.x; let cy = parseFloat(p.style.top) || p.y;
         cx += p.vx * delta; cy += p.vy * delta;
         p.style.left = cx + "px"; p.style.top = cy + "px";
@@ -964,7 +1026,7 @@
              p.remove(); projectiles.splice(i, 1); continue;
         }
 
-        if (!p.isReflected) {
+        if (!p.isReflected && !p.isFading) {
             const rP = player.getBoundingClientRect(); const rM = p.getBoundingClientRect();
             if (rP.right > rM.left && rP.left < rM.right && rP.bottom > rM.top && rP.top < rM.bottom) {
                 if (isFeverTime) { 
@@ -988,6 +1050,10 @@
             const rP = player.getBoundingClientRect(); const rE = e.getBoundingClientRect();
             if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
                 if (isFeverTime) { 
+                    e.isDead = true;
+                    if(e.laserWarning) e.laserWarning.remove();
+                    if(e.laserBeam) e.laserBeam.remove();
+                    
                     e.remove(); enemies.splice(i, 1); 
                     spawnFaithCoins(rE.left, rE.top, 5);
                     showFloatText("💥 적군 분쇄! (+5)"); 
@@ -1046,10 +1112,7 @@
         const sx = window.innerWidth + 80;
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        
-        // [수정: 0~50m 장애물 높이 130~360px로 상향]
         b.style.height = randi(130, 360) + "px"; 
-        
         b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
         gameArea.appendChild(b);
         obstacles.push(b);
