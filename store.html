@@ -310,20 +310,12 @@
       const txt = await res.text();
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
-        // 기본 데이터 병합
         saveData = { ...saveData, ...loaded };
         
-        // 깊은 병합 처리 (스킨 목록 등)
+        // 깊은 병합 필요한 부분 처리
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
-        
-        // [중요] 조각 데이터 불러오기 (서버 데이터 우선)
-        if(loaded.fragments) {
-           saveData.fragments = loaded.fragments;
-        } else {
-           // 서버에 조각 정보가 없으면 로컬 데이터 유지 혹은 초기화
-           if(!saveData.fragments) saveData.fragments = {};
-        }
+        if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
         
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
@@ -466,7 +458,7 @@
         saveData.ownedSkins.push(code);
         alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
         
-        // 스킨 완성도 중요한 이벤트이므로 로그 전송
+        // [수정] 스킨 완성 시 로그 전송
         fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) });
         
         updateUI();
@@ -512,7 +504,6 @@
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
     try {
-      // saveData 객체 전체를 전송하므로 fragments 정보도 함께 저장됩니다.
       await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "save", id, saveData }) });
     } catch (e) { console.warn(e); }
   }
@@ -534,7 +525,7 @@
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
-    let fragmentInfo = null; // 조각 로그용
+    let fragmentInfo = null; // [수정] 조각 로그용 변수
 
     // 1. 희귀 조각 (0 ~ 5%)
     if (r < 5) {
@@ -545,7 +536,7 @@
       saveData.fragments[targetSkin.code] = (saveData.fragments[targetSkin.code] || 0) + qty;
       prizeText = `💎 [${targetSkin.name}] 조각 ${qty}개 획득!`;
       
-      // 조각 당첨 정보 기록
+      // [수정] 조각 당첨 정보 기록
       fragmentInfo = `[조각] ${targetSkin.name} (${qty}개)`;
     }
     // 2. 능력치 - 민첩성 (5 ~ 47%)
@@ -586,7 +577,7 @@
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
     }
     
-    // [중요] 조각 획득 시에도 로그 전송 (확인용)
+    // [수정] 조각 획득 시에도 로그 전송 (이 부분이 추가됨)
     if (fragmentInfo) {
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) });
     }
@@ -595,7 +586,7 @@
     box.innerHTML = `<h2>🎉 결과!</h2><p style="font-size:20px;"><b>${prizeText}</b></p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
     updateUI();
-    saveProgress(); // 여기서 저장이 일어나면서 fragments 데이터도 서버로 전송됨
+    saveProgress();
   }
 
   function getWeightedFragmentCount() {
