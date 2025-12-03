@@ -5,17 +5,28 @@
 <title>안디옥 청년부 게임 – Menu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff">
+
 <style>
+  /* 폰트 정의 */
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
   :root {
-    --bg-main: #f4f1ea;
-    --bg-panel: rgba(255, 253, 248, 0.92);
+    --bg-overlay: rgba(60, 40, 20, 0.4);
+    --panel-color: #fdf6e3;
     --border-color: #5d4037;
-    --accent-color: #ff9800;
-    --accent-dark: #e65100;
-    --primary-btn: #66bb6a;
-    --primary-dark: #388e3c;
-    --text-main: #4e342e;
-    --text-sub: #795548;
+    --primary-color: #ff9800;
+    --primary-shadow: #e65100;
+    --secondary-color: #8d6e63;
+    --secondary-shadow: #5d4037;
+    --checkin-color: #29b6f6;
+    --checkin-shadow: #0288d1;
+    --text-color: #3e2723;
   }
 
   * { box-sizing: border-box; }
@@ -23,56 +34,63 @@
   body {
     margin: 0; padding: 0; height: 100vh;
     display: flex; flex-direction: column;
-    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
-    color: var(--text-main);
+    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    color: var(--text-color);
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
     overflow: hidden; /* 스크롤 방지 */
   }
 
-  /* 배경 오버레이 부드럽게 */
+  /* 배경에 픽셀 패턴 추가 (index.html과 통일) */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(253, 247, 230, 0.3); z-index: -1;
+    background-image: 
+      linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: -1;
+    pointer-events: none;
   }
 
   /* 상단 바 디자인 개선 */
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 20px; 
-    background: rgba(78, 52, 46, 0.95); 
+    background: rgba(93, 64, 55, 0.95); 
     color: #fff8e1;
-    font-size: 14px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-size: 16px; 
+    border-bottom: 4px solid #3e2723;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
     z-index: 10;
   }
 
-  .game-logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; letter-spacing: 0.05em; }
+  .game-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; letter-spacing: 1px; text-shadow: 2px 2px 0 #000; }
   .logo-pixel {
-    width: 28px; height: 28px; border-radius: 6px; background: #ffca28;
+    width: 32px; height: 32px; border-radius: 4px; background: #ffca28;
     border: 2px solid #fff; 
     background-image: url("pixel_cross.png"); background-size: cover;
-    box-shadow: 0 0 5px rgba(255, 202, 40, 0.5);
+    box-shadow: 0 0 0 2px #000;
   }
 
   .user-info { display: flex; align-items: center; gap: 12px; }
   .logout-btn {
-    padding: 6px 10px; font-size: 11px; background: #ef5350; color: white;
-    border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
-    transition: background 0.2s;
+    padding: 6px 12px; font-size: 14px; background: #ef5350; color: white;
+    border: 2px solid #b71c1c; border-radius: 4px; cursor: pointer; 
+    font-family: 'DungGeunMo', monospace;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,0.3), 2px 2px 0 #b71c1c;
   }
-  .logout-btn:hover { background: #d32f2f; }
+  .logout-btn:active { transform: translateY(2px); box-shadow: none; }
 
-  /* [개선] 뉴스 티커 스타일 */
+  /* 뉴스 티커 스타일 */
   .news-ticker {
     width: 100%;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     color: #fff;
     overflow: hidden;
     padding: 8px 0;
-    font-size: 13px;
+    font-size: 14px;
     white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border-bottom: 2px solid #5d4037;
     z-index: 9;
   }
   .ticker-wrap {
@@ -80,16 +98,15 @@
     overflow: hidden;
   }
   
-  /* [수정] 애니메이션 정의를 여기서 제거하고, 클래스로 분리함 */
   .ticker-content {
     display: inline-block;
     padding-left: 100%;
-    will-change: transform; /* 모바일 성능 최적화 */
+    will-change: transform; 
   }
 
-  /* [수정] 데이터 로드 후 붙여질 애니메이션 클래스 */
+  /* 티커 애니메이션 클래스 */
   .ticker-moving {
-    animation: tickerScroll 35s linear infinite; /* 텍스트가 길어지므로 시간을 조금 늘림 (25s -> 35s) */
+    animation: tickerScroll 35s linear infinite; 
   }
 
   @keyframes tickerScroll {
@@ -99,11 +116,10 @@
   .ticker-item {
     margin-right: 50px;
     color: #ffd54f;
-    font-weight: 600;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 0 #000;
   }
 
-  /* 메인 메뉴 컨테이너 */
+  /* 메인 메뉴 컨테이너 (index.html 스타일 적용) */
   #menuWrapper { 
     flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; 
     padding: 20px;
@@ -112,157 +128,196 @@
   .container {
     width: 100%; max-width: 420px;
     padding: 30px 24px;
-    background: var(--bg-panel);
-    border-radius: 24px;
-    border: 3px solid var(--border-color);
+    background: var(--panel-color);
+    border: 4px solid var(--border-color);
+    border-radius: 8px;
+    /* 3D 픽셀 그림자 효과 */
     box-shadow: 
-      inset 0 0 20px rgba(255,255,255,0.8),
-      0 10px 30px rgba(62, 39, 35, 0.3);
+      inset 4px 4px 0px #ffffff,
+      inset -4px -4px 0px #d7ccc8,
+      8px 8px 0px rgba(0,0,0,0.3);
     text-align: center;
-    backdrop-filter: blur(8px);
     position: relative;
+    /* 둥둥 떠다니는 애니메이션 */
+    animation: float 3s ease-in-out infinite;
   }
 
-  /* 장식 요소 */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+  }
+
+  /* 장식 요소 (별) */
   .container::after {
     content: "★"; position: absolute; top: 15px; right: 20px;
-    font-size: 24px; color: #ffb74d; transform: rotate(15deg);
+    font-size: 28px; color: #ffb74d; transform: rotate(15deg);
+    text-shadow: 2px 2px 0 #000;
   }
 
   h1 { 
-    font-size: 32px; font-weight: 900; margin: 0; 
-    color: var(--text-main); 
-    text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
-    letter-spacing: -1px;
+    font-size: 36px; margin: 0; 
+    color: var(--text-color); 
+    text-shadow: 3px 3px 0px #ffe0b2, 4px 4px 0px rgba(0,0,0,0.2);
+    letter-spacing: 2px;
   }
   .sub { 
-    font-size: 13px; color: var(--accent-dark); 
-    margin-top: 5px; margin-bottom: 30px; 
-    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    font-size: 16px; color: var(--secondary-color); 
+    margin-top: 8px; margin-bottom: 30px; 
+    background: #fff; display: inline-block; padding: 4px 12px;
+    border-radius: 20px; border: 2px dashed #bcaaa4;
   }
 
   /* 그리드 레이아웃 버튼 */
   .menu-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 16px;
     margin-bottom: 12px;
   }
 
+  /* 버튼 공통 스타일 (아케이드 버튼) */
   .pixel-btn {
     position: relative;
-    border: none; border-radius: 16px; 
+    border: 3px solid #000; border-radius: 8px; 
     color: #fff; cursor: pointer;
-    font-weight: 800; transition: transform 0.1s, filter 0.1s;
+    font-family: 'DungGeunMo', monospace;
+    font-size: 18px;
+    transition: all 0.1s;
     display: flex; flex-direction: column; 
     justify-content: center; align-items: center; gap: 6px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-    overflow: hidden;
+    /* 입체감 */
+    box-shadow: 
+      inset 3px 3px 0 rgba(255,255,255,0.4),
+      4px 4px 0 rgba(0,0,0,0.2),
+      4px 4px 0 2px #000;
+    top: 0; left: 0;
   }
-  .pixel-btn:active { transform: translateY(4px); box-shadow: none !important; }
+  
+  .pixel-btn:active:not(.disabled) { 
+    top: 4px; left: 4px;
+    box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2); 
+  }
   .pixel-btn:hover { filter: brightness(1.1); }
 
   /* 게임 시작 (가로 꽉 참) */
   .btn-start {
     grid-column: span 2;
-    background: linear-gradient(135deg, #66bb6a, #43a047);
-    box-shadow: 0 5px 0 #2e7d32;
-    padding: 20px; font-size: 22px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    background: #66bb6a;
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #2e7d32, 4px 4px 0 2px #000;
+    padding: 20px; font-size: 24px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
   }
   .btn-start span { display: flex; align-items: center; gap: 10px; }
 
-  /* 일반 버튼 */
-  .btn-normal {
-    background: linear-gradient(135deg, #ffa726, #fb8c00);
-    box-shadow: 0 4px 0 #e65100;
-    padding: 15px; font-size: 16px; height: 90px;
-    color: #fff;
-  }
-  .btn-icon { font-size: 24px; margin-bottom: 2px; }
-
-  /* 출석체크 버튼 (특별함) */
+  /* 출석체크 버튼 (파란색) */
   .btn-checkin {
     grid-column: span 2;
-    background: linear-gradient(135deg, #42a5f5, #1e88e5);
-    box-shadow: 0 4px 0 #1565c0;
-    padding: 14px; font-size: 16px;
-    display: flex; flex-direction: row; justify-content: center;
+    background: var(--checkin-color);
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--checkin-shadow), 4px 4px 0 2px #000;
+    padding: 14px; font-size: 18px;
+    flex-direction: row; 
   }
+  
   .btn-checkin.disabled {
-    background: #cfd8dc; color: #90a4ae; box-shadow: none; cursor: default;
-    transform: none;
+    background: #cfd8dc; color: #90a4ae; 
+    box-shadow: none; border-color: #90a4ae;
+    cursor: default; top: 2px; left: 2px;
   }
 
-  /* 공지사항 버튼 */
+  /* 일반 버튼 (오렌지) */
+  .btn-normal {
+    background: var(--primary-color);
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--primary-shadow), 4px 4px 0 2px #000;
+    padding: 15px; height: 100px;
+  }
+  .btn-icon { font-size: 28px; margin-bottom: 4px; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2)); }
+
+  /* 공지사항 버튼 (갈색) */
   .btn-notice {
-    background: linear-gradient(135deg, #8d6e63, #6d4c41);
-    box-shadow: 0 4px 0 #4e342e;
-    padding: 15px; font-size: 16px; height: 90px;
+    background: var(--secondary-color);
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--secondary-shadow), 4px 4px 0 2px #000;
+    padding: 15px; height: 100px;
   }
 
-  .version { margin-top: 24px; font-size: 11px; color: #a1887f; opacity: 0.8; }
+  .version { margin-top: 24px; font-size: 14px; color: #a1887f; opacity: 0.8; }
 
-  /* 모달 공통 */
+  /* 모달 공통 디자인 업데이트 */
   .modal-bg {
     display: none; position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+    width: 100%; height: 100%; background: rgba(0,0,0,0.7);
     justify-content: center; align-items: center; padding: 16px; z-index: 999;
     backdrop-filter: blur(4px);
   }
   .modal {
-    width: 100%; max-width: 420px; background: #fff;
-    padding: 24px; border-radius: 20px; border: 4px solid var(--border-color);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    width: 100%; max-width: 420px; background: var(--panel-color);
+    padding: 24px; border-radius: 8px; border: 4px solid var(--border-color);
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.5); /* 짙은 그림자 */
     text-align: center;
     max-height: 85vh; overflow-y: auto;
     position: relative;
   }
-  .modal h2 { margin-top: 0; color: var(--text-main); font-size: 22px; border-bottom: 2px dashed #ddd; padding-bottom: 12px; margin-bottom: 12px; }
+  .modal h2 { 
+    margin-top: 0; color: var(--text-color); font-size: 24px; 
+    border-bottom: 3px dashed #bcaaa4; padding-bottom: 12px; margin-bottom: 12px; 
+    text-shadow: 2px 2px 0 #fff;
+  }
   
   /* 랭킹 스타일 */
   .rank-item {
     display: flex; justify-content: space-between; align-items: center;
     margin: 8px 0; padding: 12px 14px;
-    background: #fafafa; border-radius: 12px; border: 1px solid #eee;
-    font-size: 14px; text-align: left;
-    box-shadow: 0 2px 0 #eee;
+    background: #fff; border: 2px solid #d7ccc8;
+    font-size: 16px; text-align: left;
+    box-shadow: 3px 3px 0 #eee;
   }
-  .rank-rank { font-weight: 900; color: var(--accent-dark); width: 30px; font-size: 16px; }
+  .rank-rank { font-weight: 900; color: var(--primary-shadow); width: 30px; font-size: 18px; }
   .rank-info { flex: 1; margin-left: 8px; }
-  .rank-score { font-weight: bold; color: #d32f2f; background: #ffebee; padding: 4px 8px; border-radius: 6px; font-size: 13px; }
+  .rank-score { font-weight: bold; color: #d32f2f; background: #ffebee; padding: 4px 8px; border-radius: 4px; font-size: 14px; }
   
   /* 공지사항 스타일 */
-  .notice-list { text-align: left; min-height: 150px; font-size: 14px; }
-  .notice-item { border-bottom: 1px solid #eee; padding: 10px 0; }
-  .notice-title { font-weight: bold; color: #333; display:block; margin-bottom: 4px;}
-  .notice-date { font-size: 11px; color: #999; }
-  .notice-content { font-size: 13px; color: #555; margin-top: 4px; white-space: pre-wrap; line-height: 1.4; }
+  .notice-list { text-align: left; min-height: 150px; font-size: 16px; }
+  .notice-item { border-bottom: 2px solid #d7ccc8; padding: 10px 0; }
+  .notice-title { font-weight: bold; color: #333; display:block; margin-bottom: 4px; text-shadow: 1px 1px 0 #eee;}
+  .notice-date { font-size: 12px; color: #8d6e63; }
+  .notice-content { font-size: 14px; color: #555; margin-top: 4px; white-space: pre-wrap; line-height: 1.4; }
   
+  /* 관리자 버튼 */
   .admin-controls { margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-mini { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; cursor: pointer; font-weight: bold; color: white; }
+  .btn-mini { 
+    padding: 6px 12px; border-radius: 4px; border: 2px solid #000; 
+    font-size: 14px; cursor: pointer; font-weight: bold; color: white; 
+    font-family: 'DungGeunMo', monospace;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .btn-mini:active { transform: translate(2px, 2px); box-shadow: none; }
   .btn-write { background: #5c6bc0; }
-  .btn-del { background: #ef5350; margin-left: auto; } /* 게시물 내 삭제 버튼용 */
+  .btn-del { background: #ef5350; margin-left: auto; }
 
   .close-btn {
-    margin-top: 18px; padding: 14px; background: #555;
-    color: #fff; border-radius: 12px; cursor: pointer; border: 0;
-    font-weight: bold; width: 100%; font-size: 16px;
-    transition: background 0.1s;
+    margin-top: 18px; padding: 12px; background: #555;
+    color: #fff; border-radius: 4px; cursor: pointer; border: 2px solid #333;
+    font-weight: bold; width: 100%; font-size: 18px; font-family: 'DungGeunMo', monospace;
+    box-shadow: 4px 4px 0 #222;
   }
   .close-btn:hover { background: #333; }
+  .close-btn:active { transform: translate(4px, 4px); box-shadow: none; }
 
   /* 스피너 */
   .spinner {
-    width: 24px; height: 24px; border: 3px solid #eee;
-    border-top: 3px solid var(--accent-color); border-radius: 50%;
+    width: 30px; height: 30px; border: 4px solid #eee;
+    border-top: 4px solid var(--primary-color); border-radius: 50%;
     margin: 20px auto; animation: spin 0.8s linear infinite;
   }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
   /* 입력창 */
-  .input-group { margin-top: 10px; text-align: left; display: none; background: #f9f9f9; padding: 10px; border-radius: 8px;}
-  .input-field { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; }
+  .input-group { margin-top: 10px; text-align: left; display: none; background: #fffbf0; padding: 12px; border: 2px solid var(--border-color);}
+  .input-field { 
+    width: 100%; padding: 10px; margin-bottom: 8px; 
+    border: 2px solid #bcaaa4; font-family: 'DungGeunMo', monospace; 
+    font-size: 16px; background: #fff;
+  }
   textarea.input-field { height: 80px; resize: none; }
 </style>
 </head>
@@ -317,13 +372,13 @@
         <span>공지사항</span>
       </button>
       
-      <button class="pixel-btn" style="background:#bcaaa4; cursor:default;">
+      <button class="pixel-btn" style="background:#bcaaa4; cursor:default; box-shadow:none; border-color:#8d6e63;">
         <div class="btn-icon">🔒</div>
         <span>준비중</span>
       </button>
     </div>
 
-    <div class="version">v2.1 · Antioch Youth (Fixed)</div>
+    <div class="version">v2.1 · Antioch Youth (Remastered)</div>
   </div>
 </div>
 
