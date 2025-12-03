@@ -310,11 +310,20 @@
       const txt = await res.text();
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
+        // 기본 데이터 병합
         saveData = { ...saveData, ...loaded };
-        // 깊은 병합 필요한 부분 처리
+        
+        // 깊은 병합 처리 (스킨 목록 등)
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
-        if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
+        
+        // [중요] 조각 데이터 불러오기 (서버 데이터 우선)
+        if(loaded.fragments) {
+           saveData.fragments = loaded.fragments;
+        } else {
+           // 서버에 조각 정보가 없으면 로컬 데이터 유지 혹은 초기화
+           if(!saveData.fragments) saveData.fragments = {};
+        }
         
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
@@ -429,7 +438,7 @@
         if (count > 0) {
             // 이미지는 'fragment_Hidden_Skin1.png' 형식을 찾거나, 없으면 스킨 이미지 사용
             const imgSrc = `fragment_${skin.code}.png`;
-            const fallbackSrc = `skin_${skin.code}.png`; // 스킨 이미지를 조각 대신 사용 가능
+            const fallbackSrc = `skin_${skin.code}.png`; 
             
             content = `
               <img src="${imgSrc}" onerror="this.src='${fallbackSrc}'; this.onerror=null; this.src='disciple.png';" alt="조각">
@@ -456,6 +465,10 @@
         saveData.fragments[code] -= 100;
         saveData.ownedSkins.push(code);
         alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
+        
+        // 스킨 완성도 중요한 이벤트이므로 로그 전송
+        fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) });
+        
         updateUI();
         saveProgress();
       }
@@ -499,6 +512,7 @@
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
     try {
+      // saveData 객체 전체를 전송하므로 fragments 정보도 함께 저장됩니다.
       await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "save", id, saveData }) });
     } catch (e) { console.warn(e); }
   }
@@ -520,25 +534,24 @@
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
+    let fragmentInfo = null; // 조각 로그용
 
-    // 1. 희귀 조각 (0 ~ 5%) - 총 5% 확률, 스킨당 1%
+    // 1. 희귀 조각 (0 ~ 5%)
     if (r < 5) {
-      // 0~4까지 정수로 어떤 스킨인지 결정 (0,1,2,3,4)
       const skinIndex = Math.floor(r); 
       const targetSkin = HIDDEN_SKINS[skinIndex];
-      
-      // 조각 개수 결정 (1~10개, 가중치 적용)
       const qty = getWeightedFragmentCount();
       
-      // 데이터 저장
       saveData.fragments[targetSkin.code] = (saveData.fragments[targetSkin.code] || 0) + qty;
       prizeText = `💎 [${targetSkin.name}] 조각 ${qty}개 획득!`;
+      
+      // 조각 당첨 정보 기록
+      fragmentInfo = `[조각] ${targetSkin.name} (${qty}개)`;
     }
-    // 2. 능력치 - 민첩성 (5 ~ 47%) - 약 42%
+    // 2. 능력치 - 민첩성 (5 ~ 47%)
     else if (r < 47) {
       if(saveData.agility < CONFIG.agility.max) { 
-        const increase = getRandomInt(1, 3); // 1~3 랜덤 증가
-        // Max 초과 방지
+        const increase = getRandomInt(1, 3);
         const finalInc = (saveData.agility + increase > CONFIG.agility.max) ? (CONFIG.agility.max - saveData.agility) : increase;
         
         saveData.agility += finalInc;
@@ -548,18 +561,17 @@
         saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith";
       }
     }
-    // 3. 능력치 - 생명력 (47 ~ 89%) - 약 42%
+    // 3. 능력치 - 생명력 (47 ~ 89%)
     else if (r < 89) {
-      // 생명력은 무제한이므로 Max 체크 없이 증가
-      const increase = getRandomInt(1, 3); // 1~3 랜덤 증가
+      const increase = getRandomInt(1, 3);
       saveData.extraLife += increase;
       prizeText = `❤️ 생명력 +${increase} 상승!`;
     }
-    // 4. 꽝/일반 보상 (89 ~ 99.5%) - Faith
+    // 4. 꽝/일반 보상 (89 ~ 99.5%)
     else if (r < 99.5) {
       saveData.faith += 300; prizeText = "💰 300 Faith 당첨!";
     }
-    // 5. 리얼 경품 (99.5 ~ 100%) - 0.5%
+    // 5. 리얼 경품 (99.5 ~ 100%)
     else {
       const subR = Math.random() * 100;
       if (subR < 20) { prizeText = "🎁 스타벅스 $5!"; isSpecial = true; specialName = "Starbucks $5"; }
@@ -569,34 +581,34 @@
       else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
     }
 
+    // 경품 당첨 시 로그 전송
     if (isSpecial) {
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
+    }
+    
+    // [중요] 조각 획득 시에도 로그 전송 (확인용)
+    if (fragmentInfo) {
+      fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) });
     }
 
     const box = document.getElementById("gachaResult");
     box.innerHTML = `<h2>🎉 결과!</h2><p style="font-size:20px;"><b>${prizeText}</b></p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
     updateUI();
-    saveProgress();
+    saveProgress(); // 여기서 저장이 일어나면서 fragments 데이터도 서버로 전송됨
   }
 
-  // 조각 개수 가중치 뽑기 (1이 나올 확률 높음, 10이 낮음)
   function getWeightedFragmentCount() {
-    // 1~10까지의 숫자가 들어있는 배열. 숫자가 작을수록 배열에 많이 넣어 확률을 높임.
-    // 예: 1은 10개, 2는 9개 ... 10은 1개
     const pool = [];
     for(let i=1; i<=10; i++) {
-       // i가 1일 때 10번 추가, 10일 때 1번 추가
        for(let j=0; j < (11-i); j++) {
          pool.push(i);
        }
     }
-    // pool에서 랜덤으로 하나 뽑기
     const idx = Math.floor(Math.random() * pool.length);
     return pool[idx];
   }
 
-  // 랜덤 정수 (min ~ max 포함)
   function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
