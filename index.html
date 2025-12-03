@@ -5,13 +5,25 @@
 <title>안디옥 청년부 게임 – Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff">
+
 <style>
+  /* 폰트 정의 */
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
   :root {
-    --bg-panel: rgba(253, 250, 242, 0.95);
-    --border-dark: #3a2513;
-    --accent: #c47a3f;
-    --accent-dark: #8b4f26;
-    --text-main: #3a2513;
+    --bg-overlay: rgba(60, 40, 20, 0.4);
+    --panel-color: #fdf6e3;
+    --border-color: #5d4037;
+    --primary-color: #ff9800; /* 밝은 오렌지 */
+    --primary-shadow: #e65100;
+    --text-color: #3e2723;
+    --input-bg: #fffbf0;
   }
 
   * { box-sizing: border-box; }
@@ -19,44 +31,67 @@
   body {
     margin: 0; padding: 0; min-height: 100vh;
     display: flex; justify-content: center; align-items: center;
+    /* 배경 이미지 유지 */
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
     background-attachment: fixed;
-    font-family: "Pretendard", system-ui, -apple-system, sans-serif;
-    color: var(--text-main);
+    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    color: var(--text-color);
+    overflow: hidden;
   }
 
+  /* 배경에 픽셀 패턴 추가로 디테일 업 */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255, 248, 235, 0.3); z-index: -1;
+    background-image: 
+      linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: -1;
+    pointer-events: none;
   }
 
+  /* 메인 카드 디자인 (RPG 대화창 스타일) */
   .pixel-card {
-    width: 90%; max-width: 400px;
-    padding: 40px 24px 32px; /* 상단 여백 확보 */
-    background: var(--bg-panel);
-    border-radius: 16px;
-    border: 4px solid var(--border-dark);
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 12px 20px rgba(0,0,0,0.3);
-    backdrop-filter: blur(5px);
+    width: 90%; max-width: 420px;
+    padding: 30px 24px;
+    background: var(--panel-color);
+    border: 4px solid var(--border-color);
+    border-radius: 8px;
+    /* 3D 픽셀 그림자 효과 */
+    box-shadow: 
+      inset 4px 4px 0px #ffffff,
+      inset -4px -4px 0px #d7ccc8,
+      8px 8px 0px rgba(0,0,0,0.3);
     position: relative;
     margin-top: 20px;
+    /* 둥둥 떠다니는 애니메이션 */
+    animation: float 3s ease-in-out infinite;
   }
 
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+
+  /* 캐릭터 영역 */
   .deco-chars {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 15px;
+    gap: 15px;
+    margin-bottom: 20px;
+    margin-top: -50px; /* 카드를 뚫고 나온 느낌 */
   }
 
   .char-img {
-    width: 54px; height: 54px;
+    width: 64px; height: 64px; /* 크기 확대 */
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     image-rendering: pixelated;
-    animation: bounce 1s infinite alternate;
+    filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); /* 캐릭터 그림자 */
+    animation: bounce 0.8s infinite alternate cubic-bezier(0.5, 0.05, 1, 0.5);
   }
   
   .char-img:nth-child(1) { animation-delay: 0s; }
@@ -69,57 +104,112 @@
 
   @keyframes bounce {
     0% { transform: translateY(0); }
-    100% { transform: translateY(-8px); }
+    100% { transform: translateY(-12px); }
   }
 
+  /* 타이틀 스타일 강화 */
   .pixel-title {
-    text-align: center; font-size: 28px; font-weight: 900;
-    margin: 0 0 8px; letter-spacing: -0.02em; color: #4b2e12;
+    text-align: center; font-size: 36px; 
+    margin: 10px 0 5px; 
+    color: #5d4037;
+    /* 글자 입체 효과 */
+    text-shadow: 3px 3px 0px #ffe0b2, 5px 5px 0px rgba(0,0,0,0.2);
+    letter-spacing: 2px;
   }
 
   .pixel-sub {
-    text-align: center; font-size: 14px; color: #8a735a; margin-bottom: 28px;
-    font-weight: 600;
+    text-align: center; font-size: 16px; color: #8d6e63; margin-bottom: 30px;
+    background: #fff; display: inline-block; padding: 4px 12px;
+    border-radius: 20px; border: 2px dashed #bcaaa4;
+    position: relative; left: 50%; transform: translateX(-50%);
   }
 
-  label { display: block; font-size: 13px; margin-top: 12px; margin-bottom: 6px; font-weight: 700; color: #5d4037; }
+  label { 
+    display: block; font-size: 16px; margin-top: 15px; margin-bottom: 8px; 
+    color: var(--border-color);
+    text-shadow: 1px 1px 0 #fff;
+  }
 
+  /* 입력창 디자인 (콘솔 느낌) */
   input {
-    width: 100%; padding: 12px 14px; border-radius: 8px;
-    border: 2px solid #c9b79c; font-size: 15px; background: #fff; outline: none;
-    transition: border 0.2s;
+    width: 100%; padding: 14px; 
+    border: 3px solid #8d6e63;
+    border-radius: 0; /* 각지게 */
+    font-size: 18px; 
+    background: var(--input-bg); 
+    font-family: 'DungGeunMo', monospace;
+    outline: none;
+    box-shadow: inset 3px 3px 0 rgba(0,0,0,0.1);
+    transition: all 0.2s;
   }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196, 122, 63, 0.15); }
+  input:focus { 
+    border-color: var(--primary-color); 
+    background: #fff;
+    box-shadow: inset 3px 3px 0 rgba(255, 152, 0, 0.1), 0 0 10px rgba(255, 152, 0, 0.4); 
+  }
 
+  /* 버튼 디자인 (아케이드 버튼 스타일) */
   .btn-main {
-    width: 100%; padding: 14px; margin-top: 24px; border-radius: 10px; border: 0;
-    background: var(--accent); color: #fff; font-size: 16px; font-weight: 800;
-    cursor: pointer; box-shadow: 0 4px 0 var(--accent-dark); transition: transform 0.1s;
+    width: 100%; padding: 16px; margin-top: 30px; 
+    border: 3px solid #000; border-radius: 8px;
+    background: var(--primary-color); 
+    color: #fff; font-size: 20px; 
+    cursor: pointer; 
+    font-family: 'DungGeunMo', monospace;
+    /* 버튼 입체감 */
+    box-shadow: 
+      inset 4px 4px 0 rgba(255,255,255,0.4),
+      4px 4px 0 var(--primary-shadow),
+      4px 4px 0 2px #000; /* 테두리 포함 그림자 */
+    transition: all 0.1s;
+    position: relative;
+    top: 0; left: 0;
   }
-  .btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
-  .btn-main:disabled { background: #aaa; box-shadow: none; cursor: not-allowed; }
+  
+  .btn-main:active:not(:disabled) { 
+    top: 4px; left: 4px;
+    box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2); /* 눌린 효과 */
+  }
+  
+  .btn-main:disabled { 
+    background: #9e9e9e; 
+    box-shadow: none; 
+    border-color: #555;
+    cursor: not-allowed; top: 2px; left: 2px;
+  }
 
-  .link-row { text-align: center; margin-top: 18px; font-size: 13px; color: #888; }
-  .link-btn {
-    cursor: pointer; color: var(--accent-dark); font-weight: bold;
-    margin: 0 8px; display: inline-block; padding: 4px;
+  .link-row { 
+    text-align: center; margin-top: 25px; 
+    font-size: 14px; color: #795548; 
+    background: rgba(255,255,255,0.5);
+    padding: 8px; border-radius: 6px;
   }
-  .link-btn:hover { text-decoration: underline; }
+  .link-btn {
+    cursor: pointer; color: #d84315; 
+    margin: 0 10px; display: inline-block;
+    transition: transform 0.2s;
+  }
+  .link-btn:hover { 
+    transform: scale(1.1); 
+    text-shadow: 1px 1px 0 #fff; 
+    text-decoration: none;
+  }
 
   .hidden { display: none; }
 
+  /* 스피너 디자인 개선 */
   .spinner {
-    width: 24px; height: 24px; border: 4px solid #e2d5c2;
-    border-top: 4px solid var(--accent); border-radius: 50%;
-    margin: 16px auto 0; display: none; animation: spin 0.9s linear infinite;
+    width: 30px; height: 30px; border: 5px solid #ffe0b2;
+    border-top: 5px solid var(--primary-shadow); border-radius: 50%;
+    margin: 20px auto 0; display: none; animation: spin 0.8s linear infinite;
   }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
   .shake { animation: shake 0.4s ease-in-out; }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    75% { transform: translateX(6px); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
   }
 </style>
 </head>
@@ -135,67 +225,67 @@
   </div>
 
   <h1 class="pixel-title">Disciple Run</h1>
-  <div class="pixel-sub">안디옥 청년부 홀리 스파크 런!</div>
+  <div class="pixel-sub">PRESS START TO PLAY</div>
 
-  <label for="loginId">ID</label>
-  <input id="loginId" type="text" autocomplete="username" placeholder="아이디 입력">
+  <label for="loginId">ID (아이디)</label>
+  <input id="loginId" type="text" autocomplete="username" placeholder="PLAYER ID">
 
-  <label for="loginPw">Password</label>
-  <input id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호 입력" onkeypress="handleEnter(event, login)">
+  <label for="loginPw">PASSWORD (암호)</label>
+  <input id="loginPw" type="password" autocomplete="current-password" placeholder="******" onkeypress="handleEnter(event, login)">
 
-  <button class="btn-main" onclick="login()" id="loginBtn">로그인</button>
+  <button class="btn-main" onclick="login()" id="loginBtn">GAME START</button>
   <div id="loginSpinner" class="spinner"></div>
 
   <div class="link-row">
-    <span class="link-btn" onclick="showSignup()">회원가입</span> |
-    <span class="link-btn" onclick="showFindPw()">비밀번호 찾기</span>
+    <span class="link-btn" onclick="showSignup()">📝 회원가입</span>
+    <span class="link-btn" onclick="showFindPw()">🔍 비밀번호 찾기</span>
   </div>
 </div>
 
 <div class="pixel-card hidden" id="signupBox">
-  <h1 class="pixel-title">회원가입</h1>
-  <div class="pixel-sub">나만의 신앙 여정을 시작해보세요</div>
+  <h1 class="pixel-title">NEW PLAYER</h1>
+  <div class="pixel-sub">나만의 신앙 여정 시작하기</div>
 
   <label for="newId">ID</label>
   <input id="newId" type="text" placeholder="사용할 아이디">
 
-  <label for="newPw">Password</label>
+  <label for="newPw">PASSWORD</label>
   <input id="newPw" type="password" placeholder="사용할 비밀번호">
 
-  <label for="newName">이름</label>
+  <label for="newName">NAME (이름)</label>
   <input id="newName" type="text" placeholder="본명 (랭킹 표시용)">
 
-  <label for="newBible">좋아하는 성경 인물</label>
-  <input id="newBible" type="text" placeholder="예: 다윗, 바울 (비밀번호 찾기 질문)">
+  <label for="newBible">FAVORITE (성경 인물)</label>
+  <input id="newBible" type="text" placeholder="예: 다윗, 바울">
 
-  <button class="btn-main" onclick="signup()" id="signupBtn">가입하기</button>
+  <button class="btn-main" onclick="signup()" id="signupBtn">JOIN NOW</button>
   <div id="signupSpinner" class="spinner"></div>
 
   <div class="link-row">
-    <span class="link-btn" onclick="showLogin()">← 로그인으로 돌아가기</span>
+    <span class="link-btn" onclick="showLogin()">↩ BACK TO TITLE</span>
   </div>
 </div>
 
 <div class="pixel-card hidden" id="findPwBox">
-  <h1 class="pixel-title">비밀번호 찾기</h1>
-  <div class="pixel-sub">가입 시 입력한 정보를 적어주세요</div>
+  <h1 class="pixel-title">RECOVERY</h1>
+  <div class="pixel-sub">계정 정보를 잊으셨나요?</div>
 
-  <label for="findName">이름</label>
+  <label for="findName">NAME (이름)</label>
   <input id="findName" type="text">
 
-  <label for="findBible">좋아하는 성경 인물</label>
+  <label for="findBible">FAVORITE (성경 인물)</label>
   <input id="findBible" type="text" onkeypress="handleEnter(event, findPw)">
 
-  <button class="btn-main" onclick="findPw()" id="findPwBtn">찾기</button>
+  <button class="btn-main" onclick="findPw()" id="findPwBtn">SEARCH</button>
   <div id="findPwSpinner" class="spinner"></div>
 
   <div class="link-row">
-    <span class="link-btn" onclick="showLogin()">← 로그인으로 돌아가기</span>
+    <span class="link-btn" onclick="showLogin()">↩ BACK TO TITLE</span>
   </div>
 </div>
 
 <script>
-  // [보안] F12 및 개발자 도구 단축키 차단
+  // [보안] F12 및 개발자 도구 단축키 차단 (기능 유지)
   document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || 
        (e.ctrlKey && e.shiftKey && e.key === 'I') || 
