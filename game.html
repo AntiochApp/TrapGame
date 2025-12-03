@@ -369,7 +369,8 @@
   let isBossBattle = false;
   let nextBossTrigger = 200; 
   let bossLevel = 0;
-  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 1, state: 'idle', shootTimer: 0, actionTimer: 0 }; 
+  // [수정: 보스 위아래 속도 vy 1 -> 0.5]
+  let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 0.5, state: 'idle', shootTimer: 0, actionTimer: 0 }; 
   let bossContainer = document.getElementById('bossContainer');
   let bossBody = document.getElementById('bossBody');
   let bossHpFill = document.getElementById('bossHpFill');
@@ -751,11 +752,12 @@
               e.x -= 100 * dt;
               if (e.x < window.innerWidth - 150) { e.state = 'attack'; e.timer = 0; }
           } else if (e.state === 'attack') {
+              // [수정: 적군 2~5번의 미사일 쿨타임을 모두 1.0초로 변경]
               if (e.type === 1) { if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; else e.x -= 300 * dt; }
-              else if (e.type === 2 && e.timer > 3.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single'); e.timer = 0; }
-              else if (e.type === 3 && e.timer > 4.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan'); e.timer = 0; }
-              else if (e.type === 4 && e.timer > 3.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode'); e.timer = 0; }
-              else if (e.type === 5 && e.timer > 3.5) { fireEnemyLaser(e); e.timer = 0; }
+              else if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single'); e.timer = 0; }
+              else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan'); e.timer = 0; }
+              else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode'); e.timer = 0; }
+              else if (e.type === 5 && e.timer > 1.0) { fireEnemyLaser(e); e.timer = 0; }
               if(e.type !== 1) e.x -= 50 * dt; 
           }
           e.style.left = e.x + "px"; e.style.top = e.y + "px";
@@ -1034,7 +1036,8 @@
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         
-        b.style.height = randi(100, 330) + "px"; 
+        // [수정: 0~50m 장애물 높이 130~360px로 상향]
+        b.style.height = randi(130, 360) + "px"; 
         
         b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
         gameArea.appendChild(b);
