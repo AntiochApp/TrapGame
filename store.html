@@ -34,7 +34,7 @@
     margin: 0; padding: 0; min-height: 100vh;
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
-    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    font-family: 'DungGeunMo', monospace;
     color: var(--text-color);
     display: flex; flex-direction: column;
   }
@@ -197,9 +197,16 @@
   }
   .inv-slot:active { background: #e0e0e0; transform: translate(1px, 1px); box-shadow: none; }
   
-  /* 조각이 0개일 때 흐리게 표시하는 스타일 */
+  /* [수정] 인벤토리 이미지 상태 클래스 (그림자/회색/컬러) */
   .inv-slot img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; transition: 0.2s; }
-  .inv-slot img.locked { opacity: 0.3; filter: grayscale(100%); }
+  
+  /* 그림자(실루엣): 획득 전 (0 ~ 99개) */
+  .inv-slot img.shadow { opacity: 0.5; filter: brightness(0%); }
+  
+  /* 회색(Gray): 100개 모음 (조합 가능 상태) */
+  .inv-slot img.ready { opacity: 0.8; filter: grayscale(100%); }
+  
+  /* 컬러(Normal): 보유 중 (이미지 클래스 없음) */
 
   .inv-count {
     position: absolute; bottom: 2px; right: 2px;
@@ -388,9 +395,7 @@
   if(!saveData.fragments) saveData.fragments = {};
   if(!saveData.mileage) saveData.mileage = 0; 
 
-  // ==========================================
-  // [수정] 민첩성 Max를 45로 변경 (게임 밸런스)
-  // ==========================================
+  // 설정값 (라이프 Max 제한 해제)
   const CONFIG = {
     agility: { name:"민첩성", price: 30, max: 45, key: "agility" },
     life: { name:"라이프", price: 200, max: 9999, key: "extraLife" }, 
@@ -519,7 +524,8 @@
     // 히든 스킨 (보유하고 있을 때만 목록에 표시)
     HIDDEN_SKINS.forEach(skin => {
       if(saveData.ownedSkins.includes(skin.code)) {
-         renderSingleSkinItem({ ...skin, type: "Hidden", desc: "희귀 조각으로 완성된 스킨" }, listArea);
+         // [수정] 보유 스킨 표시 시 이름 앞에 '보유' 텍스트 추가
+         renderSingleSkinItem({ ...skin, name: `(보유) ${skin.name}`, type: "Hidden", desc: "희귀 조각으로 완성된 스킨" }, listArea);
       }
     });
   }
@@ -561,8 +567,7 @@
   }
 
   // =========================================================================
-  // [수정 핵심] 인벤토리 렌더링 (Strict Slot Mapping)
-  // 섞이거나 사라지는 문제를 해결하기 위해 '지정석' 시스템 사용
+  // [수정 핵심] 인벤토리 렌더링 (그림자/회색/컬러 상태 적용)
   // =========================================================================
   function renderInventory() {
     const invArea = document.getElementById('inventoryArea');
@@ -575,32 +580,44 @@
       let onClick = "";
       
       // 앞쪽 5칸은 무조건 히든스킨 1, 2, 3, 4, 5의 전용 자리입니다.
-      // (순서가 섞이지 않도록 i를 인덱스로 고정)
       if (i < HIDDEN_SKINS.length) {
         const skin = HIDDEN_SKINS[i];
         
-        // [중요] 변수 범위를 블록 내부로 한정지어 데이터 섞임 방지
         let count = 0;
         if (saveData.fragments && saveData.fragments[skin.code]) {
            count = saveData.fragments[skin.code];
         }
         
-        // 이미지 경로 설정
         const imgSrc = `fragment_${skin.code}.png`;
         const fallbackSrc = `skin_${skin.code}.png`; 
         
-        // 개수가 0이면 locked 클래스 추가 (회색조/투명)
-        const imgClass = (count === 0) ? "locked" : "";
+        // [수정] 상태별 클래스 결정
+        let imgClass = "";
+        let displayName = skin.name;
+
+        // 1. 이미 보유(조합완료)한 경우 -> 컬러 + (보유) 텍스트
+        if (saveData.ownedSkins.includes(skin.code)) {
+            imgClass = ""; // Normal Color
+            displayName = "(보유) " + skin.name;
+        }
+        // 2. 보유하지 않았으나 100개 이상 모은 경우 -> 회색 (Gray)
+        else if (count >= 100) {
+            imgClass = "ready"; 
+        }
+        // 3. 아직 모으는 중인 경우 (0 ~ 99개) -> 그림자 (Shadow)
+        else {
+            imgClass = "shadow";
+        }
         
         content = `
           <img src="${imgSrc}" class="${imgClass}"
                onerror="this.src='${fallbackSrc}'; this.onerror=null; this.src='disciple.png';" 
-               alt="${skin.name}">
+               alt="${displayName}">
           <span class="inv-count">${count}</span>
         `;
         
-        // 개수가 0이어도 클릭해서 설명을 볼 수 있게 합니다.
-        onClick = `onclick="openFragModal('${skin.code}', '${skin.name}', '${skin.story}')"`;
+        // 클릭 이벤트 연결
+        onClick = `onclick="openFragModal('${skin.code}', '${displayName}', '${skin.story}')"`;
       }
       
       // HTML 문자열 누적
@@ -794,9 +811,9 @@
         
         saveData.agility += finalInc;
         if(finalInc > 0) prizeText = `⚡ 민첩성 +${finalInc} 상승!`;
-        else { saveData.faith += 200; prizeText = "💰 민첩성이 최대치임으로 Faith가 반품됩니다; }
+        else { saveData.faith += 200; prizeText = "💰 민첩 Max 보상: 200 Faith"; }
       } else {
-        saveData.faith += 200; prizeText = "💰 민첩성이 최대치임으로 Faith가 반품됩니다";
+        saveData.faith += 200; prizeText = "💰 민첩 Max 보상: 200 Faith";
       }
     }
     // 3. 능력치 - 생명력 (47 ~ 89%)
