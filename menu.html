@@ -11,7 +11,7 @@
     --border-dark: #3a2513;
     --accent: #c47a3f;
     --accent-dark: #8b4f26;
-    --primary-btn: #4CAF50; /* 게임시작 버튼용 녹색 */
+    --primary-btn: #4CAF50;
     --primary-dark: #2E7D32;
     --text-main: #3a2513;
   }
@@ -23,18 +23,15 @@
     display: flex; flex-direction: column;
     font-family: "Pretendard", system-ui, -apple-system, sans-serif;
     color: var(--text-main);
-    /* [개선] 게임 분위기와 이어지는 배경 적용 */
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
   }
 
-  /* 배경 오버레이 (텍스트 가독성 확보) */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(255, 248, 235, 0.4); z-index: -1;
   }
 
-  /* 상단바 */
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 16px; background: rgba(59, 38, 20, 0.95); color: #fbe8c4;
@@ -54,13 +51,38 @@
     border: 0; border-radius: 4px; cursor: pointer;
   }
 
-  /* 메인 컨테이너 */
+  /* [NEW] 뉴스 티커 스타일 추가 */
+  .news-ticker {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    overflow: hidden;
+    padding: 6px 0;
+    font-size: 12px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .ticker-content {
+    display: inline-block;
+    animation: tickerScroll 20s linear infinite;
+    padding-left: 100%;
+  }
+  @keyframes tickerScroll {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+  }
+  .ticker-item {
+    margin-right: 40px;
+    color: #ffd700;
+    font-weight: bold;
+  }
+
   #menuWrapper { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; }
   
   .container {
     width: 90%; max-width: 400px;
     padding: 32px 24px;
-    background: rgba(253, 250, 242, 0.95); /* 반투명 패널 */
+    background: rgba(253, 250, 242, 0.95);
     border-radius: 16px;
     border: 4px solid var(--border-dark);
     box-shadow: 0 0 0 4px rgba(255,255,255,0.5), 0 12px 20px rgba(0,0,0,0.3);
@@ -71,7 +93,6 @@
   h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px; color: #3a2513; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
   .sub { font-size: 13px; color: #7d6a4c; margin-bottom: 28px; font-weight: 600; }
 
-  /* 버튼 스타일 */
   .pixel-btn {
     width: 100%; padding: 16px; font-size: 18px; margin-bottom: 12px;
     border: 0; border-radius: 12px; color: #fff; cursor: pointer;
@@ -80,7 +101,6 @@
   }
   .pixel-btn:active { transform: translateY(3px); }
 
-  /* [개선] 시작 버튼 강조 (녹색) */
   .btn-start {
     background: var(--primary-btn);
     box-shadow: 0 5px 0 var(--primary-dark);
@@ -88,7 +108,6 @@
   }
   .btn-start:active { box-shadow: 0 2px 0 var(--primary-dark); }
 
-  /* [개선] 일반 버튼 (갈색/주황) */
   .btn-normal {
     background: var(--accent);
     box-shadow: 0 5px 0 var(--accent-dark);
@@ -97,7 +116,6 @@
 
   .version { margin-top: 24px; font-size: 11px; color: #9a8970; opacity: 0.7; }
 
-  /* 랭킹 모달 */
   .modal-bg {
     display: none; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%; background: rgba(0,0,0,0.6);
@@ -142,6 +160,12 @@
   </div>
 </div>
 
+<div class="news-ticker">
+  <div class="ticker-content" id="tickerArea">
+    <span class="ticker-item">🔔 환영합니다! 안디옥 청년부 홀리 스파크 런!</span>
+  </div>
+</div>
+
 <div id="menuWrapper">
   <div class="container">
     <h1>메인 메뉴</h1>
@@ -156,7 +180,7 @@
       <button class="pixel-btn btn-normal" onclick="showRanking()">🏆 랭킹</button>
     </div>
 
-    <div class="version">v1.1 · Antioch Youth</div>
+    <div class="version">v2.0 · Antioch Youth</div>
   </div>
 </div>
 
@@ -201,11 +225,42 @@
       });
       const txt = await res.text();
       if (txt !== "fail") {
-        localStorage.setItem("run_save", txt); // 받은 JSON 문자열 그대로 저장
+        localStorage.setItem("run_save", txt);
       }
     } catch (e) { console.warn("Sync Fail:", e); }
   }
   refreshSave();
+
+  // [NEW] 티커 데이터 로드 함수
+  async function loadTicker() {
+    try {
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ type: "getRecentLog" }) 
+      });
+      const txt = await res.text();
+      const logs = JSON.parse(txt);
+      
+      if(logs && logs.length > 0) {
+        const area = document.getElementById("tickerArea");
+        let html = "";
+        logs.forEach(l => {
+           // 메시지 조금 더 보기 좋게 가공
+           let msg = l.reward;
+           if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
+           if(msg.includes("QT Book")) msg = "QT책 당첨!";
+           // 조각 메시지는 그대로 사용
+           
+           html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
+        });
+        area.innerHTML = html;
+      }
+    } catch(e) {
+      console.log("Ticker Load Fail", e);
+    }
+  }
+  // 페이지 로드 시 티커 실행
+  loadTicker();
 
   // 랭킹 불러오기
   async function showRanking() {
