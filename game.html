@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Enemy Fever & Coin Update</title>
+  <title>Disciple Run – Balance Patch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -24,7 +24,17 @@
     #ground { display: none; }
 
     /* 플레이어 */
-    #player { position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px; background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; transition: opacity 0.2s, transform 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); }
+    /* [수정] transition에 left 속성 추가 (보스전 이동 애니메이션) */
+    #player { 
+        position: absolute; z-index: 50; 
+        left: 120px; bottom: 40px; 
+        width: 60px; height: 60px; 
+        background-image: url("disciple.png"); 
+        background-position: center; background-size: contain; background-repeat: no-repeat; 
+        image-rendering: pixelated; 
+        transition: opacity 0.2s, transform 0.3s, left 1.0s ease-in-out; /* 위치 이동 부드럽게 */
+        filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
+    }
     
     #player.fever-active { transform: scale(1.3); filter: drop-shadow(0 0 20px gold); }
 
@@ -164,9 +174,9 @@
         • <b>점프:</b> 화면 터치 / Space<br>
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
-        [최신 업데이트]<br>
-        🔥 <b>피버 모드:</b> 적군도 1초뒤 자동 폭발!<br>
-        💰 <b>보상 강화:</b> 적 처치시 코인 5개 (Faith +5)!
+        [업데이트]<br>
+        🛡️ <b>보스전:</b> 캐릭터가 뒤로 물러나 회피가 쉬워집니다!<br>
+        👶 <b>초반:</b> 50m까지는 쉬운 장애물만 나옵니다.
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -659,13 +669,12 @@
       for (let i = enemies.length - 1; i >= 0; i--) {
           let e = enemies[i]; e.timer += dt;
 
-          // [추가] 피버 모드 시 화면 진입 후 1초 뒤 자동 폭발
           if (isFeverTime) {
              if (!e.feverTimer) e.feverTimer = 0;
              if (e.x < window.innerWidth) e.feverTimer += dt;
              if (e.feverTimer > 1.0) {
                  spawnExplosionEffect(e.x + 30, e.y + 30);
-                 spawnFaithCoins(e.x + 30, e.y + 30, 5); // 5 코인 생성
+                 spawnFaithCoins(e.x + 30, e.y + 30, 5); 
                  showFloatText("💥 적군 섬멸!");
                  e.remove(); enemies.splice(i, 1);
                  continue;
@@ -741,6 +750,9 @@
     // [보안] 보스전 시작 시 피버모드 강제 종료 (데미지 로직 충돌 방지)
     if(isFeverTime) endFeverTime();
     
+    // [수정] 보스전 시작 시 캐릭터 뒤로 이동
+    player.style.left = "50px"; 
+
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning'); warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block'; setTimeout(() => warning.style.display = 'none', 3000);
@@ -806,6 +818,9 @@
             faith += 100 * bossLevel; daily.faith20 += 100; updateDailyMissionUI();
             showFloatText(`🎉 보스 처치! (+${100*bossLevel} Faith)`); playSound('clear');
             nextBossTrigger = distance + 200; saveProgress(); 
+            
+            // [수정] 보스 처치 후 캐릭터 위치 복귀
+            player.style.left = "120px";
         }, 1000);
     }
   }
@@ -841,7 +856,6 @@
 
                 if (e.hp <= 0) { 
                     e.remove(); enemies.splice(j, 1); 
-                    // [추가] 적군 처치 시 코인 5개 생성
                     spawnFaithCoins(rE.left, rE.top, 5); 
                     showFloatText("💥 적군 격파! (+5)"); 
                     if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER); 
@@ -895,7 +909,6 @@
             if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
                 if (isFeverTime) { 
                     e.remove(); enemies.splice(i, 1); 
-                    // [추가] 피버 시 몸통 박치기로 처치해도 코인 생성
                     spawnFaithCoins(rE.left, rE.top, 5);
                     showFloatText("💥 적군 분쇄! (+5)"); 
                     spawnExplosionEffect(rE.left, rE.top); continue; 
@@ -947,6 +960,21 @@
     if(activeEffects.turbo > 0 && !isFeverTime) return;
 
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
+
+    // [수정] 50m 미만에서는 쉬운 난이도 적용
+    if (distance < 50) {
+        // 복잡한 패턴(공중 발판, 천장) 스킵하고 지상 장애물만 생성
+        const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
+        const sx = window.innerWidth + 80;
+        const b = document.createElement("div");
+        b.classList.add("obstacle", "obs-cap", "obs-ground", type);
+        b.style.height = randi(80, 150) + "px"; // 높이도 낮춰서 점프하기 쉽게
+        b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
+        gameArea.appendChild(b);
+        obstacles.push(b);
+        return; // 여기서 함수 종료하여 아래 복잡한 로직 실행 안함
+    }
+
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
