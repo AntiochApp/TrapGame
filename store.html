@@ -185,7 +185,7 @@
 </style>
 </head>
 
-<body>
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
 
 <div class="top-bar">
   <span>Faith: <b id="faithText">0</b></span>
@@ -284,6 +284,17 @@
 </div>
 
 <script>
+  // [보안] F12 및 개발자 도구 단축키 차단
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || 
+       (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+       (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+       (e.ctrlKey && e.key === 'U')) {
+      e.preventDefault();
+      alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
+    }
+  });
+  
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
   const id = localStorage.getItem("run_id");
   const playerName = localStorage.getItem("run_name") || "";
