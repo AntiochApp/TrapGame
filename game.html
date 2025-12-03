@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Obstacle Balance Patch</title>
+  <title>Disciple Run – Pause Feature Added</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -105,6 +105,17 @@
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
+    /* 일시정지 버튼 스타일 */
+    #pauseBtn { 
+        position: fixed; z-index: 900; top: 12px; right: 12px; 
+        width: 44px; height: 44px; 
+        background: var(--hud-bg); 
+        border: 3px solid var(--hud-border); 
+        border-radius: 10px; 
+        display: flex; justify-content: center; align-items: center; 
+        font-size: 24px; cursor: pointer; 
+    }
+
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 
@@ -202,6 +213,8 @@
     </div>
   </div>
    
+  <div id="pauseBtn" onclick="togglePause()">⏸️</div>
+
   <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
   <div id="dailyMissionBox"></div>
   
@@ -213,6 +226,14 @@
 <div id="bossWarning">⚠️ BOSS WARNING!</div>
 <div id="comboEffect">COMBO +1!</div>
 <div id="correctEffect">+5 Faith!</div>
+
+<div id="pauseModal" class="modal-bg">
+  <div class="modal-box">
+    <div style="font-size:28px; font-weight:800; margin-bottom:15px;">일시정지</div>
+    <button class="action-btn" onclick="resumeGame()">▶ 계속하기</button>
+    <button class="action-btn" style="background:#5d4037;" onclick="exitToMenu()">🏠 메뉴로 나가기</button>
+  </div>
+</div>
 
 <div id="quizModal" class="modal-bg">
   <div class="modal-box">
@@ -386,14 +407,15 @@
     playSound('jump');
   }
 
+  // [수정] 일시정지 버튼 예외 처리 추가
   document.addEventListener("touchstart", (e) => {
-      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
+      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn')) return;
       if (!running) return;
       e.preventDefault(); jump();
   }, {passive: false});
 
   document.addEventListener("mousedown", (e) => {
-       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
+       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn')) return;
        if (!running) return;
        jump();
   });
@@ -407,6 +429,24 @@
    
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
+
+  // [추가] 일시정지 기능
+  function togglePause() {
+      if(!running) return; // 이미 멈춘 상태(게임오버 등)면 무시
+      running = false;
+      document.getElementById('pauseModal').style.display = 'flex';
+  }
+
+  function resumeGame() {
+      document.getElementById('pauseModal').style.display = 'none';
+      running = true;
+      lastTime = performance.now(); // 시간 델타 초기화 (순간이동 방지)
+      requestAnimationFrame(gameLoop);
+  }
+
+  function exitToMenu() {
+      window.location.href = "/TrapGame/menu.html";
+  }
 
   function handleSubAction(e) {
       if(e) { e.stopPropagation(); e.preventDefault(); }
@@ -657,7 +697,9 @@
 
   function spawnEnemy(type) {
       const e = document.createElement("div"); e.classList.add("enemy");
-      e.style.backgroundImage = `url('enemy${type}.png')`; e.style.backgroundColor = 'red'; 
+      e.style.backgroundImage = `url('enemy${type}.png')`; 
+      // [수정] 배경색 제거
+      e.style.backgroundColor = 'transparent'; 
       e.type = type; e.hp = 1; e.timer = 0; e.state = 'enter'; 
       e.x = window.innerWidth + 50; e.y = randBetween(50, window.innerHeight - 150);
       e.style.left = e.x + "px"; e.style.top = e.y + "px";
@@ -818,8 +860,7 @@
             showFloatText(`🎉 보스 처치! (+${100*bossLevel} Faith)`); playSound('clear');
             nextBossTrigger = distance + 200; saveProgress(); 
             
-            // [수정] 보스 처치 후 캐릭터 위치 복귀
-            player.style.left = "120px";
+            // [수정] 보스 처치 후 캐릭터 위치 복귀하지 않음! (계속 50px 유지)
         }, 1000);
     }
   }
@@ -967,8 +1008,8 @@
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         
-        // 높이 랜덤 설정 (80~230px 범위로 다양하게)
-        b.style.height = randi(80, 230) + "px"; 
+        // [수정] 높이 랜덤 설정 (100~330px 범위로 대폭 상향)
+        b.style.height = randi(100, 330) + "px"; 
         
         b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
         gameArea.appendChild(b);
