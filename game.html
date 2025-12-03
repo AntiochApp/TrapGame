@@ -258,8 +258,8 @@
   }
 
   let playerY = 40; let velocity = 0; 
-  // [수정] 중력 완화 (-0.16 -> -0.11)
-  let gravity = -0.21; let jumpPower = Math.max(3, 5.5 - agility * 0.05);
+  // [수정] 중력 대폭 완화, 점프 파워 감소 -> 낮고 길게 점프
+  let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
    
   let targetY = 0;
   let distance = 0;
@@ -318,20 +318,28 @@
     playSound('jump');
   }
 
-  // [수정] 전역 입력 핸들러: 대쉬 로직 삭제, 점프만 실행
-  function handleGlobalInput(e) {
-      if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
+  // [수정] 터치 이벤트 처리: e.preventDefault()로 더블 점프 방지
+  document.addEventListener("touchstart", (e) => {
+      // 버튼 클릭 시 점프 방지
+      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
       if (!running) return;
+      
+      e.preventDefault(); // 중요: 터치 후 발생하는 마우스 이벤트 차단 (이중 점프 해결)
       jump();
-  }
+  }, {passive: false}); // passive: false 필수
 
-  document.addEventListener('touchstart', handleGlobalInput);
-  document.addEventListener('mousedown', handleGlobalInput);
+  // 마우스 클릭 (PC)
+  document.addEventListener("mousedown", (e) => {
+       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
+       if (!running) return;
+       jump();
+  });
   
+  // 키보드 (PC)
   document.addEventListener("keydown", e => {
     if (e.code === "Space") { 
         e.preventDefault(); 
-        if(!e.repeat) jump(); // 연타 체크 없이 바로 점프
+        if(!e.repeat) jump(); 
     }
     if (e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility();
