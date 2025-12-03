@@ -35,7 +35,7 @@
     /* 적군 (Enemy) 스타일 */
     .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
     
-    /* 아이템 스타일 */
+    /* 아이템 스타일: 원형 배경 제거 */
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
@@ -72,7 +72,7 @@
     #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
 
-    /* [수정] 서브 액션 버튼 (Attack / Defence) 스타일 완전 변경 */
+    /* 서브 액션 버튼 (Attack / Defence) */
     #subActionBtn { 
         position: fixed; bottom: 150px; left: 20px; 
         width: 100px; height: 100px; 
@@ -91,9 +91,8 @@
     #subActionBtn:active { transform: scale(0.9); }
     #subActionBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
     
-    /* 상태별 색상 */
-    .btn-attack { background-color: #D32F2F !important; } /* 빨간색 */
-    .btn-defence { background-color: #1976D2 !important; } /* 파란색 */
+    .btn-attack { background-color: #D32F2F !important; }
+    .btn-defence { background-color: #1976D2 !important; }
 
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
@@ -135,9 +134,10 @@
     <div class="modal-box">
       <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법 / How to Play</div>
       <div style="text-align:left; font-size:15px; line-height:1.6;">
-        • <b>Space / 터치</b>: 점프<br>
-        • <b>A키</b>: 특수능력 (SKILL)<br>
-        • <b>S키 / 버튼</b>: 200m 이후 공격 / 보스전 방어<br><br>
+        • <b>1번 클릭/Space</b>: 점프 (Jump)<br>
+        • <b>2번 클릭/연타</b>: 대쉬 (Dash - 무적/고속)<br>
+        • <b>A키 / SKILL</b>: 특수능력<br>
+        • <b>S키 / Attack</b>: 공격(200m+) / 방어(보스전)<br><br>
         [아이템 효과]<br>
         ✝️ <b>십자가:</b> 무적 / 🕊️ <b>Wings:</b> 터보<br>
         🍃 <b>바람:</b> 감속 / 📘 <b>성경:</b> Faith +10
@@ -311,22 +311,64 @@
     }
   }
 
+  // [수정] 입력 감지 변수 및 함수
+  let lastClickTime = 0;
+
   function jump() {
     if (!running) return;
     if (activeEffects.turbo > 0 || activeEffects.fly > 0) return;
     velocity = jumpPower;
     playSound('jump');
   }
-   
-  document.body.addEventListener("keydown", e => {
-    if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); }
+
+  function dash() {
+      if(!running) return;
+      // 대쉬: 짧은 터보 효과 (0.6초)
+      if(activeEffects.turbo < 0.6) activeEffects.turbo = 0.6; 
+      showFloatText("💨 DASH!");
+      // 대쉬 효과음이 따로 없으면 점프 소리 재생 or 생략
+      playSound('jump');
+  }
+
+  function handleGlobalInput(e) {
+      // 버튼 클릭 시에는 점프/대쉬 방지
+      if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
+      
+      if (!running) return;
+
+      const now = Date.now();
+      // 더블 클릭 감지 (300ms 이내)
+      if (now - lastClickTime < 300) {
+          dash();
+          lastClickTime = 0; // 리셋
+      } else {
+          jump();
+          lastClickTime = now;
+      }
+  }
+
+  // 통합 입력 리스너 등록
+  document.addEventListener('touchstart', handleGlobalInput);
+  document.addEventListener('mousedown', handleGlobalInput);
+  
+  // 키보드 입력 (스페이스바 연타 처리)
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space") { 
+        e.preventDefault(); 
+        if(!e.repeat) { // 꾹 누르고 있는거 방지
+            const now = Date.now();
+            if (now - lastClickTime < 300) {
+                dash();
+                lastClickTime = 0;
+            } else {
+                jump();
+                lastClickTime = now;
+            }
+        }
+    }
+    if (e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility();
     if (e.code === "KeyS") handleSubAction(); 
-  });
-   
-  document.body.addEventListener("touchstart", (e) => {
-      if(e.target.closest('button') || e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
-      jump();
   });
    
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
@@ -335,7 +377,7 @@
   function handleSubAction(e) {
       if(e) {
           e.stopPropagation();
-          e.preventDefault(); // 더블 터치 방지
+          e.preventDefault(); 
       }
       if (!running) return;
 
@@ -357,7 +399,6 @@
             const plRect = player.getBoundingClientRect();
             const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
             
-            // 방어 판정 범위 150
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
@@ -375,14 +416,10 @@
   function playerShoot() {
       const m = document.createElement("div");
       m.classList.add("player-missile");
-      // 위치 보정
       const pRect = player.getBoundingClientRect();
-      const areaRect = gameArea.getBoundingClientRect();
       
-      // left: 캐릭터 오른쪽 끝, top: 캐릭터 중간
       m.style.left = (pRect.left + 50) + "px"; 
-      m.style.top = (playerY + 20) + "px"; // playerY는 bottom 기준이므로 변환 필요
-      // bottom 기준 렌더링을 위해
+      m.style.top = (playerY + 20) + "px"; 
       m.style.bottom = (playerY + 20) + "px";
       m.style.top = "auto";
 
@@ -437,7 +474,6 @@
     updateSubActionButtonUI();
   }
 
-  // [수정] 방패/공격 모드에 따라 버튼 디자인 및 텍스트 변경
   function updateSubActionButtonUI() {
       if (isBossBattle) {
           subActionBtn.style.display = 'flex';
