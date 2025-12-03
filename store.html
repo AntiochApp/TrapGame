@@ -51,12 +51,13 @@
   h1 { text-align: center; color: #4b2e12; margin-bottom: 15px; }
 
   /* 탭 버튼 스타일 */
-  .tab-container { display: flex; gap: 10px; margin-bottom: 20px; }
+  .tab-container { display: flex; gap: 6px; margin-bottom: 20px; }
   .tab-btn {
-    flex: 1; padding: 12px; border: none; border-radius: 8px;
-    font-size: 16px; font-weight: bold; cursor: pointer;
+    flex: 1; padding: 10px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: bold; cursor: pointer;
     background: #e0d8c8; color: #776e65;
     box-shadow: 0 4px 0 #bcaaa4; transition: all 0.1s;
+    white-space: nowrap;
   }
   .tab-btn.active {
     background: var(--accent); color: white;
@@ -113,6 +114,34 @@
     font-size: 14px; border-radius: 9px; cursor: pointer; border: 0; box-shadow: 0 3px 0 #222;
   }
 
+  /* 인벤토리 스타일 */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4열 */
+    gap: 8px;
+    padding: 10px;
+    background: #eaddcf;
+    border-radius: 10px;
+    border: 3px solid #cbb6a3;
+  }
+  .inv-slot {
+    aspect-ratio: 1 / 1;
+    background: #faf8f3;
+    border: 2px solid #d7ccc8;
+    border-radius: 6px;
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer;
+  }
+  .inv-slot:active { background: #eee; }
+  .inv-slot img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; }
+  .inv-count {
+    position: absolute; bottom: 2px; right: 4px;
+    font-size: 11px; color: #3a2513; font-weight: bold;
+    background: rgba(255,255,255,0.8);
+    padding: 0 3px; border-radius: 4px;
+  }
+
   /* 가챠 모달 */
   #gachaModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); justify-content: center; align-items: center; z-index: 999; }
   #gachaBox { width: 220px; height: 220px; background-color: #c47a3f; background-image: url('giftbox.png'); background-position: center; background-size: cover; border-radius: 8px; border: 4px solid #2b1a0f; animation: spin 1.2s steps(8) infinite; }
@@ -137,10 +166,10 @@
   <div class="tab-container">
     <button class="tab-btn active" onclick="switchTab('upgrade')">능력치</button>
     <button class="tab-btn" onclick="switchTab('skin')">스킨</button>
+    <button class="tab-btn" onclick="switchTab('inventory')">인벤토리</button>
   </div>
 
   <div id="tab-upgrade" class="tab-content active">
-    
     <div class="item">
       <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
       <p>점프력이 상승합니다. (Max 100)</p>
@@ -149,7 +178,7 @@
 
     <div class="item">
       <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
-      <p>기본 생명력이 증가합니다. (Max 10)</p>
+      <p>기본 생명력이 증가합니다. (무제한)</p>
       <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매</button>
     </div>
 
@@ -173,14 +202,22 @@
 
     <div class="item" style="background:#fff8e1; border-color:#eec048;">
       <h2>🎁 랜덤 뽑기</h2>
-      <p>Faith 200으로 특별한 보상을 뽑아 보세요!</p>
-      <p style="font-size:12px; color:#8a735a;">(특별 당첨은 교역자님이 따로 알려줍니다 😊)</p>
+      <p>Faith 200으로 능력치, 희귀 조각을 얻어보세요!</p>
+      <p style="font-size:12px; color:#8a735a;">(확률: 희귀조각 5%, 능력치/Faith 95%, 경품 별도)</p>
       <button class="buy-btn" style="background:#ffa000; border-color:#ff6f00;" onclick="buyGacha()">뽑기 (200 F)</button>
     </div>
   </div>
 
   <div id="tab-skin" class="tab-content">
     <div id="skinListArea"></div>
+  </div>
+
+  <div id="tab-inventory" class="tab-content">
+    <div style="text-align:center; font-size:13px; color:#666; margin-bottom:10px;">
+      조각 100개를 모아 클릭하면 스킨을 완성합니다!
+    </div>
+    <div class="inv-grid" id="inventoryArea">
+      </div>
   </div>
 
   <button class="back-btn" onclick="goMenu()">← 메뉴로 돌아가기</button>
@@ -210,10 +247,13 @@
   if(!saveData.ownedSkins) saveData.ownedSkins = ["default"];
   if(!saveData.equippedSkin) saveData.equippedSkin = "default";
 
-  // 설정값 (key: 실제 저장될 변수명)
+  // 조각 인벤토리 초기화 (key: 스킨코드, value: 개수)
+  if(!saveData.fragments) saveData.fragments = {};
+
+  // 설정값 (라이프 Max 제한 해제)
   const CONFIG = {
     agility: { name:"민첩성", price: 30, max: 100, key: "agility" },
-    life: { name:"라이프", price: 200, max: 10, key: "extraLife" },
+    life: { name:"라이프", price: 200, max: 9999, key: "extraLife" }, // Max 제한 해제
     up_invincible: { name:"무적시간", price: 40, max: 20, key: "up_invincible" },
     up_turbo: { name:"터보시간", price: 40, max: 20, key: "up_turbo" },
     up_slow: { name:"감속시간", price: 40, max: 20, key: "up_slow" }
@@ -232,6 +272,16 @@
     { code: "ganghui", name: "강희", type: "Passive", desc: "20초마다 전방 파괴" },
     { code: "jieun", name: "지은", type: "Active", desc: "2분 쿨: 소환수 탱킹" }
   ];
+  
+  // 희귀 스킨 목록
+  const HIDDEN_SKINS = [
+    { code: "Hidden_Skin1", name: "히든 스킨 1" },
+    { code: "Hidden_Skin2", name: "히든 스킨 2" },
+    { code: "Hidden_Skin3", name: "히든 스킨 3" },
+    { code: "Hidden_Skin4", name: "히든 스킨 4" },
+    { code: "Hidden_Skin5", name: "히든 스킨 5" }
+  ];
+
   const SKIN_PRICE = 10000;
 
   updateUI();
@@ -240,8 +290,11 @@
   function switchTab(tabName) {
     const btns = document.querySelectorAll('.tab-btn');
     btns.forEach(btn => btn.classList.remove('active'));
+    
+    // 버튼 인덱스 매핑 (0:upgrade, 1:skin, 2:inventory)
     if(tabName === 'upgrade') btns[0].classList.add('active');
-    else btns[1].classList.add('active');
+    else if(tabName === 'skin') btns[1].classList.add('active');
+    else btns[2].classList.add('active');
 
     const contents = document.querySelectorAll('.tab-content');
     contents.forEach(c => c.classList.remove('active'));
@@ -258,8 +311,11 @@
       if (txt !== "fail") {
         const loaded = JSON.parse(txt);
         saveData = { ...saveData, ...loaded };
+        // 깊은 병합 필요한 부분 처리
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
+        if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
+        
         localStorage.setItem("run_save", JSON.stringify(saveData));
         updateUI();
       }
@@ -267,13 +323,13 @@
   }
 
   function updateUI() {
-    document.getElementById("faithText").innerText = saveData.faith.toLocaleString(); // 콤마 표시
+    document.getElementById("faithText").innerText = saveData.faith.toLocaleString();
 
     // 업그레이드 UI
     Object.keys(CONFIG).forEach(type => {
       const conf = CONFIG[type];
       const currentLvl = saveData[conf.key] || 0;
-      const btn = document.getElementById(`btn-${type.replace('up_','')}`); // btn-invincible 등 매핑
+      const btn = document.getElementById(`btn-${type.replace('up_','')}`); 
       const badge = document.getElementById(`lvl-${type.replace('up_','')}`);
       
       if(badge) badge.innerText = `Lv.${currentLvl}`;
@@ -290,6 +346,7 @@
     });
 
     renderSkins();
+    renderInventory();
   }
 
   function renderSkins() {
@@ -304,11 +361,23 @@
     
     listArea.innerHTML += createSkinHTML('disciple', '😊 기본 캐릭터', 'Normal', '#888', '기본 능력치입니다.', defBtn);
 
-    // 판매 스킨
+    // 일반 판매 스킨
     SKIN_LIST.forEach(skin => {
+      renderSingleSkinItem(skin, listArea);
+    });
+    
+    // 히든 스킨 (보유하고 있을 때만 목록에 표시)
+    HIDDEN_SKINS.forEach(skin => {
+      if(saveData.ownedSkins.includes(skin.code)) {
+         renderSingleSkinItem({ ...skin, type: "Hidden", desc: "희귀 조각으로 완성된 스킨" }, listArea);
+      }
+    });
+  }
+
+  function renderSingleSkinItem(skin, container) {
       const isOwned = saveData.ownedSkins.includes(skin.code);
       const isEquipped = (saveData.equippedSkin === skin.code);
-      const tagColor = (skin.type === 'Active') ? '#d32f2f' : '#1976D2'; 
+      const tagColor = (skin.type === 'Active') ? '#d32f2f' : (skin.type === 'Hidden' ? '#9C27B0' : '#1976D2'); 
 
       let btnHtml = "";
       if (isEquipped) {
@@ -316,21 +385,17 @@
       } else if (isOwned) {
         btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
       } else {
+        // 히든 스킨은 구매 버튼 없음
+        if(skin.type === 'Hidden') return; 
         btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
       }
       
-      // 이미지 파일명 규칙: skin_코드.png (없으면 disciple.png가 뜨도록 onerror 처리)
       const imgName = `skin_${skin.code}`;
-      createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
-      listArea.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
-    });
+      container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
   }
 
-  // HTML 생성 헬퍼 함수
   function createSkinHTML(imgName, name, type, color, desc, btn) {
-    // imgName이 'disciple'이면 그냥 disciple.png 사용, 아니면 skin_xxx.png
     const imgSrc = (imgName === 'disciple') ? 'disciple.png' : `${imgName}.png`;
-    
     return `
       <div class="item skin-item">
         <div class="skin-img-box">
@@ -345,6 +410,60 @@
     `;
   }
 
+  // 인벤토리 렌더링 (20칸)
+  function renderInventory() {
+    const invArea = document.getElementById('inventoryArea');
+    invArea.innerHTML = "";
+
+    // 20칸 루프
+    for(let i = 0; i < 20; i++) {
+      let content = "";
+      let onClick = "";
+      
+      // 앞쪽 5칸은 히든 스킨 조각 전용으로 할당
+      if (i < 5) {
+        const skin = HIDDEN_SKINS[i];
+        const count = saveData.fragments[skin.code] || 0;
+        
+        // 조각이 1개라도 있으면 아이콘 표시
+        if (count > 0) {
+            // 이미지는 'fragment_Hidden_Skin1.png' 형식을 찾거나, 없으면 스킨 이미지 사용
+            const imgSrc = `fragment_${skin.code}.png`;
+            const fallbackSrc = `skin_${skin.code}.png`; // 스킨 이미지를 조각 대신 사용 가능
+            
+            content = `
+              <img src="${imgSrc}" onerror="this.src='${fallbackSrc}'; this.onerror=null; this.src='disciple.png';" alt="조각">
+              <span class="inv-count">${count}</span>
+            `;
+            onClick = `onclick="combineSkin('${skin.code}', '${skin.name}')"`;
+        }
+      }
+      
+      invArea.innerHTML += `<div class="inv-slot" ${onClick}>${content}</div>`;
+    }
+  }
+
+  function combineSkin(code, name) {
+    const count = saveData.fragments[code] || 0;
+    
+    if (saveData.ownedSkins.includes(code)) {
+      alert("이미 완성하여 보유 중인 스킨입니다!");
+      return;
+    }
+
+    if (count >= 100) {
+      if(confirm(`${name} 조각 100개를 사용하여 스킨을 완성하시겠습니까?`)) {
+        saveData.fragments[code] -= 100;
+        saveData.ownedSkins.push(code);
+        alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
+        updateUI();
+        saveProgress();
+      }
+    } else {
+      alert(`[${name}] 조각이 부족합니다.\n현재: ${count}개 / 필요: 100개\n(부족: ${100 - count}개)`);
+    }
+  }
+
   function buyItem(type) {
     const conf = CONFIG[type];
     const key = conf.key;
@@ -355,7 +474,6 @@
     saveData.faith -= conf.price;
     saveData[key]++;
     
-    // UI 즉시 갱신 (반응성 향상)
     updateUI(); 
     saveProgress();
   }
@@ -374,7 +492,7 @@
 
   function equipSkin(code) {
     saveData.equippedSkin = code;
-    updateUI(); // UI 갱신으로 버튼 상태 변경
+    updateUI(); 
     saveProgress();
   }
 
@@ -403,29 +521,53 @@
     let isSpecial = false;
     let specialName = "";
 
-    // 확률 로직 유지
-    if (r < 40) { 
-        if(saveData.agility < CONFIG.agility.max) { saveData.agility++; prizeText = "⚡ 민첩성 +1"; }
+    // 1. 희귀 조각 (0 ~ 5%) - 총 5% 확률, 스킨당 1%
+    if (r < 5) {
+      // 0~4까지 정수로 어떤 스킨인지 결정 (0,1,2,3,4)
+      const skinIndex = Math.floor(r); 
+      const targetSkin = HIDDEN_SKINS[skinIndex];
+      
+      // 조각 개수 결정 (1~10개, 가중치 적용)
+      const qty = getWeightedFragmentCount();
+      
+      // 데이터 저장
+      saveData.fragments[targetSkin.code] = (saveData.fragments[targetSkin.code] || 0) + qty;
+      prizeText = `💎 [${targetSkin.name}] 조각 ${qty}개 획득!`;
+    }
+    // 2. 능력치 - 민첩성 (5 ~ 47%) - 약 42%
+    else if (r < 47) {
+      if(saveData.agility < CONFIG.agility.max) { 
+        const increase = getRandomInt(1, 3); // 1~3 랜덤 증가
+        // Max 초과 방지
+        const finalInc = (saveData.agility + increase > CONFIG.agility.max) ? (CONFIG.agility.max - saveData.agility) : increase;
+        
+        saveData.agility += finalInc;
+        if(finalInc > 0) prizeText = `⚡ 민첩성 +${finalInc} 상승!`;
         else { saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith"; }
+      } else {
+        saveData.faith += 50; prizeText = "💰 민첩 Max 보상: 50 Faith";
+      }
     }
-    else if (r < 80) { 
-        if(saveData.extraLife < CONFIG.life.max) { saveData.extraLife++; prizeText = "❤️ 생명력 +1"; }
-        else { saveData.faith += 100; prizeText = "💰 라이프 Max 보상: 100 Faith"; }
+    // 3. 능력치 - 생명력 (47 ~ 89%) - 약 42%
+    else if (r < 89) {
+      // 생명력은 무제한이므로 Max 체크 없이 증가
+      const increase = getRandomInt(1, 3); // 1~3 랜덤 증가
+      saveData.extraLife += increase;
+      prizeText = `❤️ 생명력 +${increase} 상승!`;
     }
-    else if (r < 85) { 
-        if(saveData.agility + 2 <= CONFIG.agility.max) { saveData.agility += 2; prizeText = "⚡ 민첩성 +2"; }
-        else { saveData.agility = CONFIG.agility.max; prizeText = "⚡ 민첩성 MAX!"; }
+    // 4. 꽝/일반 보상 (89 ~ 99.5%) - Faith
+    else if (r < 99.5) {
+      saveData.faith += 300; prizeText = "💰 300 Faith 당첨!";
     }
-    else if (r < 90) { 
-        if(saveData.extraLife + 2 <= CONFIG.life.max) { saveData.extraLife += 2; prizeText = "❤️ 생명력 +2"; }
-        else { saveData.extraLife = CONFIG.life.max; prizeText = "❤️ 생명력 MAX!"; }
+    // 5. 리얼 경품 (99.5 ~ 100%) - 0.5%
+    else {
+      const subR = Math.random() * 100;
+      if (subR < 20) { prizeText = "🎁 스타벅스 $5!"; isSpecial = true; specialName = "Starbucks $5"; }
+      else if (subR < 40) { prizeText = "🎁 스타벅스 $10!"; isSpecial = true; specialName = "Starbucks $10"; }
+      else if (subR < 60) { prizeText = "🎁 아마존 $5!"; isSpecial = true; specialName = "Amazon $5"; }
+      else if (subR < 80) { prizeText = "🎁 아마존 $10!"; isSpecial = true; specialName = "Amazon $10"; }
+      else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
     }
-    else if (r < 94.9) { saveData.faith += 300; prizeText = "💎 300 Faith 당첨!"; }
-    else if (r < 94.91) { prizeText = "🎁 스타벅스 $5!"; isSpecial = true; specialName = "Starbucks $5"; }
-    else if (r < 94.92) { prizeText = "🎁 스타벅스 $10!"; isSpecial = true; specialName = "Starbucks $10"; }
-    else if (r < 94.93) { prizeText = "🎁 아마존 $5!"; isSpecial = true; specialName = "Amazon $5"; }
-    else if (r < 94.94) { prizeText = "🎁 아마존 $10!"; isSpecial = true; specialName = "Amazon $10"; }
-    else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
 
     if (isSpecial) {
       fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
@@ -436,6 +578,27 @@
     box.style.display = "block";
     updateUI();
     saveProgress();
+  }
+
+  // 조각 개수 가중치 뽑기 (1이 나올 확률 높음, 10이 낮음)
+  function getWeightedFragmentCount() {
+    // 1~10까지의 숫자가 들어있는 배열. 숫자가 작을수록 배열에 많이 넣어 확률을 높임.
+    // 예: 1은 10개, 2는 9개 ... 10은 1개
+    const pool = [];
+    for(let i=1; i<=10; i++) {
+       // i가 1일 때 10번 추가, 10일 때 1번 추가
+       for(let j=0; j < (11-i); j++) {
+         pool.push(i);
+       }
+    }
+    // pool에서 랜덤으로 하나 뽑기
+    const idx = Math.floor(Math.random() * pool.length);
+    return pool[idx];
+  }
+
+  // 랜덤 정수 (min ~ max 포함)
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   function closeResult() { document.getElementById("gachaResult").style.display = "none"; }
