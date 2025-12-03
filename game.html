@@ -265,7 +265,7 @@
     daily = initDailyMission(); localStorage.setItem("dailyMission", JSON.stringify(daily));
   }
 
-  let life = 3 + (saveData.extraLife || 0);
+  let life = 10 + (saveData.extraLife || 0);
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
