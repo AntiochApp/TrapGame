@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Pause Feature Added</title>
+  <title>Disciple Run – Fever & Boss Update</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -212,7 +212,7 @@
         <div id="feverContainer"><div id="feverFill"></div></div>
     </div>
   </div>
-   
+    
   <div id="pauseBtn" onclick="togglePause()">⏸️</div>
 
   <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
@@ -280,6 +280,16 @@
   let name = localStorage.getItem("run_name") || "Tester";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
+  // [NEW] 컬렉션 완성 여부 체크 (히든 스킨 5종)
+  function hasFullCollection() {
+    const hiddenSkins = ["Hidden_Skin1", "Hidden_Skin2", "Hidden_Skin3", "Hidden_Skin4", "Hidden_Skin5"];
+    if(!saveData.ownedSkins) return false;
+    return hiddenSkins.every(skin => saveData.ownedSkins.includes(skin));
+  }
+  
+  // 컬렉션 완성 시 버프 변수
+  const collectionBuff = hasFullCollection();
+
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
   function initDailyMission() { return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '3.0' }; }
   if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '3.0') {
@@ -312,6 +322,12 @@
   else player.style.backgroundImage = `url('disciple.png')`;
 
   let buffArea = document.getElementById("buffArea");
+  
+  // [NEW] 컬렉션 버프가 있다면 UI에 표시
+  if(collectionBuff) {
+    buffArea.innerHTML += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스 (Faith +10%)</div>`;
+  }
+
   let speedLines = document.getElementById("speedLines");
 
   function createEl(tag, id, parent, before) {
@@ -322,7 +338,7 @@
 
   let playerY = 40; let velocity = 0; 
   let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
-   
+    
   let targetY = 0;
   let distance = 0;
   let obstacles = []; let projectiles = []; 
@@ -333,7 +349,7 @@
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
   let lastTime = performance.now();
   let nextQuizDistance = 35; 
-   
+    
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let enemySpawnTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
@@ -407,7 +423,6 @@
     playSound('jump');
   }
 
-  // [수정] 일시정지 버튼 예외 처리 추가
   document.addEventListener("touchstart", (e) => {
       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn')) return;
       if (!running) return;
@@ -426,13 +441,12 @@
     if (e.code === "KeyA") useAbility();
     if (e.code === "KeyS") handleSubAction(); 
   });
-   
+    
   window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
   window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
 
-  // [추가] 일시정지 기능
   function togglePause() {
-      if(!running) return; // 이미 멈춘 상태(게임오버 등)면 무시
+      if(!running) return; 
       running = false;
       document.getElementById('pauseModal').style.display = 'flex';
   }
@@ -440,7 +454,7 @@
   function resumeGame() {
       document.getElementById('pauseModal').style.display = 'none';
       running = true;
-      lastTime = performance.now(); // 시간 델타 초기화 (순간이동 방지)
+      lastTime = performance.now(); 
       requestAnimationFrame(gameLoop);
   }
 
@@ -503,7 +517,11 @@
   }
 
   function updateBuffUI(delta) {
-    const buffContainer = document.getElementById("buffArea"); buffContainer.innerHTML = ""; 
+    const buffContainer = document.getElementById("buffArea"); 
+    // [NEW] 기존 버프 태그 리셋 방식 유지하되 컬렉션 버프 추가
+    let html = "";
+    if(collectionBuff) html += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스</div>`;
+
     if (!isFeverTime) {
         document.getElementById("feverFill").style.width = feverGauge + "%";
         if(feverGauge >= MAX_FEVER) startFeverTime();
@@ -522,10 +540,12 @@
                 else if(k === 'slow') { color = "#90ee90"; icon = "🍃"; label = "감속"; }
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
-                if(k !== 'magnet') buffContainer.innerHTML += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
+                if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
     }
+    buffContainer.innerHTML = html;
+
     if(shieldCooldown > 0) { shieldCooldown -= delta; if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown'); }
     updateAbilityBtn(delta); updateSubActionButtonUI();
   }
@@ -678,8 +698,14 @@
               const targetX = pRect.left + pRect.width/2; const targetY = pRect.top + pRect.height/2;
               const dx = targetX - cx; const dy = targetY - cy;
               cx += dx * 8 * dt; cy += dy * 8 * dt;
+              
               if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-                  faith += 1; daily.faith20++; document.getElementById("faithText").innerText = faith;
+                  // [NEW] 컬렉션 버프 적용: 10% 확률로 Faith 1 추가 획득 (평균 1.1배 효과)
+                  let gain = 1;
+                  if(collectionBuff && Math.random() < 0.1) gain = 2;
+
+                  faith += gain; daily.faith20 += gain; 
+                  document.getElementById("faithText").innerText = faith;
                   coin.remove(); faithCoins.splice(i, 1); continue;
               }
           }
@@ -698,7 +724,6 @@
   function spawnEnemy(type) {
       const e = document.createElement("div"); e.classList.add("enemy");
       e.style.backgroundImage = `url('enemy${type}.png')`; 
-      // [수정] 배경색 제거
       e.style.backgroundColor = 'transparent'; 
       e.type = type; e.hp = 1; e.timer = 0; e.state = 'enter'; 
       e.x = window.innerWidth + 50; e.y = randBetween(50, window.innerHeight - 150);
@@ -781,17 +806,21 @@
     if(type === 'invincible') { activeEffects.invincible = 10; showFloatText("🛡️ 무적!"); }
     else if(type === 'turbo') { activeEffects.turbo = 5; showFloatText("🚀 터보!"); }
     else if(type === 'slow') { activeEffects.slow = 10; showFloatText("🍃 감속"); }
-    else if(type === 'faith') { faith += 10; daily.faith20 += 10; updateDailyMissionUI(); showFloatText("📘 Faith +10"); }
+    else if(type === 'faith') { 
+        // [NEW] 컬렉션 버프 적용 (기본 10 -> 버프시 11)
+        let gain = 10;
+        if(collectionBuff) gain = 11;
+        faith += gain; daily.faith20 += gain; 
+        updateDailyMissionUI(); showFloatText(`📘 Faith +${gain}`); 
+    }
     document.getElementById("faithText").innerText = faith;
   }
 
   function startBossBattle() {
     isBossBattle = true; bossLevel++; boss.maxHp = 6 + (bossLevel-1)*4; boss.hp = boss.maxHp; 
     invincible = false;
-    // [보안] 보스전 시작 시 피버모드 강제 종료 (데미지 로직 충돌 방지)
     if(isFeverTime) endFeverTime();
     
-    // [수정] 보스전 시작 시 캐릭터 뒤로 이동
     player.style.left = "50px"; 
 
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
@@ -859,8 +888,6 @@
             faith += 100 * bossLevel; daily.faith20 += 100; updateDailyMissionUI();
             showFloatText(`🎉 보스 처치! (+${100*bossLevel} Faith)`); playSound('clear');
             nextBossTrigger = distance + 200; saveProgress(); 
-            
-            // [수정] 보스 처치 후 캐릭터 위치 복귀하지 않음! (계속 50px 유지)
         }, 1000);
     }
   }
@@ -1001,14 +1028,12 @@
 
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
 
-    // [수정] 50m 미만에서는 쉬운 난이도 적용 (지상 장애물만, 그러나 높이는 다양하게)
     if (distance < 50) {
         const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
         const sx = window.innerWidth + 80;
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         
-        // [수정] 높이 랜덤 설정 (100~330px 범위로 대폭 상향)
         b.style.height = randi(100, 330) + "px"; 
         
         b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
@@ -1017,7 +1042,6 @@
         return; 
     }
 
-    // 50m 이상부터는 기존 로직 (공중 발판, 천장 장애물 포함)
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
@@ -1066,14 +1090,14 @@
       requestAnimationFrame(gameLoop); 
       updateDailyMissionUI(); 
   }
-   
+    
   async function saveProgress() { 
     saveData.faith = faith; 
     try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"save",id,saveData})});}catch(e){} localStorage.setItem("run_save",JSON.stringify(saveData)); 
   }
   async function gameOver() { if(rankingSaved)return; running=false; invincible=true; player.style.opacity="0.4"; document.getElementById("finalDist").innerText=Math.floor(distance); document.getElementById("gameOverModal").style.display="flex"; try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})});}catch(e){} rankingSaved=true; }
   async function confirmRanking() { const msg=document.getElementById("rankMsg").value.trim(); try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateComment",id,message:msg})}); alert("등록완료"); window.location.href="/TrapGame/menu.html";}catch(e){alert("오류"); window.location.href="/TrapGame/menu.html";} }
-   
+    
   async function pauseForQuiz() {
     if (!running) return;
     running = false; document.getElementById("loadingQuiz").style.display = "flex";
@@ -1104,7 +1128,7 @@
     } else { damageLife(); }
     if (life > 0) { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); }
   }
-   
+    
   let lastT=0; document.addEventListener("touchend",e=>{const n=Date.now();if(n-lastT<300)e.preventDefault();lastT=n;},{passive:false});
 </script>
 </body>
