@@ -79,11 +79,19 @@
     width: 100%;
     overflow: hidden;
   }
+  
+  /* [수정] 애니메이션 정의를 여기서 제거하고, 클래스로 분리함 */
   .ticker-content {
     display: inline-block;
     padding-left: 100%;
-    animation: tickerScroll 25s linear infinite;
+    will-change: transform; /* 모바일 성능 최적화 */
   }
+
+  /* [수정] 데이터 로드 후 붙여질 애니메이션 클래스 */
+  .ticker-moving {
+    animation: tickerScroll 35s linear infinite; /* 텍스트가 길어지므로 시간을 조금 늘림 (25s -> 35s) */
+  }
+
   @keyframes tickerScroll {
     0% { transform: translate3d(0, 0, 0); }
     100% { transform: translate3d(-100%, 0, 0); }
@@ -376,7 +384,7 @@
   document.getElementById("playerName").innerText = name || "Guest";
 
   // ==========================================
-  // [수정] 출석체크 로직 개선 (랜덤 스킨 조각 지급)
+  // 출석체크 로직
   // ==========================================
   function initAttendance() {
     const btn = document.getElementById("checkinBtn");
@@ -414,30 +422,25 @@
     // 보상 지급
     let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
     
-    // [중요 수정] fragments가 없거나 숫자형태면 객체로 초기화 (자동 데이터 복구)
     if (!saveData.fragments || typeof saveData.fragments !== 'object') {
       saveData.fragments = {}; 
     }
     
-    // 랜덤으로 스킨 선택 (히든 스킨 1~5)
     const hiddenSkins = ["Hidden_Skin1", "Hidden_Skin2", "Hidden_Skin3", "Hidden_Skin4", "Hidden_Skin5"];
     const randomSkin = hiddenSkins[Math.floor(Math.random() * hiddenSkins.length)];
-    const randomSkinName = "히든 스킨 " + randomSkin.slice(-1); // "히든 스킨 1"
+    const randomSkinName = "히든 스킨 " + randomSkin.slice(-1);
 
-    // 해당 스킨 조각 +5
     saveData.fragments[randomSkin] = (saveData.fragments[randomSkin] || 0) + 5;
     
     localStorage.setItem("run_save", JSON.stringify(saveData));
     localStorage.setItem("last_checkin_time", Date.now().toString());
 
-    // 알림 메시지 개선
     alert(`🎁 출석체크 완료!\n[${randomSkinName} 조각 +5]를 획득했습니다!`);
     
     btn.classList.add("disabled");
     txt.innerText = "✅ 출석완료 (내일 23시)";
     btn.onclick = null;
 
-    // 서버 동기화
     try {
       await fetch(API_URL, {
         method: "POST",
@@ -450,14 +453,15 @@
     } catch(e) { console.warn("Checkin Sync Fail"); }
   }
 
-  // 페이지 로드 시 실행
   initAttendance();
 
 
   // ==========================================
-  // 티커 로드 (이어붙이기)
+  // [수정] 티커 로드 (튕김 현상 방지)
   // ==========================================
   async function loadTicker() {
+    const area = document.getElementById("tickerArea");
+    
     try {
       const res = await fetch(API_URL, { 
         method: "POST", 
@@ -467,7 +471,6 @@
       const logs = JSON.parse(txt);
       
       if(logs && logs.length > 0) {
-        const area = document.getElementById("tickerArea");
         let html = "";
         logs.forEach(l => {
            let msg = l.reward;
@@ -475,10 +478,15 @@
            if(msg.includes("QT Book")) msg = "QT책 당첨!";
            html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
         });
+        // 내용 추가
         area.innerHTML += html;
       }
     } catch(e) {
       console.log("Ticker Load Fail", e);
+    } finally {
+      // [핵심] 로딩이 성공하든 실패하든, 내용이 완성된 후 애니메이션 시작
+      // 이렇게 해야 길이가 확정된 상태에서 움직임이 시작되어 튕기지 않음
+      area.classList.add("ticker-moving");
     }
   }
   loadTicker();
@@ -494,7 +502,6 @@
   
   async function loadNotices() {
     const listDiv = document.getElementById("noticeList");
-    // 서버에서 실제 공지 가져오기
     try {
       const res = await fetch(API_URL, { 
         method: "POST", 
