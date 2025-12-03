@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Fever & Missile Fix</title>
+  <title>Disciple Run – Boss & Fever Final Fix</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -23,9 +23,9 @@
 
     #ground { display: none; }
 
+    /* 플레이어 (기본 위치 left: 120px) */
     #player { position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px; background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; transition: opacity 0.2s, transform 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); }
     
-    /* 피버타임 플레이어 효과 */
     #player.fever-active { transform: scale(1.3); filter: drop-shadow(0 0 20px gold); }
 
     /* 장애물 */
@@ -40,14 +40,15 @@
 
     /* 장애물 파괴 이펙트 */
     .obstacle-explosion {
-        position: absolute; z-index: 85; width: 80px; height: 80px;
+        position: absolute; z-index: 85; width: 100px; height: 100px;
         background: radial-gradient(circle, #fff, orange, transparent);
         border-radius: 50%;
         animation: obsExplode 0.4s ease-out forwards;
+        transform: translate(-50%, -50%); /* 중심점 보정 */
     }
     @keyframes obsExplode { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
-    /* [추가] 신앙심 코인 스타일 */
+    /* 신앙심 코인 */
     .faith-coin {
         position: absolute; z-index: 88; width: 24px; height: 24px;
         background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
@@ -58,7 +59,7 @@
     }
     .faith-coin::after { content: '✝'; }
 
-    /* 적군 (Enemy) */
+    /* 적군 */
     .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
     
     /* 아이템 */
@@ -70,7 +71,7 @@
     .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
     .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
     
-    /* [수정] 플레이어 미사일 스타일 강화 */
+    /* 플레이어 미사일 */
     .player-missile { 
         position: absolute; width: 50px; height: 24px; 
         background: linear-gradient(90deg, #00ffff, #0099ff); 
@@ -163,9 +164,9 @@
         • <b>점프:</b> 화면 터치 / Space<br>
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
-        [업데이트]<br>
-        🚀 <b>미사일 수정:</b> 이제 직선으로 정확히 날아갑니다!<br>
-        🔥 <b>피버 모드:</b> 장애물 파괴 시 코인이 쏟아집니다!
+        [최신 업데이트]<br>
+        🛡️ <b>보스전:</b> 미사일은 아픕니다! 방어하세요!<br>
+        🔥 <b>피버 모드:</b> 장애물은 가까이 가면 자동 파괴됩니다!
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -245,7 +246,6 @@
     }
   }
 
-  // 로그인 우회 (테스트용) - 실제 배포시 원래대로 되돌리세요
   let id = localStorage.getItem("run_id") || "test_user";
   let name = localStorage.getItem("run_name") || "Tester";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
@@ -297,7 +297,7 @@
   let distance = 0;
   let obstacles = []; let projectiles = []; 
   let enemies = []; let playerMissiles = []; 
-  let faithCoins = []; // [추가] 신앙심 코인 배열
+  let faithCoins = [];
   let running = false; let invincible = false;
 
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
@@ -348,34 +348,25 @@
     }
   }
 
-  // [추가] 피버 모드 장애물 파괴 이펙트
   function spawnExplosionEffect(x, y) {
       const ex = document.createElement('div');
       ex.classList.add('obstacle-explosion');
-      ex.style.left = (x - 10) + 'px';
-      ex.style.top = (y - 10) + 'px';
+      ex.style.left = x + 'px';
+      ex.style.top = y + 'px';
       gameArea.appendChild(ex);
       setTimeout(() => ex.remove(), 400);
-      playSound('hit'); // 타격음 재활용
+      playSound('hit');
   }
 
-  // [추가] 신앙심 코인 생성 함수
   function spawnFaithCoins(x, y, count) {
       for(let i=0; i<count; i++) {
           const coin = document.createElement('div');
           coin.classList.add('faith-coin');
-          // 처음엔 약간 퍼지도록 랜덤 위치 지정
           const spreadX = (Math.random() - 0.5) * 100;
           const spreadY = (Math.random() - 0.5) * 100;
-          
-          coin.style.left = x + 'px';
-          coin.style.top = y + 'px';
-          coin.vx = spreadX; // 초기 퍼짐 속도
-          coin.vy = spreadY;
-          coin.timer = 0; // 자석 발동 타이머
-          
-          gameArea.appendChild(coin);
-          faithCoins.push(coin);
+          coin.style.left = x + 'px'; coin.style.top = y + 'px';
+          coin.vx = spreadX; coin.vy = spreadY; coin.timer = 0;
+          gameArea.appendChild(coin); faithCoins.push(coin);
       }
   }
 
@@ -389,8 +380,7 @@
   document.addEventListener("touchstart", (e) => {
       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn')) return;
       if (!running) return;
-      e.preventDefault(); 
-      jump();
+      e.preventDefault(); jump();
   }, {passive: false});
 
   document.addEventListener("mousedown", (e) => {
@@ -400,10 +390,7 @@
   });
   
   document.addEventListener("keydown", e => {
-    if (e.code === "Space") { 
-        e.preventDefault(); 
-        if(!e.repeat) jump(); 
-    }
+    if (e.code === "Space") { e.preventDefault(); if(!e.repeat) jump(); }
     if (e.code === "ArrowUp") { e.preventDefault(); jump(); }
     if (e.code === "KeyA") useAbility();
     if (e.code === "KeyS") handleSubAction(); 
@@ -415,12 +402,8 @@
   function handleSubAction(e) {
       if(e) { e.stopPropagation(); e.preventDefault(); }
       if (!running) return;
-
-      if (isBossBattle) {
-          useShield();
-      } else if (distance >= 200) {
-          playerShoot();
-      }
+      if (isBossBattle) useShield();
+      else if (distance >= 200) playerShoot();
   }
 
   function useShield() {
@@ -433,7 +416,6 @@
             const pRect = p.getBoundingClientRect();
             const plRect = player.getBoundingClientRect();
             const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
-            
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
@@ -448,26 +430,14 @@
     else showFloatText("🛡️ 방어!");
   }
 
-  // [수정] 미사일 발사 로직 전면 수정
   function playerShoot() {
-      const m = document.createElement("div");
-      m.classList.add("player-missile");
-      
-      // 플레이어 위치 정확히 가져오기
+      const m = document.createElement("div"); m.classList.add("player-missile");
       const pRect = player.getBoundingClientRect();
       const startX = pRect.right - 10;
-      const startY = pRect.top + (pRect.height / 2) - 12; // 미사일 높이 절반 보정
-
-      m.style.left = startX + "px"; 
-      m.style.top = startY + "px"; 
-      
-      // 불필요한 속성 제거 및 확실한 초기화
-      // m.style.bottom = ... (제거)
-      // m.style.top = "auto"; (이게 문제였음! 제거)
-
-      gameArea.appendChild(m);
-      playerMissiles.push(m);
-      playSound('jump'); // 발사음
+      const startY = pRect.top + (pRect.height / 2) - 12;
+      m.style.left = startX + "px"; m.style.top = startY + "px"; 
+      gameArea.appendChild(m); playerMissiles.push(m);
+      playSound('jump');
   }
 
   function useAbility(e) {
@@ -484,22 +454,15 @@
   }
 
   function updateBuffUI(delta) {
-    const buffContainer = document.getElementById("buffArea");
-    buffContainer.innerHTML = ""; 
-
+    const buffContainer = document.getElementById("buffArea"); buffContainer.innerHTML = ""; 
     if (!isFeverTime) {
         document.getElementById("feverFill").style.width = feverGauge + "%";
-        if(feverGauge >= MAX_FEVER) {
-            startFeverTime();
-        }
+        if(feverGauge >= MAX_FEVER) startFeverTime();
     } else {
         feverGauge -= (delta * 20);
         document.getElementById("feverFill").style.width = feverGauge + "%";
-        if(feverGauge <= 0) {
-            endFeverTime();
-        }
+        if(feverGauge <= 0) endFeverTime();
     }
-
     for(let k in activeEffects) {
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
@@ -510,67 +473,38 @@
                 else if(k === 'slow') { color = "#90ee90"; icon = "🍃"; label = "감속"; }
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
-                
-                if(k !== 'magnet') {
-                    buffContainer.innerHTML += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
-                }
+                if(k !== 'magnet') buffContainer.innerHTML += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
     }
-
-    if(shieldCooldown > 0) {
-        shieldCooldown -= delta;
-        if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown');
-    }
-    updateAbilityBtn(delta);
-    updateSubActionButtonUI();
+    if(shieldCooldown > 0) { shieldCooldown -= delta; if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown'); }
+    updateAbilityBtn(delta); updateSubActionButtonUI();
   }
 
   function startFeverTime() {
-      isFeverTime = true;
-      feverGauge = 100;
-      activeEffects.invincible = 5;
-      activeEffects.turbo = 5;
-      activeEffects.magnet = 5;
-      gameArea.classList.add("fever-mode");
-      player.classList.add("fever-active");
-      showFloatText("🔥 성령 충만! (FEVER)");
-      playSound('clear');
+      isFeverTime = true; feverGauge = 100;
+      activeEffects.invincible = 5; activeEffects.turbo = 5; activeEffects.magnet = 5;
+      gameArea.classList.add("fever-mode"); player.classList.add("fever-active");
+      showFloatText("🔥 성령 충만! (FEVER)"); playSound('clear');
   }
 
   function endFeverTime() {
-      isFeverTime = false;
-      feverGauge = 0;
-      activeEffects.invincible = 0;
-      activeEffects.turbo = 0;
-      activeEffects.magnet = 0;
-      gameArea.classList.remove("fever-mode");
-      player.classList.remove("fever-active");
+      isFeverTime = false; feverGauge = 0;
+      activeEffects.invincible = 0; activeEffects.turbo = 0; activeEffects.magnet = 0;
+      gameArea.classList.remove("fever-mode"); player.classList.remove("fever-active");
   }
 
   function updateSubActionButtonUI() {
       if (isBossBattle) {
-          subActionBtn.style.display = 'flex';
-          subActionBtn.className = 'btn-defence';
-          subActionBtn.innerText = "Defence"; 
+          subActionBtn.style.display = 'flex'; subActionBtn.className = 'btn-defence'; subActionBtn.innerText = "Defence"; 
       } else if (distance >= 200) {
-          subActionBtn.style.display = 'flex';
-          subActionBtn.className = 'btn-attack';
-          subActionBtn.innerText = "Attack";
-      } else {
-          subActionBtn.style.display = 'none';
-      }
+          subActionBtn.style.display = 'flex'; subActionBtn.className = 'btn-attack'; subActionBtn.innerText = "Attack";
+      } else { subActionBtn.style.display = 'none'; }
   }
 
   function updateAbilityBtn(dt) {
-    if(abilityCD > 0) {
-      abilityCD -= dt;
-      abilityBtn.classList.add('cooldown');
-      abilityBtn.innerHTML = Math.ceil(abilityCD);
-    } else {
-      abilityBtn.classList.remove('cooldown');
-      abilityBtn.innerHTML = "SKILL";
-    }
+    if(abilityCD > 0) { abilityCD -= dt; abilityBtn.classList.add('cooldown'); abilityBtn.innerHTML = Math.ceil(abilityCD); } 
+    else { abilityBtn.classList.remove('cooldown'); abilityBtn.innerHTML = "SKILL"; }
   }
 
   let lastMissionHTML = "";
@@ -578,9 +512,7 @@
     const box = document.getElementById('dailyMissionBox');
     if (daily.completed || isBossBattle) { box.style.display = 'none'; return; }
     box.style.display = 'block';
-    const m1 = daily.run200 ? 'mission-done' : '';
-    const m2 = daily.quiz3 >= 3 ? 'mission-done' : '';
-    const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
+    const m1 = daily.run200 ? 'mission-done' : ''; const m2 = daily.quiz3 >= 3 ? 'mission-done' : ''; const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
     const newHTML = `
       <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
       <div class="mission-item ${m1}">🏃 200m 달리기</div>
@@ -598,8 +530,7 @@
     if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
         daily.completed = true; faith += 200;
         saveData.faith = faith; document.getElementById("faithText").innerText = faith;
-        showFloatText("🎉 일일 미션 완료! (+200 Faith)");
-        playSound('clear');
+        showFloatText("🎉 일일 미션 완료! (+200 Faith)"); playSound('clear');
         saveProgress(); changed = true; updateDailyMissionUI();
     }
     if(changed) { localStorage.setItem("dailyMission", JSON.stringify(daily)); updateDailyMissionUI(); }
@@ -607,8 +538,7 @@
 
   function gameLoop(now) {
     if (!running) return;
-    const delta = (now - lastTime) / 1000;
-    lastTime = now;
+    const delta = (now - lastTime) / 1000; lastTime = now;
     const safeDelta = Math.min(delta, 0.05);
 
     try {
@@ -622,16 +552,13 @@
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
             distance += safeDelta * 1 * distMultiplier;
             document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
-            
             let progress = Math.min(distance / 3000, 1);
             let speedMultiplier = 1 + (progress * 14);
             let currentSpeed = BASE_SPEED * speedMultiplier;
             if (activeEffects.slow > 0) currentSpeed *= 0.5;
             if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
             gameSpeed = currentSpeed;
-        } else {
-            gameSpeed = BASE_SPEED * 0.5; 
-        }
+        } else { gameSpeed = BASE_SPEED * 0.5; }
 
         if (!isBossBattle && distance >= nextBossTrigger) { startBossBattle(); }
         if (!isBossBattle && distance >= nextQuizDistance) { nextQuizDistance += 35; pauseForQuiz(); return; }
@@ -651,7 +578,7 @@
 
         updateEnemies(safeDelta); 
         updatePhysics(safeDelta);
-        updateFaithCoinsLogic(safeDelta); // [추가] 코인 로직 업데이트
+        updateFaithCoinsLogic(safeDelta);
         
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime) { spawnItem(); itemTimer = 0; nextItemTime = 8 + Math.random() * 4; }
@@ -692,45 +619,22 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // [추가] 신앙심 코인 움직임 로직 (자석 효과)
   function updateFaithCoinsLogic(dt) {
       for(let i = faithCoins.length - 1; i >= 0; i--) {
-          const coin = faithCoins[i];
-          coin.timer += dt;
-          
-          let cx = parseFloat(coin.style.left);
-          let cy = parseFloat(coin.style.top);
-
-          // 초기에는 퍼짐 효과
-          if (coin.timer < 0.3) {
-              cx += coin.vx * dt * 2;
-              cy += coin.vy * dt * 2;
-          } else {
-              // 플레이어에게 빨려들어감
+          const coin = faithCoins[i]; coin.timer += dt;
+          let cx = parseFloat(coin.style.left); let cy = parseFloat(coin.style.top);
+          if (coin.timer < 0.3) { cx += coin.vx * dt * 2; cy += coin.vy * dt * 2; } 
+          else {
               const pRect = player.getBoundingClientRect();
-              // 플레이어 중심
-              const targetX = pRect.left + pRect.width/2;
-              const targetY = pRect.top + pRect.height/2;
-              
-              const dx = targetX - cx;
-              const dy = targetY - cy;
-              
-              // 부드러운 가속 (Lerp)
-              cx += dx * 8 * dt; 
-              cy += dy * 8 * dt;
-
-              // 획득 판정 (거리가 가까워지면)
+              const targetX = pRect.left + pRect.width/2; const targetY = pRect.top + pRect.height/2;
+              const dx = targetX - cx; const dy = targetY - cy;
+              cx += dx * 8 * dt; cy += dy * 8 * dt;
               if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-                  faith += 1; // 1개당 1신앙심
-                  daily.faith20++;
-                  document.getElementById("faithText").innerText = faith;
-                  coin.remove();
-                  faithCoins.splice(i, 1);
-                  continue;
+                  faith += 1; daily.faith20++; document.getElementById("faithText").innerText = faith;
+                  coin.remove(); faithCoins.splice(i, 1); continue;
               }
           }
-          coin.style.left = cx + "px";
-          coin.style.top = cy + "px";
+          coin.style.left = cx + "px"; coin.style.top = cy + "px";
       }
   }
 
@@ -818,7 +722,11 @@
   }
 
   function startBossBattle() {
-    isBossBattle = true; bossLevel++; boss.maxHp = 6 + (bossLevel-1)*4; boss.hp = boss.maxHp; invincible = false;
+    isBossBattle = true; bossLevel++; boss.maxHp = 6 + (bossLevel-1)*4; boss.hp = boss.maxHp; 
+    invincible = false;
+    // [보안] 보스전 시작 시 피버모드 강제 종료 (데미지 로직 충돌 방지)
+    if(isFeverTime) endFeverTime();
+    
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning'); warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block'; setTimeout(() => warning.style.display = 'none', 3000);
@@ -899,13 +807,11 @@
 
     const safeActive = (val) => (val && val > 0);
 
-    // [수정] 플레이어 미사일 로직 강화
     for (let i = playerMissiles.length - 1; i >= 0; i--) {
         let m = playerMissiles[i];
         let mx = parseFloat(m.style.left);
-        mx += 600 * delta; // 속도 증가
+        mx += 600 * delta; 
         m.style.left = mx + "px";
-        
         if (mx > window.innerWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
 
         for (let j = enemies.length - 1; j >= 0; j--) {
@@ -914,19 +820,12 @@
             let rE = e.getBoundingClientRect();
             
             if (rM.right > rE.left && rM.left < rE.right && rM.bottom > rE.top && rM.top < rE.bottom) {
-                e.hp--;
-                m.remove(); playerMissiles.splice(i, 1);
-                
-                // [추가] 적군 피격 이펙트 및 폭발
+                e.hp--; m.remove(); playerMissiles.splice(i, 1);
                 const ex = document.createElement('div'); ex.className = 'explosion-area';
                 ex.style.left = rE.left + 'px'; ex.style.top = rE.top + 'px'; ex.style.width='60px'; ex.style.height='60px';
                 gameArea.appendChild(ex); setTimeout(()=>ex.remove(), 500);
 
-                if (e.hp <= 0) {
-                    e.remove(); enemies.splice(j, 1);
-                    showFloatText("💥 적군 격파!");
-                    if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
-                }
+                if (e.hp <= 0) { e.remove(); enemies.splice(j, 1); showFloatText("💥 적군 격파!"); if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER); }
                 break; 
             }
         }
@@ -938,6 +837,7 @@
         cx += p.vx * delta; cy += p.vy * delta;
         p.style.left = cx + "px"; p.style.top = cy + "px";
         if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
+        
         if (p.isExplosive && !p.exploded && Math.abs(cx - 120) < 100) { 
              p.exploded = true;
              const boom = document.createElement("div"); boom.className = "explosion-area";
@@ -949,13 +849,22 @@
              }
              p.remove(); projectiles.splice(i, 1); continue;
         }
-        if (!p.isReflected && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
+
+        // [수정] 보스 미사일 및 일반 투사체 충돌 로직 강화
+        if (!p.isReflected) {
             const rP = player.getBoundingClientRect(); const rM = p.getBoundingClientRect();
             if (rP.right > rM.left && rP.left < rM.right && rP.bottom > rM.top && rP.top < rM.bottom) {
-                if (isFeverTime) { p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; } 
-                else { damageLife(); p.remove(); projectiles.splice(i, 1); continue; }
+                // 피버모드라면 투사체 무시/파괴
+                if (isFeverTime) { 
+                    p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; 
+                } 
+                // 무적이 아니고, 반사된 미사일이 아니라면 데미지
+                else if (!invincible && !safeActive(activeEffects.invincible) && !safeActive(activeEffects.summon)) {
+                     damageLife(); p.remove(); projectiles.splice(i, 1); continue; 
+                }
             }
         }
+
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect(); const pRect = p.getBoundingClientRect();
             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) { damageBoss(); p.remove(); projectiles.splice(i, 1); continue; }
@@ -968,11 +877,8 @@
             const rP = player.getBoundingClientRect(); const rE = e.getBoundingClientRect();
             if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
                 if (isFeverTime) { 
-                    e.remove(); enemies.splice(i, 1); 
-                    faith += 10; showFloatText("💥 적군 분쇄!"); 
-                    // [추가] 피버때 적군 잡으면 이펙트
-                    spawnExplosionEffect(rE.left, rE.top);
-                    continue; 
+                    e.remove(); enemies.splice(i, 1); faith += 10; showFloatText("💥 적군 분쇄!"); 
+                    spawnExplosionEffect(rE.left, rE.top); continue; 
                 } 
                 else { damageLife(); e.remove(); enemies.splice(i, 1); continue; }
             }
@@ -986,6 +892,18 @@
         o.style.left = left + "px";
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
 
+        // [수정] 피버 모드일 때 캐릭터 세로선(약 120px~180px) 통과 시 자동 파괴
+        if (isFeverTime && left < 180 && !o.destroyed) {
+            o.destroyed = true; // 중복 파괴 방지
+            // 캐릭터 앞쪽에서 터지는 연출
+            spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
+            
+            o.remove(); obstacles.splice(i, 1);
+            showFloatText("💰 격파!");
+            continue;
+        }
+
         if (left + rw < 0) {
             o.remove(); obstacles.splice(i, 1); obstacleSurviveCount++;
             if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
@@ -997,21 +915,10 @@
             continue;
         }
         
-        if (!safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
+        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
-                // [수정] 피버 모드 장애물 파괴 로직 강화
-                if (isFeverTime) {
-                    spawnExplosionEffect(rO.left + rw/2, rO.top + 30); // 폭발 이펙트
-                    // 코인 생성 (1~5개 랜덤)
-                    spawnFaithCoins(rO.left + rw/2, rO.top + 30, Math.floor(randBetween(1, 6)));
-                    
-                    o.remove(); obstacles.splice(i, 1);
-                    showFloatText("💰 격파!");
-                    continue;
-                } else {
-                    damageLife(); break;
-                }
+                damageLife(); break;
             }
         }
         if(currentSkin === 'stephanie' && left < 50 && !o.passed) { faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true; }
@@ -1019,7 +926,10 @@
   }
 
   function spawnObstacle() { 
-    if(!running || activeEffects.turbo>0) return;
+    if(!running) return;
+    // [수정] 피버 모드일 때는 터보 상태여도 장애물이 나오도록 허용
+    if(activeEffects.turbo > 0 && !isFeverTime) return;
+
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
@@ -1051,7 +961,9 @@
 
   function damageLife() {
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
-    if(activeEffects.turbo>0 || activeEffects.invincible>0 || invincible || !running) return;
+    if(activeEffects.turbo>0 && !isFeverTime) return; // 피버 아닐때만 터보 무적
+    if(activeEffects.invincible>0 || invincible || !running) return;
+    
     life--; document.getElementById("lifeText").innerText=life;
     invincible=true; player.style.opacity="0.4"; setTimeout(()=>{invincible=false; player.style.opacity="1";},800);
     playSound('hit');
