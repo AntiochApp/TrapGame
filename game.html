@@ -44,6 +44,8 @@
         background-image: url('noel.png');
         background-size: contain; background-repeat: no-repeat;
         z-index: 60; pointer-events: none;
+        /* 포물선 느낌을 위한 transition 설정 (left는 등속, top은 가속/감속) */
+        transition: left 0.8s linear, top 0.8s cubic-bezier(0.5, 0, 0.5, 1); 
     }
 
     /* 하은 스킨 보호막 */
@@ -544,29 +546,30 @@
       setTimeout(()=>heal.remove(), 600);
   }
 
-  // [추가] 지은 스킨 스킬: 노엘 도착 연출
+  // [추가] 지은 스킨 스킬: 노엘 도착 연출 (수정됨: 더 확실한 렌더링 보장)
   function triggerJieunSkill() {
       const noel = document.createElement('div');
       noel.className = 'flying-noel';
-      // 화면 오른쪽 위에서 시작
-      const startX = window.innerWidth - 100;
-      const startY = 100;
+      
+      // 1. 초기 위치 설정 (화면 우상단)
+      const startX = window.innerWidth - 50;
+      const startY = 50;
       noel.style.left = startX + 'px';
       noel.style.top = startY + 'px';
       gameArea.appendChild(noel);
 
-      // 애니메이션: 1초 동안 플레이어에게 날아옴 (포물선 느낌은 cubic-bezier로 단순화하거나 JS로 계산 가능하지만 여기선 transition 사용)
-      noel.style.transition = "all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-      
-      // 다음 프레임에 목표 위치로 이동
+      // 2. 브라우저 리플로우 강제 (애니메이션 시작점 인식시키기)
+      // requestAnimationFrame을 두 번 중첩하여 다음 프레임에 스타일 변경 예약
       requestAnimationFrame(() => {
-          const pRect = player.getBoundingClientRect();
-          // 플레이어 위치 계산 (화면 좌표)
-          noel.style.left = (pRect.left) + 'px';
-          noel.style.top = (pRect.top) + 'px';
+          requestAnimationFrame(() => {
+             const pRect = player.getBoundingClientRect();
+             // 3. 목표 위치 설정 (플레이어 위치)
+             noel.style.left = (pRect.left) + 'px';
+             noel.style.top = (pRect.top) + 'px';
+          });
       });
 
-      // 도착 후 처리
+      // 4. 애니메이션 시간 후 스킬 발동
       setTimeout(() => {
           noel.remove();
           activateJieunBuff();
@@ -592,12 +595,12 @@
 
       // 버프 적용 (summon 버프 재활용하되, 충돌 로직에서 jieunShield 체크 추가)
       activeEffects.summon = 20; 
-      showFloatText("🛡️ 노엘 합체!");
+      showFloatText("🛡️ 노엘 소환!");
 
       // 20초 후 원상복구 예약은 updateBuffUI에서 처리됨 (activeEffects.summon이 0이 될 때)
   }
 
-  // [추가] 지은 스킨 스킬: 종료 처리
+  // [추가] 지은 스킨 스킬: 종료 처리 (수정됨: 스킨 복구 전 애니메이션 실행)
   function deactivateJieunBuff() {
       // 화면 반짝임
       const flash = document.getElementById('flashEffect');
@@ -611,7 +614,7 @@
       const shield = document.getElementById('jieunShield');
       if(shield) shield.remove();
 
-      // 노엘 떠나는 연출
+      // 노엘 떠나는 연출 (플레이어 위치에서 시작)
       const noel = document.createElement('div');
       noel.className = 'flying-noel';
       const pRect = player.getBoundingClientRect();
@@ -619,11 +622,15 @@
       noel.style.top = pRect.top + 'px';
       gameArea.appendChild(noel);
 
-      noel.style.transition = "all 1s ease-in";
+      // 리플로우 강제 후 이동
       requestAnimationFrame(() => {
-          noel.style.left = (window.innerWidth + 200) + 'px';
-          noel.style.top = '-200px';
+          requestAnimationFrame(() => {
+              // 화면 밖으로 이동
+              noel.style.left = (window.innerWidth + 200) + 'px';
+              noel.style.top = '-200px';
+          });
       });
+      
       setTimeout(() => noel.remove(), 1000);
   }
 
@@ -813,7 +820,7 @@
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
                 else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
-                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "합체"; }
+                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "소환"; }
                 if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
@@ -1499,7 +1506,7 @@
             }
         }
 
-        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
+        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
                 damageLife(); break;
