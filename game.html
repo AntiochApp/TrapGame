@@ -15,6 +15,32 @@
     /* 피버타임 시 배경 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
 
+    /* [추가] 지진 효과 (화면 흔들림) */
+    #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
+    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
+
+    /* [추가] 노엘 에너지포 스타일 */
+    .noel-beam {
+        position: absolute;
+        left: 150px; /* 플레이어 앞쪽 */
+        bottom: 0; /* 바닥부터 */
+        width: 150vw; /* 화면 전체를 덮을 만큼 길게 */
+        height: 100vh; /* 화면 전체 높이 */
+        background: linear-gradient(90deg, rgba(0, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.8) 20%, rgba(0, 100, 255, 0) 100%);
+        z-index: 89; /* 장애물보다 위, 파티클보다 아래 */
+        transform-origin: left center;
+        opacity: 0.9;
+        pointer-events: none;
+        animation: beamPulse 0.2s infinite alternate;
+        mix-blend-mode: screen; /* 빛나는 효과 */
+        border-left: 10px solid #fff;
+        box-shadow: 0 0 50px cyan;
+    }
+    @keyframes beamPulse { 
+        0% { transform: scaleY(1); opacity: 0.8; filter: hue-rotate(0deg); } 
+        100% { transform: scaleY(1.05); opacity: 1; filter: hue-rotate(10deg); } 
+    }
+
     /* 배경 */
     .bg-layer { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
     #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
@@ -374,7 +400,7 @@
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
   let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
-  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0 };
+  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0 };
 
   let feverGauge = 0;
   const MAX_FEVER = 100;
@@ -522,8 +548,17 @@
     if(!running || abilityCD > 0) return;
     const s = SKIN_DATA[currentSkin];
     if(currentSkin === 'noel') {
-      showFloatText("🌊 길 열림!");
-      document.querySelectorAll('.obstacle').forEach(el => { el.style.bottom = '-150px'; });
+      // [수정] 노엘 스킬 로직 변경: 에너지포 발사 + 지진 효과
+      showFloatText("🌊 에너지 파!");
+      activeEffects.noelLaser = 10; // 10초 유지
+      
+      const beam = document.createElement('div');
+      beam.id = 'noelBeam';
+      beam.className = 'noel-beam';
+      gameArea.appendChild(beam);
+      
+      gameArea.classList.add('shake-screen');
+      playSound('clear'); // 임팩트 사운드
     } else if(currentSkin === 'jaeguk') { activeEffects.revive = 30; showFloatText("👼 자동 부활 On"); } 
     else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
     else if(currentSkin === 'jieun') { activeEffects.summon = 20; showFloatText("🛡️ 노엘 소환!"); }
@@ -546,6 +581,16 @@
     for(let k in activeEffects) {
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
+            
+            // [추가] 노엘 레이저 종료 처리
+            if(k === 'noelLaser') {
+                if(activeEffects[k] <= 0) {
+                    const beam = document.getElementById('noelBeam');
+                    if(beam) beam.remove();
+                    gameArea.classList.remove('shake-screen');
+                }
+            }
+
             if(activeEffects[k] > 0) {
                 let color = "#fff"; let icon = ""; let label = k;
                 if(k === 'invincible') { color = "#ffd700"; icon = "🛡️"; label = "무적"; }
@@ -553,6 +598,7 @@
                 else if(k === 'slow') { color = "#90ee90"; icon = "🍃"; label = "감속"; }
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
+                else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
                 if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
@@ -755,6 +801,18 @@
         if(e.laserBeam) {
             e.laserBeam.style.width = e.x + "px";
             e.laserBeam.style.top = (e.y + 15) + "px";
+        }
+
+        // [추가] 노엘 레이저에 맞으면 적도 파괴
+        if (activeEffects.noelLaser > 0 && e.x < window.innerWidth) {
+            spawnExplosionEffect(e.x + 30, e.y + 30);
+            spawnFaithCoins(e.x + 30, e.y + 30, Math.floor(randBetween(10, 31))); // 적 파괴시 코인 대량
+            showFloatText("💥 레이저 분쇄!");
+            e.isDead = true;
+            if(e.laserWarning) e.laserWarning.remove();
+            if(e.laserBeam) e.laserBeam.remove();
+            e.remove(); enemies.splice(i, 1);
+            continue;
         }
 
         if (isFeverTime) {
@@ -1054,7 +1112,7 @@
                     p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; 
                 } 
                 else if (!invincible && !safeActive(activeEffects.invincible) && !safeActive(activeEffects.summon)) {
-                     damageLife(); p.remove(); projectiles.splice(i, 1); continue; 
+                      damageLife(); p.remove(); projectiles.splice(i, 1); continue; 
                 }
             }
         }
@@ -1091,6 +1149,17 @@
         left -= gameSpeed * delta;
         o.style.left = left + "px";
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
+
+        // [추가] 노엘 레이저 스킬: 화면에 있는 모든 장애물 파괴 및 코인 생성
+        if (activeEffects.noelLaser > 0 && left < window.innerWidth && !o.destroyed) {
+            o.destroyed = true;
+            spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+            // [추가] 10~30개 랜덤 코인 생성
+            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
+            o.remove(); obstacles.splice(i, 1);
+            showFloatText("💰 대박!");
+            continue;
+        }
 
         if (isFeverTime && left < 180 && !o.destroyed) {
             o.destroyed = true; 
