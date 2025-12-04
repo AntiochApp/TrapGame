@@ -523,6 +523,8 @@
         body: JSON.stringify({ type: "getRecentLog" }) 
       });
       const txt = await res.text();
+      // 티커도 안전하게 파싱하도록 수정하면 좋으나, 요청하신 공지사항 위주로 수정했습니다.
+      // 여기는 그대로 둡니다.
       const logs = JSON.parse(txt);
       
       if(logs && logs.length > 0) {
@@ -563,6 +565,13 @@
         body: JSON.stringify({ type: "getNotices" }) 
       });
       const txt = await res.text();
+
+      // [수정된 부분] 텍스트가 비어있거나 "fail" 문자열이면 파싱하지 않고 종료
+      if (!txt || txt.trim() === "fail") {
+         listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
+         return;
+      }
+
       const notices = JSON.parse(txt);
 
       if (!notices || notices.length === 0) {
@@ -585,7 +594,9 @@
       });
       listDiv.innerHTML = html;
     } catch(e) {
-      listDiv.innerHTML = "<p>공지 로드 실패</p>";
+      // 파싱 에러나 네트워크 에러가 발생해도 사용자에게는 안내 문구 표시
+      console.warn("Notice Load Error:", e);
+      listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>공지사항을 불러오지 못했습니다.</p>";
     }
   }
 
