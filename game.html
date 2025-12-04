@@ -38,14 +38,20 @@
         pointer-events: none; z-index: 55;
     }
 
-    /* 노엘 스킨 (날아오는 연출용) */
+    /* [수정됨] 노엘 스킨 애니메이션 (공통) */
     .flying-noel {
         position: absolute; width: 50px; height: 50px;
-        background-image: url('noel.png');
+        background-image: url('skin_noel.png'); /* 파일명 수정 */
         background-size: contain; background-repeat: no-repeat;
         z-index: 60; pointer-events: none;
-        /* 포물선 느낌을 위한 transition 설정 (left는 등속, top은 가속/감속) */
-        transition: left 0.8s linear, top 0.8s cubic-bezier(0.5, 0, 0.5, 1); 
+    }
+    /* [수정됨] 들어올 때: 플레이어에게 착륙하는 느낌 */
+    .flying-noel.fly-in {
+        transition: left 0.8s linear, top 0.8s cubic-bezier(0.6, 0.04, 0.98, 0.335); 
+    }
+    /* [수정됨] 나갈 때: 하늘로 솟구쳐 날아가는 느낌 */
+    .flying-noel.fly-out {
+        transition: left 0.8s linear, top 0.8s cubic-bezier(0.5, 0, 0.5, 1);
     }
 
     /* 하은 스킨 보호막 */
@@ -546,26 +552,25 @@
       setTimeout(()=>heal.remove(), 600);
   }
 
-  // [추가] 지은 스킨 스킬: 노엘 도착 연출 (수정됨: 더 확실한 렌더링 보장)
+  // [수정] 지은 스킨 스킬: 노엘 도착 연출 (포물선 + 경로수정)
   function triggerJieunSkill() {
       const noel = document.createElement('div');
-      noel.className = 'flying-noel';
+      noel.classList.add('flying-noel', 'fly-in'); // 클래스 변경
       
-      // 1. 초기 위치 설정 (화면 우상단)
-      const startX = window.innerWidth - 50;
-      const startY = 50;
+      // 1. 초기 위치 설정 (화면 밖 우상단)
+      const startX = window.innerWidth + 50;
+      const startY = -50;
       noel.style.left = startX + 'px';
       noel.style.top = startY + 'px';
       gameArea.appendChild(noel);
 
-      // 2. 브라우저 리플로우 강제 (애니메이션 시작점 인식시키기)
-      // requestAnimationFrame을 두 번 중첩하여 다음 프레임에 스타일 변경 예약
+      // 2. 브라우저 리플로우 강제
       requestAnimationFrame(() => {
           requestAnimationFrame(() => {
              const pRect = player.getBoundingClientRect();
              // 3. 목표 위치 설정 (플레이어 위치)
-             noel.style.left = (pRect.left) + 'px';
-             noel.style.top = (pRect.top) + 'px';
+             noel.style.left = (pRect.left + 5) + 'px';
+             noel.style.top = (pRect.top + 5) + 'px';
           });
       });
 
@@ -600,7 +605,7 @@
       // 20초 후 원상복구 예약은 updateBuffUI에서 처리됨 (activeEffects.summon이 0이 될 때)
   }
 
-  // [추가] 지은 스킨 스킬: 종료 처리 (수정됨: 스킨 복구 전 애니메이션 실행)
+  // [수정] 지은 스킨 스킬: 종료 처리 (포물선 이별 연출)
   function deactivateJieunBuff() {
       // 화면 반짝임
       const flash = document.getElementById('flashEffect');
@@ -616,7 +621,8 @@
 
       // 노엘 떠나는 연출 (플레이어 위치에서 시작)
       const noel = document.createElement('div');
-      noel.className = 'flying-noel';
+      noel.classList.add('flying-noel', 'fly-out'); // 클래스 변경
+      
       const pRect = player.getBoundingClientRect();
       noel.style.left = pRect.left + 'px';
       noel.style.top = pRect.top + 'px';
@@ -625,13 +631,13 @@
       // 리플로우 강제 후 이동
       requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-              // 화면 밖으로 이동
+              // 화면 밖(우상단)으로 날려보냄
               noel.style.left = (window.innerWidth + 200) + 'px';
               noel.style.top = '-200px';
           });
       });
       
-      setTimeout(() => noel.remove(), 1000);
+      setTimeout(() => noel.remove(), 800);
   }
 
   function jump() {
