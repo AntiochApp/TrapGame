@@ -19,10 +19,46 @@
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* [수정] 노엘 에너지포 스타일: 위치를 앞으로 당김 (100px -> 170px) */
+    /* [추가] 하은 스킨 보호막 스타일 */
+    .haeun-shield {
+        position: absolute;
+        width: 80px; height: 80px;
+        left: -10px; bottom: -10px; /* 플레이어 기준 위치 */
+        border-right: 6px solid rgba(255, 255, 255, 0.9); /* 오른쪽(앞쪽)만 보이게 */
+        border-radius: 50%;
+        box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5); /* 빛나는 효과 */
+        pointer-events: none;
+        z-index: 55;
+        animation: shieldBreath 2s infinite ease-in-out;
+    }
+    @keyframes shieldBreath {
+        0% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 0.6; transform: scale(1); }
+    }
+
+    /* [추가] 힐링 이펙트 (빨간색) */
+    .heal-effect-visual {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 100px; height: 100px;
+        background: radial-gradient(circle, rgba(255,50,50,0) 20%, rgba(255,0,0,0.6) 60%, transparent 100%);
+        border: 2px solid rgba(255, 100, 100, 0.8);
+        border-radius: 50%;
+        animation: healExpand 0.6s ease-out forwards;
+        z-index: 95;
+        pointer-events: none;
+    }
+    @keyframes healExpand {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
+    }
+
+    /* 노엘 에너지포 스타일 */
     .noel-beam {
         position: absolute;
-        left: 170px; /* 캐릭터 앞쪽에서 시작하도록 수정 */
+        left: 170px; 
         height: 140px; 
         width: 0; 
         background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
@@ -35,7 +71,6 @@
         border-radius: 100px 0 0 100px;
     }
     
-    /* 에너지포 발사구 */
     .noel-beam::before {
         content: '';
         position: absolute;
@@ -48,7 +83,6 @@
         opacity: 0.9;
     }
 
-    /* 뻗어나가는 애니메이션 */
     @keyframes beamFire { 
         0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 
         20% { width: 50vw; opacity: 1; transform: scaleY(1.2); }
@@ -370,6 +404,9 @@
   }
 
   let life = 10 + (saveData.extraLife || 0);
+  // [추가] 최대 생명력 저장 (상점에서 구매한 만큼만)
+  let maxLife = 10 + (saveData.extraLife || 0);
+
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
@@ -429,8 +466,11 @@
   let abilityCD = 0;
   let missionUpdateTimer = 0;
   
-  // [추가] 전찬 스킨용 타이머 변수
+  // [추가] 전찬, 하은 스킨용 타이머 변수
   let jeonchanTimer = 0;
+  let haeunLifeTimer = 0;
+  let haeunShieldTimer = 0;
+  let haeunShieldActive = false;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -493,6 +533,30 @@
           coin.vx = spreadX; coin.vy = spreadY; coin.timer = 0;
           gameArea.appendChild(coin); faithCoins.push(coin);
       }
+  }
+
+  // [추가] 하은 스킨 보호막 생성
+  function createHaeunShield() {
+      const shield = document.createElement('div');
+      shield.id = 'haeunShield';
+      shield.className = 'haeun-shield';
+      player.appendChild(shield); // 플레이어 자식으로 추가하여 따라다니게 함
+  }
+
+  // [추가] 하은 스킨 보호막 제거
+  function removeHaeunShield() {
+      const shield = document.getElementById('haeunShield');
+      if(shield) shield.remove();
+  }
+
+  // [추가] 힐링 이펙트
+  function showHealEffect() {
+      const heal = document.createElement('div');
+      heal.className = 'heal-effect-visual';
+      heal.style.left = '50%';
+      heal.style.top = '50%';
+      player.appendChild(heal); // 플레이어 위에서 터짐
+      setTimeout(()=>heal.remove(), 600);
   }
 
   function jump() {
@@ -760,6 +824,32 @@
             if(jeonchanTimer >= 15.0) {
                 triggerJeonchanSkill();
                 jeonchanTimer = 0;
+            }
+        }
+
+        // [추가] 하은 스킨 스킬 로직 (보호막 & 힐)
+        if(currentSkin === 'haeun' && running && !isBossBattle) {
+            // 보호막 (10초마다)
+            if(!haeunShieldActive) {
+                haeunShieldTimer += safeDelta;
+                if(haeunShieldTimer >= 10.0) {
+                    haeunShieldActive = true;
+                    haeunShieldTimer = 0;
+                    createHaeunShield();
+                    showFloatText("🛡️ 보호막 생성");
+                }
+            }
+
+            // 힐 (25초마다, 최대체력까지만)
+            haeunLifeTimer += safeDelta;
+            if(haeunLifeTimer >= 25.0) {
+                haeunLifeTimer = 0;
+                if(life < maxLife) {
+                    life++;
+                    document.getElementById("lifeText").innerText = life;
+                    showHealEffect();
+                    showFloatText("💖 생명력 회복");
+                }
             }
         }
         
@@ -1302,7 +1392,7 @@
             continue;
         }
         
-        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
+        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
                 damageLife(); break;
@@ -1363,6 +1453,15 @@
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
     
+    // [추가] 하은 스킨 보호막 체크
+    if(currentSkin === 'haeun' && haeunShieldActive) {
+        haeunShieldActive = false;
+        removeHaeunShield();
+        showFloatText("🛡️ 방어 성공!");
+        playSound('parry');
+        return;
+    }
+
     life--; document.getElementById("lifeText").innerText=life;
     invincible=true; player.style.opacity="0.4"; setTimeout(()=>{invincible=false; player.style.opacity="1";},800);
     playSound('hit');
