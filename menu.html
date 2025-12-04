@@ -34,14 +34,14 @@
   body {
     margin: 0; padding: 0; height: 100vh;
     display: flex; flex-direction: column;
-    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    font-family: 'DungGeunMo', monospace;
     color: var(--text-color);
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
-    overflow: hidden; /* 스크롤 방지 */
+    overflow: hidden;
   }
 
-  /* 배경에 픽셀 패턴 추가 (index.html과 통일) */
+  /* 배경 패턴 */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background-image: 
@@ -52,7 +52,7 @@
     pointer-events: none;
   }
 
-  /* 상단 바 디자인 개선 */
+  /* 상단 바 */
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 20px; 
@@ -81,7 +81,7 @@
   }
   .logout-btn:active { transform: translateY(2px); box-shadow: none; }
 
-  /* 뉴스 티커 스타일 */
+  /* 뉴스 티커 */
   .news-ticker {
     width: 100%;
     background: rgba(0, 0, 0, 0.85);
@@ -93,33 +93,17 @@
     border-bottom: 2px solid #5d4037;
     z-index: 9;
   }
-  .ticker-wrap {
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  .ticker-content {
-    display: inline-block;
-    padding-left: 100%;
-    will-change: transform; 
-  }
-
-  /* 티커 애니메이션 클래스 */
-  .ticker-moving {
-    animation: tickerScroll 35s linear infinite; 
-  }
+  .ticker-wrap { width: 100%; overflow: hidden; }
+  .ticker-content { display: inline-block; padding-left: 100%; will-change: transform; }
+  .ticker-moving { animation: tickerScroll 35s linear infinite; }
 
   @keyframes tickerScroll {
     0% { transform: translate3d(0, 0, 0); }
     100% { transform: translate3d(-100%, 0, 0); }
   }
-  .ticker-item {
-    margin-right: 50px;
-    color: #ffd54f;
-    text-shadow: 2px 2px 0 #000;
-  }
+  .ticker-item { margin-right: 50px; color: #ffd54f; text-shadow: 2px 2px 0 #000; }
 
-  /* 메인 메뉴 컨테이너 (index.html 스타일 적용) */
+  /* 메인 메뉴 컨테이너 */
   #menuWrapper { 
     flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; 
     padding: 20px;
@@ -131,14 +115,12 @@
     background: var(--panel-color);
     border: 4px solid var(--border-color);
     border-radius: 8px;
-    /* 3D 픽셀 그림자 효과 */
     box-shadow: 
       inset 4px 4px 0px #ffffff,
       inset -4px -4px 0px #d7ccc8,
       8px 8px 0px rgba(0,0,0,0.3);
     text-align: center;
     position: relative;
-    /* 둥둥 떠다니는 애니메이션 */
     animation: float 3s ease-in-out infinite;
   }
 
@@ -148,7 +130,6 @@
     100% { transform: translateY(0px); }
   }
 
-  /* 장식 요소 (별) */
   .container::after {
     content: "★"; position: absolute; top: 15px; right: 20px;
     font-size: 28px; color: #ffb74d; transform: rotate(15deg);
@@ -168,7 +149,7 @@
     border-radius: 20px; border: 2px dashed #bcaaa4;
   }
 
-  /* 그리드 레이아웃 버튼 */
+  /* 그리드 버튼 */
   .menu-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -176,7 +157,6 @@
     margin-bottom: 12px;
   }
 
-  /* 버튼 공통 스타일 (아케이드 버튼) */
   .pixel-btn {
     position: relative;
     border: 3px solid #000; border-radius: 8px; 
@@ -186,7 +166,6 @@
     transition: all 0.1s;
     display: flex; flex-direction: column; 
     justify-content: center; align-items: center; gap: 6px;
-    /* 입체감 */
     box-shadow: 
       inset 3px 3px 0 rgba(255,255,255,0.4),
       4px 4px 0 rgba(0,0,0,0.2),
@@ -200,7 +179,6 @@
   }
   .pixel-btn:hover { filter: brightness(1.1); }
 
-  /* 게임 시작 (가로 꽉 참) */
   .btn-start {
     grid-column: span 2;
     background: #66bb6a;
@@ -210,7 +188,6 @@
   }
   .btn-start span { display: flex; align-items: center; gap: 10px; }
 
-  /* 출석체크 버튼 (파란색) */
   .btn-checkin {
     grid-column: span 2;
     background: var(--checkin-color);
@@ -225,7 +202,6 @@
     cursor: default; top: 2px; left: 2px;
   }
 
-  /* 일반 버튼 (오렌지) */
   .btn-normal {
     background: var(--primary-color);
     box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--primary-shadow), 4px 4px 0 2px #000;
@@ -233,7 +209,6 @@
   }
   .btn-icon { font-size: 28px; margin-bottom: 4px; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2)); }
 
-  /* 공지사항 버튼 (갈색) */
   .btn-notice {
     background: var(--secondary-color);
     box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 var(--secondary-shadow), 4px 4px 0 2px #000;
@@ -242,7 +217,7 @@
 
   .version { margin-top: 24px; font-size: 14px; color: #a1887f; opacity: 0.8; }
 
-  /* 모달 공통 디자인 업데이트 */
+  /* 모달 */
   .modal-bg {
     display: none; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%; background: rgba(0,0,0,0.7);
@@ -252,7 +227,7 @@
   .modal {
     width: 100%; max-width: 420px; background: var(--panel-color);
     padding: 24px; border-radius: 8px; border: 4px solid var(--border-color);
-    box-shadow: 10px 10px 0 rgba(0,0,0,0.5); /* 짙은 그림자 */
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.5);
     text-align: center;
     max-height: 85vh; overflow-y: auto;
     position: relative;
@@ -303,7 +278,6 @@
   .close-btn:hover { background: #333; }
   .close-btn:active { transform: translate(4px, 4px); box-shadow: none; }
 
-  /* 스피너 */
   .spinner {
     width: 30px; height: 30px; border: 4px solid #eee;
     border-top: 4px solid var(--primary-color); border-radius: 50%;
@@ -311,7 +285,6 @@
   }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  /* 입력창 */
   .input-group { margin-top: 10px; text-align: left; display: none; background: #fffbf0; padding: 12px; border: 2px solid var(--border-color);}
   .input-field { 
     width: 100%; padding: 10px; margin-bottom: 8px; 
@@ -385,7 +358,10 @@
 <div id="rankingModal" class="modal-bg">
   <div class="modal">
     <h2>🏆 명예의 전당</h2>
-    <div id="rankingList"></div>
+    <div id="rankingList">
+      <div class='spinner'></div>
+      <p style='text-align:center'>랭킹 불러오는 중...</p>
+    </div>
     <button class="close-btn" onclick="closeModal('rankingModal')">닫기</button>
   </div>
 </div>
@@ -394,7 +370,8 @@
   <div class="modal">
     <h2>📢 안디옥 게시판</h2>
     <div id="noticeList" class="notice-list">
-      <p style="color:#999; text-align:center; padding:20px;">등록된 공지사항이 없습니다.</p>
+      <div class='spinner'></div>
+      <p style="color:#999; text-align:center;">공지사항 불러오는 중...</p>
     </div>
     
     <div id="writeForm" class="input-group">
@@ -474,7 +451,6 @@
     const btn = document.getElementById("checkinBtn");
     const txt = document.getElementById("checkinText");
 
-    // 보상 지급
     let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
     
     if (!saveData.fragments || typeof saveData.fragments !== 'object') {
@@ -512,7 +488,7 @@
 
 
   // ==========================================
-  // [수정] 티커 로드 (튕김 현상 방지)
+  // 티커 로드
   // ==========================================
   async function loadTicker() {
     const area = document.getElementById("tickerArea");
@@ -523,8 +499,6 @@
         body: JSON.stringify({ type: "getRecentLog" }) 
       });
       const txt = await res.text();
-      // 티커도 안전하게 파싱하도록 수정하면 좋으나, 요청하신 공지사항 위주로 수정했습니다.
-      // 여기는 그대로 둡니다.
       const logs = JSON.parse(txt);
       
       if(logs && logs.length > 0) {
@@ -535,14 +509,11 @@
            if(msg.includes("QT Book")) msg = "QT책 당첨!";
            html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
         });
-        // 내용 추가
         area.innerHTML += html;
       }
     } catch(e) {
       console.log("Ticker Load Fail", e);
     } finally {
-      // [핵심] 로딩이 성공하든 실패하든, 내용이 완성된 후 애니메이션 시작
-      // 이렇게 해야 길이가 확정된 상태에서 움직임이 시작되어 튕기지 않음
       area.classList.add("ticker-moving");
     }
   }
@@ -550,11 +521,10 @@
 
 
   // ==========================================
-  // 공지사항 (관리자 기능)
+  // 공지사항 (백그라운드 로딩)
   // ==========================================
   function openNotice() {
     document.getElementById("noticeModal").style.display = "flex";
-    loadNotices();
   }
   
   async function loadNotices() {
@@ -566,14 +536,12 @@
       });
       const txt = await res.text();
 
-      // [수정된 부분] 텍스트가 비어있거나 "fail" 문자열이면 파싱하지 않고 종료
       if (!txt || txt.trim() === "fail") {
          listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
          return;
       }
 
       const notices = JSON.parse(txt);
-
       if (!notices || notices.length === 0) {
         listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>등록된 공지사항이 없습니다.</p>";
         return;
@@ -593,8 +561,8 @@
         `;
       });
       listDiv.innerHTML = html;
+      
     } catch(e) {
-      // 파싱 에러나 네트워크 에러가 발생해도 사용자에게는 안내 문구 표시
       console.warn("Notice Load Error:", e);
       listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>공지사항을 불러오지 못했습니다.</p>";
     }
@@ -620,10 +588,11 @@
   async function saveNotice() {
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
-
     if (!title || !content) { alert("제목과 내용을 입력해주세요."); return; }
-
     if(!confirm("공지사항을 등록하시겠습니까?")) return;
+
+    const listDiv = document.getElementById("noticeList");
+    listDiv.innerHTML = "<div class='spinner'></div><p style='text-align:center'>등록 중...</p>";
 
     try {
       await fetch(API_URL, { 
@@ -633,13 +602,16 @@
       alert("공지사항이 등록되었습니다.");
       cancelWrite();
       loadNotices();
-    } catch(e) { alert("등록 실패"); }
+    } catch(e) { alert("등록 실패"); loadNotices(); }
   }
 
   async function deleteNotice(rowIndex) {
     const input = prompt("삭제하려면 관리자 비밀번호를 입력하세요:", "");
     if (input === ADMIN_PW) {
        if(!confirm("정말 삭제하시겠습니까?")) return;
+       const listDiv = document.getElementById("noticeList");
+       listDiv.innerHTML = "<div class='spinner'></div><p style='text-align:center'>삭제 중...</p>";
+
        try {
          const res = await fetch(API_URL, { 
            method: "POST", 
@@ -651,10 +623,67 @@
            loadNotices();
          } else {
            alert("삭제 실패");
+           loadNotices();
          }
-       } catch(e) { alert("오류 발생"); }
+       } catch(e) { alert("오류 발생"); loadNotices(); }
     } else {
       if(input !== null) alert("비밀번호가 틀렸습니다.");
+    }
+  }
+
+
+  // ==========================================
+  // 랭킹 (백그라운드 로딩 + 안전장치)
+  // ==========================================
+  
+  // [수정됨] 랭킹 버튼 클릭 시: 로딩 과정 없이 바로 모달 열기
+  function showRanking() {
+    document.getElementById("rankingModal").style.display = "flex";
+  }
+
+  // [수정됨] 실제 데이터 로드는 별도 함수로 분리하여 백그라운드에서 실행
+  async function loadRanking() {
+    const listDiv = document.getElementById("rankingList");
+    try {
+      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getRanking" }) });
+      const txt = await res.text();
+
+      // 안전장치: 응답이 "fail"이거나 비어있으면 파싱하지 않음
+      if (!txt || txt.trim() === "fail") {
+         listDiv.innerHTML = "<p>랭킹을 불러오지 못했습니다.</p>";
+         return;
+      }
+
+      const list = JSON.parse(txt);
+
+      let html = "";
+      if (list.length === 0) {
+        html = "<p>아직 등록된 랭킹이 없습니다.</p>";
+      } else {
+        list.forEach((item, index) => {
+          let rankIcon = (index + 1) + ".";
+          if(index === 0) rankIcon = "🥇";
+          if(index === 1) rankIcon = "🥈";
+          if(index === 2) rankIcon = "🥉";
+
+          html += `
+            <div class="rank-item">
+              <div class="rank-rank">${rankIcon}</div>
+              <div class="rank-info">
+                <div style="font-weight:bold;">${item.name}</div>
+                <span class="msg" style="font-size:12px; color:#666;">${item.message || "한마디 없음"}</span>
+              </div>
+              <div class="rank-score">${item.distance}m</div>
+            </div>
+          `;
+        });
+      }
+      // 백그라운드에서 HTML 주입
+      listDiv.innerHTML = html;
+
+    } catch (e) {
+      console.warn("Ranking Load Error:", e);
+      listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
     }
   }
 
@@ -688,45 +717,10 @@
   }
   refreshSave();
 
-  // 랭킹
-  async function showRanking() {
-    const modal = document.getElementById("rankingModal");
-    modal.style.display = "flex";
-    const listDiv = document.getElementById("rankingList");
-    listDiv.innerHTML = "<div class='spinner'></div>";
+  // [핵심] 페이지 로드 시 공지사항과 랭킹을 백그라운드에서 즉시 불러옵니다.
+  loadNotices();
+  loadRanking();
 
-    try {
-      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getRanking" }) });
-      const txt = await res.text();
-      const list = JSON.parse(txt);
-
-      let html = "";
-      if (list.length === 0) {
-        html = "<p>아직 등록된 랭킹이 없습니다.</p>";
-      } else {
-        list.forEach((item, index) => {
-          let rankIcon = (index + 1) + ".";
-          if(index === 0) rankIcon = "🥇";
-          if(index === 1) rankIcon = "🥈";
-          if(index === 2) rankIcon = "🥉";
-
-          html += `
-            <div class="rank-item">
-              <div class="rank-rank">${rankIcon}</div>
-              <div class="rank-info">
-                <div style="font-weight:bold;">${item.name}</div>
-                <span class="msg" style="font-size:12px; color:#666;">${item.message || "한마디 없음"}</span>
-              </div>
-              <div class="rank-score">${item.distance}m</div>
-            </div>
-          `;
-        });
-      }
-      listDiv.innerHTML = html;
-    } catch (e) {
-      listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
-    }
-  }
 </script>
 
 </body>
