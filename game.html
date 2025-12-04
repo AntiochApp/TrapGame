@@ -1751,16 +1751,62 @@
     
   async function saveProgress() { 
     saveData.faith = faith; 
-    try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"save",id,saveData})});}catch(e){} localStorage.setItem("run_save",JSON.stringify(saveData)); 
+    try{
+        await fetch(API_URL,{
+            method:"POST",
+            // [수정] 통신 안정성 확보
+            headers: { "Content-Type": "text/plain" },
+            redirect: 'follow',
+            body:JSON.stringify({type:"save",id,saveData})
+        });
+    }catch(e){} 
+    localStorage.setItem("run_save",JSON.stringify(saveData)); 
   }
-  async function gameOver() { if(rankingSaved)return; running=false; invincible=true; player.style.opacity="0.4"; document.getElementById("finalDist").innerText=Math.floor(distance); document.getElementById("gameOverModal").style.display="flex"; try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})});}catch(e){} rankingSaved=true; }
-  async function confirmRanking() { const msg=document.getElementById("rankMsg").value.trim(); try{await fetch(API_URL,{method:"POST",body:JSON.stringify({type:"updateComment",id,message:msg})}); alert("등록완료"); window.location.href="/TrapGame/menu.html";}catch(e){alert("오류"); window.location.href="/TrapGame/menu.html";} }
+
+  async function gameOver() { 
+      if(rankingSaved)return; 
+      running=false; invincible=true; player.style.opacity="0.4"; 
+      document.getElementById("finalDist").innerText=Math.floor(distance); 
+      document.getElementById("gameOverModal").style.display="flex"; 
+      try{
+          await fetch(API_URL,{
+              method:"POST",
+              // [수정] 통신 안정성 확보
+              headers: { "Content-Type": "text/plain" },
+              redirect: 'follow',
+              body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})
+          });
+      }catch(e){} 
+      rankingSaved=true; 
+  }
+
+  async function confirmRanking() { 
+      const msg=document.getElementById("rankMsg").value.trim(); 
+      try{
+          await fetch(API_URL,{
+              method:"POST",
+              // [수정] 통신 안정성 확보
+              headers: { "Content-Type": "text/plain" },
+              redirect: 'follow',
+              body:JSON.stringify({type:"updateComment",id,message:msg})
+          }); 
+          alert("등록완료"); window.location.href="/TrapGame/menu.html";
+      }catch(e){
+          alert("오류"); window.location.href="/TrapGame/menu.html";
+      } 
+  }
     
   async function pauseForQuiz() {
     if (!running) return;
     running = false; document.getElementById("loadingQuiz").style.display = "flex";
     try {
-      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getQuiz" }) });
+      const res = await fetch(API_URL, { 
+          method: "POST", 
+          // [수정] 통신 안정성 확보
+          headers: { "Content-Type": "text/plain" },
+          redirect: 'follow',
+          body: JSON.stringify({ type: "getQuiz" }) 
+      });
       const txt = await res.text();
       document.getElementById("loadingQuiz").style.display = "none";
       if (txt === "noquiz") { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); return; }
