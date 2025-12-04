@@ -197,7 +197,7 @@
   }
   .inv-slot:active { background: #e0e0e0; transform: translate(1px, 1px); box-shadow: none; }
   
-  /* [수정] 인벤토리 이미지 상태 클래스 */
+  /* 인벤토리 이미지 */
   .inv-slot img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; transition: 0.2s; }
   
   /* 1. 획득 전 (0~99개): 그림자 실루엣 */
@@ -210,25 +210,17 @@
     filter: grayscale(100%); opacity: 0.8; 
   }
   
-  /* 3. 보유 중: 컬러 (기본) */
-
-  /* [수정] 개수 표시 스타일 강화 */
-  
-/* [수정] 3D 입체 효과 스타일 (깔끔한 블록 형태) */
-.inv-count {
+  /* 3D 입체 효과 스타일 */
+  .inv-count {
     position: absolute; 
     bottom: 4px; 
     right: 6px;
-    font-size: 32px; /* 너무 크면 둔해 보이므로 32px 정도로 조정 */
+    font-size: 32px;
     font-weight: 900;
     font-family: 'DungGeunMo', monospace;
     z-index: 5;
     pointer-events: none;
-
-    /* 글자색: 진한 갈색 (테두리 색과 깔맞춤) */
     color: #3e2723; 
-    
-    /* 그림자: 밝은 베이지색으로 살짝만 받쳐줌 */
     text-shadow: 2px 2px 0px #d7ccc8;
   }
 
@@ -467,6 +459,9 @@
     try {
       const res = await fetch(API_URL, {
         method: "POST",
+        // [수정] 통신 안정성 확보
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "getSaveData", id })
       });
       const txt = await res.text();
@@ -583,9 +578,6 @@
     `;
   }
 
-  // =========================================================================
-  // [수정] 인벤토리 렌더링 (그림자/회색/컬러 및 큰 글씨 적용)
-  // =========================================================================
   function renderInventory() {
     const invArea = document.getElementById('inventoryArea');
     
@@ -606,7 +598,6 @@
         }
         
         // 스킨 이미지를 기본으로 사용 (실루엣용)
-        // 조각 이미지 파일이 있다면 `fragment_...`를 쓰겠지만, 요청에 따라 스킨 이미지를 실루엣으로 활용
         const imgSrc = `skin_${skin.code}.png`; 
         const fallbackSrc = `skin_${skin.code}.png`; 
         
@@ -697,14 +688,25 @@
     if(!selectedFragment) return;
     const { code, name } = selectedFragment;
     
+    // [수정] 중복 보유 체크 추가
+    if(saveData.ownedSkins.includes(code)) {
+        alert("이미 보유한 스킨입니다.");
+        return;
+    }
+
     if(saveData.fragments[code] >= 100) {
         if(confirm(`${name} 스킨을 완성하시겠습니까?`)) {
             saveData.fragments[code] -= 100;
             saveData.ownedSkins.push(code);
             alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
             
-            // 로그 전송
-            fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) });
+            // 로그 전송 [수정: fetch 통신 안정화]
+            fetch(API_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain" },
+                redirect: 'follow',
+                body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) 
+            });
             
             updateUI();
             saveProgress();
@@ -766,7 +768,13 @@
   async function saveProgress() {
     localStorage.setItem("run_save", JSON.stringify(saveData));
     try {
-      await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "save", id, saveData }) });
+      await fetch(API_URL, { 
+          method: "POST", 
+          // [수정] 통신 안정성 확보
+          headers: { "Content-Type": "text/plain" },
+          redirect: 'follow',
+          body: JSON.stringify({ type: "save", id, saveData }) 
+      });
     } catch (e) { console.warn(e); }
   }
 
@@ -779,6 +787,11 @@
     saveData.mileage = (saveData.mileage || 0) + 1;
     
     updateUI();
+    
+    // [수정: 중요] 뽑기 버튼 누르는 즉시 저장 (Faith 차감 확정)
+    // 이렇게 해야 애니메이션 도중 새로고침해서 재화 소모를 무효화하는 것을 방지함.
+    saveProgress();
+
     document.getElementById("gachaModal").style.display = "flex";
     setTimeout(() => {
       document.getElementById("gachaModal").style.display = "none";
@@ -862,14 +875,24 @@
       else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
     }
 
-    // 경품 당첨 시 로그 전송
+    // 경품 당첨 시 로그 전송 [수정: fetch 통신 안정화]
     if (isSpecial) {
-      fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) });
+      fetch(API_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain" },
+          redirect: 'follow',
+          body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) 
+      });
     }
     
-    // 조각 획득 시에도 로그 전송
+    // 조각 획득 시에도 로그 전송 [수정: fetch 통신 안정화]
     if (fragmentInfo) {
-      fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) });
+      fetch(API_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain" },
+          redirect: 'follow',
+          body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) 
+      });
     }
 
     // [NEW] 대박이나 희귀 조각일 때 폭죽 효과 발사
