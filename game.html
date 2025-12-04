@@ -19,26 +19,23 @@
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* [수정] 노엘 에너지포 스타일: 에너르기파 느낌 강화 */
+    /* [수정] 노엘 에너지포 스타일: 위치를 앞으로 당김 (100px -> 170px) */
     .noel-beam {
         position: absolute;
-        left: 100px; /* 플레이어 몸체 중앙 부근 */
-        height: 140px; /* 빔 두께 */
-        width: 0; /* 애니메이션으로 확장됨 */
-        /* 코어(흰색)와 외곽(파란색) 그라데이션 */
+        left: 170px; /* 캐릭터 앞쪽에서 시작하도록 수정 */
+        height: 140px; 
+        width: 0; 
         background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
         z-index: 89;
         transform-origin: left center;
         pointer-events: none;
-        /* 발사 애니메이션 */
         animation: beamFire 0.4s ease-out forwards;
         mix-blend-mode: screen;
-        /* 빛나는 효과 */
         box-shadow: 0 0 40px cyan, 0 0 20px white;
         border-radius: 100px 0 0 100px;
     }
     
-    /* 에너지포 발사구 (기 모으는 느낌) */
+    /* 에너지포 발사구 */
     .noel-beam::before {
         content: '';
         position: absolute;
@@ -878,6 +875,12 @@
                   faith += gain; daily.faith20 += gain; 
                   document.getElementById("faithText").innerText = faith;
                   playSound('item'); // 획득 소리
+                  
+                  // [추가] 전찬 스킬 코인(manual) 획득 시 텍스트 표시
+                  if(coin.isManual) {
+                      showFloatText("+1 신앙심");
+                  }
+
                   coin.remove(); faithCoins.splice(i, 1); continue;
               }
           }
