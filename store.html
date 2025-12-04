@@ -213,26 +213,31 @@
   /* 3. 보유 중: 컬러 (기본) */
 
   /* [수정] 개수 표시 스타일 강화 */
-.inv-count {
-    position: absolute; bottom: 0px; right: 2px;
-    font-size: 40px; /* 크기 대폭 확대 (기존 16px -> 40px) */
-    color: #fff; 
-    font-weight: 900;
-    
-    /* 글자 테두리 (획) 추가 - 크롬/사파리 등 최신 브라우저 */
-    -webkit-text-stroke: 0.5px #000; 
-    
-    /* 테두리 호환성 (그림자로 외곽선 효과) */
-    text-shadow: 
-       1px 1px 0 #000,
-      -0.5px -0.5px 0 #000,  
-       0.5px -0.5px 0 #000,
-      -0.5px  0.5px 0 #000,
-       0.5px  0.5px 0 #000;
-       
+  
+/* [수정] 3D 입체 효과 스타일 (깔끔한 블록 형태) */
+  .inv-count {
+    position: absolute; 
+    bottom: 5px;   /* 두께만큼 위치 약간 위로 조정 */
+    right: 5px; 
+    font-size: 36px; /* 크기는 큼직하게 유지 */
+    color: #ffffff;  /* 숫자 색상: 흰색 */
+    font-weight: normal; /* 폰트 자체가 굵으므로 normal로 설정 */
+    font-family: 'DungGeunMo', monospace;
     z-index: 5;
-    pointer-events: none; /* 숫자가 클릭을 방해하지 않도록 설정 */
-    font-family: 'DungGeunMo', monospace; /* 폰트 확실하게 적용 */
+    pointer-events: none;
+    
+    /* [3D 효과 핵심] 
+       그림자를 1px씩 아래로 쌓아서 두께를 만듭니다.
+       테두리보다 훨씬 깔끔하고 단단해 보입니다.
+    */
+    text-shadow: 
+      0px 1px 0px #8d6e63,  /* 1단계 두께 (중간 갈색) */
+      0px 2px 0px #8d6e63,
+      0px 3px 0px #5d4037,  /* 2단계 두께 (진한 갈색) */
+      0px 4px 0px #5d4037,
+      0px 5px 0px #3e2723,  /* 3단계 바닥 (아주 진한 갈색) */
+      0px 6px 0px #3e2723,
+      2px 7px 5px rgba(0,0,0,0.4); /* 4단계: 바닥에 깔리는 부드러운 그림자 */
   }
 
   /* 천장 마일리지 스타일 */
