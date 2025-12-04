@@ -15,97 +15,83 @@
     /* 피버타임 시 배경 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
 
-    /* 지진 효과 (화면 흔들림) */
+    /* 지진 효과 */
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* [추가] 하은 스킨 보호막 스타일 */
-    .haeun-shield {
+    /* 화면 반짝임 효과 */
+    #flashEffect {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: white; opacity: 0; pointer-events: none; z-index: 200;
+        transition: opacity 0.1s;
+    }
+
+    /* 지은 스킨 전용 보호막 */
+    .jieun-shield {
         position: absolute;
-        width: 80px; height: 80px;
-        left: -10px; bottom: -10px; /* 플레이어 기준 위치 */
-        border-right: 6px solid rgba(255, 255, 255, 0.9); /* 오른쪽(앞쪽)만 보이게 */
+        width: 90px; height: 90px;
+        left: -15px; bottom: -15px;
+        border-right: 8px solid rgba(255, 255, 255, 0.8);
         border-radius: 50%;
-        box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5); /* 빛나는 효과 */
-        pointer-events: none;
-        z-index: 55;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        background: linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.2) 100%);
+        pointer-events: none; z-index: 55;
+    }
+
+    /* 노엘 스킨 (날아오는 연출용) */
+    .flying-noel {
+        position: absolute; width: 50px; height: 50px;
+        background-image: url('noel.png');
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 60; pointer-events: none;
+    }
+
+    /* 하은 스킨 보호막 */
+    .haeun-shield {
+        position: absolute; width: 80px; height: 80px;
+        left: -10px; bottom: -10px;
+        border-right: 6px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5);
+        pointer-events: none; z-index: 55;
         animation: shieldBreath 2s infinite ease-in-out;
     }
-    @keyframes shieldBreath {
-        0% { opacity: 0.6; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.05); }
-        100% { opacity: 0.6; transform: scale(1); }
-    }
+    @keyframes shieldBreath { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
 
-    /* [추가] 힐링 이펙트 (빨간색) */
+    /* 힐링 이펙트 */
     .heal-effect-visual {
-        position: absolute;
-        left: 50%; top: 50%;
-        transform: translate(-50%, -50%);
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: 100px; height: 100px;
         background: radial-gradient(circle, rgba(255,50,50,0) 20%, rgba(255,0,0,0.6) 60%, transparent 100%);
-        border: 2px solid rgba(255, 100, 100, 0.8);
-        border-radius: 50%;
-        animation: healExpand 0.6s ease-out forwards;
-        z-index: 95;
-        pointer-events: none;
+        border: 2px solid rgba(255, 100, 100, 0.8); border-radius: 50%;
+        animation: healExpand 0.6s ease-out forwards; z-index: 95; pointer-events: none;
     }
-    @keyframes healExpand {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
-    }
+    @keyframes healExpand { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; } }
 
-    /* 노엘 에너지포 스타일 */
+    /* 노엘 에너지포 */
     .noel-beam {
-        position: absolute;
-        left: 170px; 
-        height: 140px; 
-        width: 0; 
+        position: absolute; left: 170px; height: 140px; width: 0; 
         background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
-        z-index: 89;
-        transform-origin: left center;
-        pointer-events: none;
-        animation: beamFire 0.4s ease-out forwards;
-        mix-blend-mode: screen;
-        box-shadow: 0 0 40px cyan, 0 0 20px white;
-        border-radius: 100px 0 0 100px;
+        z-index: 89; transform-origin: left center; pointer-events: none;
+        animation: beamFire 0.4s ease-out forwards; mix-blend-mode: screen;
+        box-shadow: 0 0 40px cyan, 0 0 20px white; border-radius: 100px 0 0 100px;
     }
-    
     .noel-beam::before {
-        content: '';
-        position: absolute;
-        left: -20px; top: 50%;
-        transform: translateY(-50%);
+        content: ''; position: absolute; left: -20px; top: 50%; transform: translateY(-50%);
         width: 80px; height: 80px;
         background: radial-gradient(circle, #fff 20%, #00ffff 80%, transparent 100%);
-        border-radius: 50%;
-        box-shadow: 0 0 50px #fff;
-        opacity: 0.9;
+        border-radius: 50%; box-shadow: 0 0 50px #fff; opacity: 0.9;
     }
+    @keyframes beamFire { 0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 20% { width: 50vw; opacity: 1; transform: scaleY(1.2); } 100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } }
 
-    @keyframes beamFire { 
-        0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 
-        20% { width: 50vw; opacity: 1; transform: scaleY(1.2); }
-        100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } 
-    }
-
-    /* 전찬 스킨 번개 이펙트 */
+    /* 전찬 번개 */
     .jc-lightning {
-        position: absolute;
-        height: 12px;
-        background: #fff;
-        transform-origin: left center;
-        z-index: 89;
-        box-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00; 
-        pointer-events: none;
+        position: absolute; height: 12px; background: #fff; transform-origin: left center;
+        z-index: 89; box-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00; pointer-events: none;
         clip-path: polygon(0% 45%, 10% 25%, 20% 65%, 30% 20%, 40% 70%, 50% 30%, 60% 75%, 70% 20%, 80% 80%, 90% 30%, 100% 50%, 100% 60%, 90% 40%, 80% 90%, 70% 30%, 60% 85%, 50% 40%, 40% 80%, 30% 30%, 20% 75%, 10% 35%, 0% 55%);
         animation: lightningFlash 0.2s ease-out forwards;
     }
-    @keyframes lightningFlash {
-        0% { width: 0; opacity: 1; filter: brightness(2); }
-        40% { width: 130vw; opacity: 1; filter: brightness(1.5); }
-        100% { width: 130vw; opacity: 0; }
-    }
+    @keyframes lightningFlash { 0% { width: 0; opacity: 1; filter: brightness(2); } 40% { width: 130vw; opacity: 1; filter: brightness(1.5); } 100% { width: 130vw; opacity: 0; } }
 
     /* 배경 */
     .bg-layer { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
@@ -295,6 +281,8 @@
   <div id="bgLayer3" class="bg-layer"></div>
   <div id="speedLines"></div> <div id="ground"></div> <div id="player"></div>
 
+  <div id="flashEffect"></div>
+
   <div id="bossContainer">
     <div id="bossHpBar"><div id="bossHpFill"></div></div>
     <div id="bossBody"></div>
@@ -404,7 +392,6 @@
   }
 
   let life = 10 + (saveData.extraLife || 0);
-  // [추가] 최대 생명력 저장 (상점에서 구매한 만큼만)
   let maxLife = 10 + (saveData.extraLife || 0);
 
   let faith = saveData.faith || 0;
@@ -520,12 +507,13 @@
       playSound('hit');
   }
 
-  // [수정] 수동 획득 여부 파라미터(manualCollection) 추가
-  function spawnFaithCoins(x, y, count, manualCollection = false) {
+  // [수정] 수동 획득 여부 파라미터(manualCollection) 추가, 자동 흡수(autoCollect) 옵션 추가
+  function spawnFaithCoins(x, y, count, manualCollection = false, autoCollect = false) {
       for(let i=0; i<count; i++) {
           const coin = document.createElement('div');
           coin.classList.add('faith-coin');
-          coin.isManual = manualCollection; // 수동 획득 속성 추가
+          coin.isManual = manualCollection; 
+          coin.isAutoCollect = autoCollect; // [추가] 자동 흡수 속성
           
           const spreadX = (Math.random() - 0.5) * 100;
           const spreadY = (Math.random() - 0.5) * 100;
@@ -535,28 +523,108 @@
       }
   }
 
-  // [추가] 하은 스킨 보호막 생성
   function createHaeunShield() {
       const shield = document.createElement('div');
       shield.id = 'haeunShield';
       shield.className = 'haeun-shield';
-      player.appendChild(shield); // 플레이어 자식으로 추가하여 따라다니게 함
+      player.appendChild(shield);
   }
 
-  // [추가] 하은 스킨 보호막 제거
   function removeHaeunShield() {
       const shield = document.getElementById('haeunShield');
       if(shield) shield.remove();
   }
 
-  // [추가] 힐링 이펙트
   function showHealEffect() {
       const heal = document.createElement('div');
       heal.className = 'heal-effect-visual';
       heal.style.left = '50%';
       heal.style.top = '50%';
-      player.appendChild(heal); // 플레이어 위에서 터짐
+      player.appendChild(heal); 
       setTimeout(()=>heal.remove(), 600);
+  }
+
+  // [추가] 지은 스킨 스킬: 노엘 도착 연출
+  function triggerJieunSkill() {
+      const noel = document.createElement('div');
+      noel.className = 'flying-noel';
+      // 화면 오른쪽 위에서 시작
+      const startX = window.innerWidth - 100;
+      const startY = 100;
+      noel.style.left = startX + 'px';
+      noel.style.top = startY + 'px';
+      gameArea.appendChild(noel);
+
+      // 애니메이션: 1초 동안 플레이어에게 날아옴 (포물선 느낌은 cubic-bezier로 단순화하거나 JS로 계산 가능하지만 여기선 transition 사용)
+      noel.style.transition = "all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+      
+      // 다음 프레임에 목표 위치로 이동
+      requestAnimationFrame(() => {
+          const pRect = player.getBoundingClientRect();
+          // 플레이어 위치 계산 (화면 좌표)
+          noel.style.left = (pRect.left) + 'px';
+          noel.style.top = (pRect.top) + 'px';
+      });
+
+      // 도착 후 처리
+      setTimeout(() => {
+          noel.remove();
+          activateJieunBuff();
+      }, 800);
+  }
+
+  // [추가] 지은 스킨 스킬: 변신 및 버프 활성화
+  function activateJieunBuff() {
+      // 화면 반짝임
+      const flash = document.getElementById('flashEffect');
+      flash.style.opacity = '0.8';
+      setTimeout(() => flash.style.opacity = '0', 100);
+      playSound('item'); // 변신 효과음 대용
+
+      // 스킨 변경
+      player.style.backgroundImage = `url('Skill_NJ.png')`;
+      
+      // 보호막 생성
+      const shield = document.createElement('div');
+      shield.id = 'jieunShield';
+      shield.className = 'jieun-shield';
+      player.appendChild(shield);
+
+      // 버프 적용 (summon 버프 재활용하되, 충돌 로직에서 jieunShield 체크 추가)
+      activeEffects.summon = 20; 
+      showFloatText("🛡️ 노엘 합체!");
+
+      // 20초 후 원상복구 예약은 updateBuffUI에서 처리됨 (activeEffects.summon이 0이 될 때)
+  }
+
+  // [추가] 지은 스킨 스킬: 종료 처리
+  function deactivateJieunBuff() {
+      // 화면 반짝임
+      const flash = document.getElementById('flashEffect');
+      flash.style.opacity = '0.8';
+      setTimeout(() => flash.style.opacity = '0', 100);
+
+      // 스킨 복구
+      player.style.backgroundImage = `url('skin_jieun.png')`;
+
+      // 보호막 제거
+      const shield = document.getElementById('jieunShield');
+      if(shield) shield.remove();
+
+      // 노엘 떠나는 연출
+      const noel = document.createElement('div');
+      noel.className = 'flying-noel';
+      const pRect = player.getBoundingClientRect();
+      noel.style.left = pRect.left + 'px';
+      noel.style.top = pRect.top + 'px';
+      gameArea.appendChild(noel);
+
+      noel.style.transition = "all 1s ease-in";
+      requestAnimationFrame(() => {
+          noel.style.left = (window.innerWidth + 200) + 'px';
+          noel.style.top = '-200px';
+      });
+      setTimeout(() => noel.remove(), 1000);
   }
 
   function jump() {
@@ -663,7 +731,9 @@
       playSound('clear'); 
     } else if(currentSkin === 'jaeguk') { activeEffects.revive = 30; showFloatText("👼 자동 부활 On"); } 
     else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
-    else if(currentSkin === 'jieun') { activeEffects.summon = 20; showFloatText("🛡️ 노엘 소환!"); }
+    else if(currentSkin === 'jieun') { 
+        triggerJieunSkill(); // [수정] 지은 스킨 스킬 발동 함수 호출
+    }
     abilityCD = s.cd;
   }
 
@@ -676,11 +746,10 @@
       const px = pRect.left + pRect.width/2;
       const py = pRect.top + pRect.height/2;
 
-      // [수정] 7갈래 번개로 변경
       for(let i=0; i<7; i++){
-          const angle = (i * (360/7)); // 7방향으로 균등 분할
+          const angle = (i * (360/7)); 
           const beam = document.createElement('div');
-          beam.className = 'jc-lightning'; // [수정] 지그재그 클래스 적용
+          beam.className = 'jc-lightning'; 
           beam.style.left = px + 'px';
           beam.style.top = py + 'px';
           beam.style.transform = `rotate(${angle}deg)`;
@@ -688,7 +757,6 @@
           setTimeout(()=>beam.remove(), 300);
       }
 
-      // 2. 장애물 파괴 및 코인 생성 로직
       for(let i = obstacles.length - 1; i >= 0; i--) {
           let o = obstacles[i];
           let left = parseFloat(o.style.left);
@@ -696,11 +764,8 @@
           if(left > -50 && left < window.innerWidth && !o.destroyed) {
               if(Math.random() < 0.5) {
                   spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-
-                  // [수정] 코인 생성 시 manualCollection = true로 설정
                   let coins = Math.floor(Math.random() * 5) + 1;
                   spawnFaithCoins(left + 30, window.innerHeight - 150, coins, true);
-
                   o.remove(); 
                   obstacles.splice(i, 1); 
               }
@@ -725,6 +790,13 @@
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
             
+            // [수정] 지은 스킬 종료 처리 (summon 버프가 끝날 때)
+            if(k === 'summon' && currentSkin === 'jieun') {
+                if(activeEffects[k] <= 0) {
+                    deactivateJieunBuff();
+                }
+            }
+
             if(k === 'noelLaser') {
                 if(activeEffects[k] <= 0) {
                     const beam = document.getElementById('noelBeam');
@@ -741,6 +813,7 @@
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
                 else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
+                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "합체"; }
                 if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
@@ -818,7 +891,6 @@
         missionUpdateTimer += safeDelta;
         if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
 
-        // [추가] 전찬 스킨 타이머 및 자동 발동 로직
         if(currentSkin === 'jeonchan' && running && !isBossBattle) {
             jeonchanTimer += safeDelta;
             if(jeonchanTimer >= 15.0) {
@@ -827,9 +899,7 @@
             }
         }
 
-        // [추가] 하은 스킨 스킬 로직 (보호막 & 힐)
         if(currentSkin === 'haeun' && running && !isBossBattle) {
-            // 보호막 (10초마다)
             if(!haeunShieldActive) {
                 haeunShieldTimer += safeDelta;
                 if(haeunShieldTimer >= 10.0) {
@@ -839,8 +909,6 @@
                     showFloatText("🛡️ 보호막 생성");
                 }
             }
-
-            // 힐 (25초마다, 최대체력까지만)
             haeunLifeTimer += safeDelta;
             if(haeunLifeTimer >= 25.0) {
                 haeunLifeTimer = 0;
@@ -853,7 +921,6 @@
             }
         }
         
-        // [추가] 노엘 빔 위치 동기화 (캐릭터 움직임 따라가기)
         if(activeEffects.noelLaser > 0) {
             const beam = document.getElementById('noelBeam');
             if(beam) {
@@ -932,14 +999,12 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // [수정] 수동/자동 코인 획득 로직 통합
   function updateFaithCoinsLogic(dt) {
       for(let i = faithCoins.length - 1; i >= 0; i--) {
           const coin = faithCoins[i]; coin.timer += dt;
           let cx = parseFloat(coin.style.left); let cy = parseFloat(coin.style.top);
           
           if (coin.timer < 0.3) { 
-              // 초반 퍼지는 효과
               cx += coin.vx * dt * 2; 
               cy += coin.vy * dt * 2; 
           } 
@@ -948,25 +1013,22 @@
               const targetX = pRect.left + pRect.width/2; const targetY = pRect.top + pRect.height/2;
               const dx = targetX - cx; const dy = targetY - cy;
 
-              // [수정] 수동 코인이 아닐 때만 자석 효과 발동
-              if (!coin.isManual) {
+              // [수정] 자동 수집 속성(isAutoCollect)이 있거나, 전찬 스킬 코인이 아닐 경우 자석 효과
+              if (coin.isAutoCollect || !coin.isManual) {
                   cx += dx * 8 * dt; 
                   cy += dy * 8 * dt;
               } else {
-                  // [수정] 수동 코인은 게임 속도에 맞춰 뒤로 밀려남 (스크롤됨)
                   cx -= gameSpeed * dt;
               }
               
-              // 충돌 감지 (자동/수동 공통)
-              if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { // 충돌 범위 약간 완화
+              if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { 
                   let gain = 1;
                   if(collectionBuff && Math.random() < 0.1) gain = 2;
 
                   faith += gain; daily.faith20 += gain; 
                   document.getElementById("faithText").innerText = faith;
-                  playSound('item'); // 획득 소리
+                  playSound('item'); 
                   
-                  // [추가] 전찬 스킬 코인(manual) 획득 시 텍스트 표시
                   if(coin.isManual) {
                       showFloatText("+1 신앙심");
                   }
@@ -975,7 +1037,6 @@
               }
           }
           
-          // 화면 밖으로 나가면 제거
           if(cx < -50) {
               coin.remove(); faithCoins.splice(i, 1); continue;
           }
@@ -1392,6 +1453,27 @@
             continue;
         }
         
+        // [수정] 지은 스킨 스킬 (소환 상태) 충돌 처리
+        if (currentSkin === 'jieun' && activeEffects.summon > 0 && !o.destroyed) {
+            const rP = player.getBoundingClientRect();
+            // 지은 스킨 보호막 영역(대략 플레이어보다 약간 큰 범위)
+            const shieldRange = 90; 
+            const rO = o.getBoundingClientRect();
+            
+            // 보호막과 장애물 충돌 체크
+            if (rP.right + 20 > rO.left && rP.left - 20 < rO.right && 
+                rP.bottom + 20 > rO.top && rP.top - 20 < rO.bottom) {
+                
+                o.destroyed = true;
+                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+                // 코인 생성 및 자동 흡수
+                spawnFaithCoins(left, window.innerHeight - 150, 3, false, true);
+                o.remove(); obstacles.splice(i, 1);
+                showFloatText("💥 파괴!");
+                continue;
+            }
+        }
+
         if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
@@ -1453,7 +1535,6 @@
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
     
-    // [추가] 하은 스킨 보호막 체크
     if(currentSkin === 'haeun' && haeunShieldActive) {
         haeunShieldActive = false;
         removeHaeunShield();
