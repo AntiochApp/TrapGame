@@ -19,20 +19,30 @@
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* 노엘 에너지포 스타일 */
+    /* [수정] 노엘 에너지포 스타일: 캐릭터를 따라다니도록 높이와 스타일 조정 */
     .noel-beam {
-        position: absolute; left: 150px; bottom: 0; width: 50vw; height: 100vh;
-        background: linear-gradient(90deg, rgba(0, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.8) 20%, rgba(0, 100, 255, 0) 100%);
-        z-index: 89; transform-origin: left center; opacity: 0.9; pointer-events: none;
-        animation: beamPulse 0.2s infinite alternate; mix-blend-mode: screen;
-        border-left: 10px solid #fff; box-shadow: 0 0 50px cyan;
+        position: absolute;
+        left: 140px; /* 플레이어 앞쪽 */
+        /* bottom: 0;  <- JS로 제어하기 위해 제거 */
+        width: 150vw;
+        height: 100px; /* [수정] 100vh -> 100px (빔 형태로 변경) */
+        background: linear-gradient(90deg, rgba(0, 255, 255, 0.8) 0%, rgba(255, 255, 255, 1) 20%, rgba(0, 100, 255, 0) 100%);
+        z-index: 89;
+        transform-origin: left center;
+        opacity: 0.9;
+        pointer-events: none;
+        animation: beamPulse 0.1s infinite alternate; /* [수정] 속도 빠르게 */
+        mix-blend-mode: screen;
+        border-left: 5px solid #fff;
+        box-shadow: 0 0 30px cyan;
+        border-radius: 0 50px 50px 0; /* [추가] 빔 끝을 둥글게 */
     }
     @keyframes beamPulse { 
         0% { transform: scaleY(1); opacity: 0.8; filter: hue-rotate(0deg); } 
         100% { transform: scaleY(1.05); opacity: 1; filter: hue-rotate(10deg); } 
     }
 
-    /* [추가] 전찬 스킨 번개 이펙트 */
+    /* 전찬 스킨 번개 이펙트 */
     .jc-lightning {
         position: absolute;
         height: 4px;
@@ -741,6 +751,16 @@
             if(jeonchanTimer >= 15.0) {
                 triggerJeonchanSkill();
                 jeonchanTimer = 0;
+            }
+        }
+        
+        // [추가] 노엘 빔 위치 동기화 (캐릭터 움직임 따라가기)
+        if(activeEffects.noelLaser > 0) {
+            const beam = document.getElementById('noelBeam');
+            if(beam) {
+                // 빔의 높이를 플레이어 높이(playerY)에 맞춰 이동
+                // 플레이어 중앙 ~ 빔 중앙 맞춤
+                beam.style.bottom = (playerY - 20) + "px";
             }
         }
 
