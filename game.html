@@ -26,6 +26,33 @@
         transition: opacity 0.1s;
     }
 
+    /* [신규] 재국 스킨 - 보바(타피오카 펄) 스타일 */
+    .boba-unit {
+        position: absolute; width: 18px; height: 18px;
+        background: radial-gradient(circle at 30% 30%, #4e342e, #212121);
+        border: 1px solid #000; border-radius: 50%;
+        box-shadow: 2px 2px 3px rgba(0,0,0,0.4);
+        z-index: 65; pointer-events: none;
+    }
+
+    /* [신규] 재국 스킨 - 부활 천사 날개 이펙트 */
+    .angel-wing-effect {
+        position: absolute; width: 150px; height: 150px;
+        left: 50%; top: 50%; transform: translate(-50%, -50%);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 100px; z-index: 100;
+        text-shadow: 0 0 20px gold, 0 0 40px white;
+        animation: wingRise 2s ease-out forwards;
+        pointer-events: none;
+    }
+    .angel-wing-effect::after { content: '🪽'; }
+    @keyframes wingRise { 
+        0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 
+        80% { opacity: 1; transform: translate(-50%, -80%) scale(1.3); }
+        100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } 
+    }
+
     /* 지은 스킨 전용 보호막 */
     .jieun-shield {
         position: absolute;
@@ -406,10 +433,10 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // [수정] 전찬 스킨 설정 변경
+  // [수정] 재국 스킨 업데이트 (Active, CD 70초)
   const SKIN_DATA = {
     default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive" },
-    haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 120 }, hahwi: { type: "Passive", cd: 20 },
+    haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 70 }, hahwi: { type: "Passive", cd: 20 },
     jihye: { type: "Passive" }, jun: { type: "Passive" }, stephanie: { type: "Passive" },
     yejun: { type: "Active", cd: 180 }, ganghui: { type: "Passive", cd: 20 }, jieun: { type: "Active", cd: 120 }
   };
@@ -461,17 +488,19 @@
   let abilityCD = 0;
   let missionUpdateTimer = 0;
   
-  // [추가] 전찬, 하은 스킨용 타이머 변수
+  // [추가] 전찬, 하은, 재국 스킨용 타이머 및 상태 변수
   let jeonchanTimer = 0;
   let haeunLifeTimer = 0;
   let haeunShieldTimer = 0;
   let haeunShieldActive = false;
+  let jaegukRevivedOnce = false; // 재국 1회 부활 체크
+  let bobas = []; // 재국 보바 저장 배열
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
   let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
-  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0 };
+  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0, bobaTime: 0 };
 
   let feverGauge = 0;
   const MAX_FEVER = 100;
@@ -523,8 +552,11 @@
           coin.isManual = manualCollection; 
           coin.isAutoCollect = autoCollect; // [추가] 자동 흡수 속성
           
-          const spreadX = (Math.random() - 0.5) * 100;
-          const spreadY = (Math.random() - 0.5) * 100;
+          // [수정] 적 처치 등으로 필드에 뿌려질 땐 더 넓게 퍼지도록
+          const spreadMult = (!manualCollection && !autoCollect) ? 5 : 1;
+
+          const spreadX = (Math.random() - 0.5) * 100 * spreadMult;
+          const spreadY = (Math.random() - 0.5) * 100 * spreadMult;
           coin.style.left = x + 'px'; coin.style.top = y + 'px';
           coin.vx = spreadX; coin.vy = spreadY; coin.timer = 0;
           gameArea.appendChild(coin); faithCoins.push(coin);
@@ -727,6 +759,22 @@
       playSound('jump');
   }
 
+  // [신규] 재국 스킨 - 보바 생성 함수
+  function triggerJaegukBobas() {
+      showFloatText("🧋 버블티 파워!");
+      activeEffects.bobaTime = 20; 
+      for(let i=0; i<5; i++) {
+          const b = document.createElement('div');
+          b.className = 'boba-unit';
+          b.angle = (i / 5) * Math.PI * 2; // 초기 각도
+          b.radius = 60;
+          b.targetObs = null; // 타겟 장애물
+          gameArea.appendChild(b);
+          bobas.push(b);
+      }
+      playSound('item');
+  }
+
   function useAbility(e) {
     if(e) e.stopPropagation();
     if(!running || abilityCD > 0) return;
@@ -742,7 +790,11 @@
       
       gameArea.classList.add('shake-screen');
       playSound('clear'); 
-    } else if(currentSkin === 'jaeguk') { activeEffects.revive = 30; showFloatText("👼 자동 부활 On"); } 
+    } 
+    // [수정] 재국 스킬: 버블티 보바 소환
+    else if(currentSkin === 'jaeguk') { 
+        triggerJaegukBobas();
+    }
     else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
     else if(currentSkin === 'jieun') { 
         triggerJieunSkill(); // [수정] 지은 스킨 스킬 발동 함수 호출
@@ -818,6 +870,12 @@
                 }
             }
 
+            // [추가] 재국 보바 시간 종료
+            if(k === 'bobaTime' && activeEffects[k] <= 0) {
+                bobas.forEach(b => b.remove());
+                bobas = [];
+            }
+
             if(activeEffects[k] > 0) {
                 let color = "#fff"; let icon = ""; let label = k;
                 if(k === 'invincible') { color = "#ffd700"; icon = "🛡️"; label = "무적"; }
@@ -827,6 +885,7 @@
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
                 else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
                 else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "소환"; }
+                else if(k === 'bobaTime') { color = "#795548"; icon = "🧋"; label = "보바 타임"; }
                 if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
@@ -938,6 +997,67 @@
             const beam = document.getElementById('noelBeam');
             if(beam) {
                 beam.style.bottom = (playerY - 20) + "px";
+            }
+        }
+
+        // [신규] 재국 스킨 - 보바 움직임 및 로직
+        if(activeEffects.bobaTime > 0 && bobas.length > 0) {
+            const pRect = player.getBoundingClientRect();
+            const px = pRect.left + pRect.width/2;
+            const py = pRect.top + pRect.height/2;
+
+            for(let i=0; i<bobas.length; i++) {
+                let b = bobas[i];
+                if(b.targetObs && b.targetObs.isConnected && !b.targetObs.destroyed) {
+                   // 타겟이 있으면 돌진
+                   const tRect = b.targetObs.getBoundingClientRect();
+                   const tx = tRect.left + tRect.width/2; 
+                   const ty = tRect.top + tRect.height/2;
+                   const bx = parseFloat(b.style.left);
+                   const by = parseFloat(b.style.top);
+                   const angle = Math.atan2(ty - by, tx - bx);
+                   
+                   const speed = 600 * safeDelta; // 빠른 속도
+                   const nextX = bx + Math.cos(angle) * speed;
+                   const nextY = by + Math.sin(angle) * speed;
+                   b.style.left = nextX + "px";
+                   b.style.top = nextY + "px";
+                   
+                   // 충돌 체크
+                   if(Math.hypot(tx-nextX, ty-nextY) < 30) {
+                        b.targetObs.destroyed = true;
+                        spawnExplosionEffect(parseFloat(b.targetObs.style.left), parseFloat(b.targetObs.style.top || (window.innerHeight - parseFloat(b.targetObs.style.bottom) - 50)));
+                        let coinCount = Math.floor(Math.random() * 5) + 1; // 1~5개
+                        spawnFaithCoins(nextX, nextY, coinCount, false, true); // 자동 흡수
+                        b.targetObs.remove();
+                        // 보바 복귀
+                        b.targetObs = null;
+                        b.style.left = px + "px"; b.style.top = py + "px";
+                   }
+                } else {
+                   // 타겟 없음: 플레이어 주위 회전 및 탐색
+                   b.targetObs = null; // 죽은 타겟 해제
+                   b.angle += 2 * safeDelta;
+                   const bx = px + Math.cos(b.angle) * b.radius;
+                   const by = py + Math.sin(b.angle) * b.radius;
+                   b.style.left = bx + "px";
+                   b.style.top = by + "px";
+                   
+                   // 탐색 (가장 가까운 장애물)
+                   let minDist = 300; 
+                   let candidate = null;
+                   obstacles.forEach(o => {
+                       if(!o.destroyed && parseFloat(o.style.left) > 0 && parseFloat(o.style.left) < window.innerWidth) {
+                           const oRect = o.getBoundingClientRect();
+                           const dist = Math.hypot((oRect.left+30) - bx, (oRect.top+30) - by);
+                           if(dist < minDist) {
+                               minDist = dist;
+                               candidate = o;
+                           }
+                       }
+                   });
+                   if(candidate) b.targetObs = candidate;
+                }
             }
         }
 
@@ -1091,7 +1211,10 @@
 
         if (activeEffects.noelLaser > 0 && e.x < window.innerWidth) {
             spawnExplosionEffect(e.x + 30, e.y + 30);
-            spawnFaithCoins(e.x + 30, e.y + 30, Math.floor(randBetween(10, 31)));
+            // [수정] 랜덤 위치 뿌리기 (5~9개)
+            let count = 4 + e.type; 
+            spawnFaithCoins(randBetween(100, window.innerWidth - 100), randBetween(50, window.innerHeight - 150), count, true, false); 
+            
             showFloatText("💥 레이저 분쇄!");
             e.isDead = true;
             if(e.laserWarning) e.laserWarning.remove();
@@ -1105,7 +1228,10 @@
            if (e.x < window.innerWidth) e.feverTimer += dt;
            if (e.feverTimer > 1.0) {
                spawnExplosionEffect(e.x + 30, e.y + 30);
-               spawnFaithCoins(e.x + 30, e.y + 30, 5); 
+               // [수정] 랜덤 위치 뿌리기 (5~9개)
+               let count = 4 + e.type; 
+               spawnFaithCoins(randBetween(100, window.innerWidth - 100), randBetween(50, window.innerHeight - 150), count, true, false);
+               
                showFloatText("💥 적군 섬멸!");
                
                e.isDead = true;
@@ -1342,7 +1468,11 @@
                     if(e.laserBeam) e.laserBeam.remove();
                     
                     e.remove(); enemies.splice(j, 1); 
-                    spawnFaithCoins(rE.left, rE.top, 5); 
+                    
+                    // [수정] 랜덤 위치 뿌리기 (5~9개)
+                    let count = 4 + e.type; 
+                    spawnFaithCoins(randBetween(100, window.innerWidth - 100), randBetween(50, window.innerHeight - 150), count, true, false); 
+                    
                     showFloatText("💥 적군 격파! (+5)"); 
                     if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER); 
                 }
@@ -1410,7 +1540,11 @@
                     if(e.laserBeam) e.laserBeam.remove();
                     
                     e.remove(); enemies.splice(i, 1); 
-                    spawnFaithCoins(rE.left, rE.top, 5);
+                    
+                    // [수정] 랜덤 위치 뿌리기 (5~9개)
+                    let count = 4 + e.type; 
+                    spawnFaithCoins(randBetween(100, window.innerWidth - 100), randBetween(50, window.innerHeight - 150), count, true, false); 
+                    
                     showFloatText("💥 적군 분쇄! (+5)"); 
                     spawnExplosionEffect(rE.left, rE.top); continue; 
                 } 
@@ -1569,6 +1703,24 @@
   }
 
   function damageLife() {
+    // [신규] 재국 스킨 - 1회용 즉시 부활 (최대 체력)
+    if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
+        jaegukRevivedOnce = true;
+        life = maxLife;
+        document.getElementById("lifeText").innerText = life;
+        
+        // 부활 이펙트 (천사 날개)
+        const wing = document.createElement('div');
+        wing.className = 'angel-wing-effect';
+        gameArea.appendChild(wing);
+        setTimeout(() => wing.remove(), 2000);
+        
+        showFloatText("🪽 부활!");
+        playSound('item');
+        activeEffects.invincible = 3; 
+        return;
+    }
+
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
