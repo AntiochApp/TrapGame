@@ -349,6 +349,9 @@
     try {
       const res = await fetch(API_URL, {
         method: "POST",
+        // [수정] 통신 안정성 확보 (Apps Script용 필수 옵션)
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "login", id, password: pw })
       });
 
@@ -396,6 +399,9 @@
     try {
       const res = await fetch(API_URL, {
         method: "POST",
+        // [수정] 통신 안정성 확보
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "signup", id, password: pw, name, bible })
       });
       
@@ -434,6 +440,9 @@
     try {
       const res = await fetch(API_URL, {
         method: "POST",
+        // [수정] 통신 안정성 확보
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "findPw", name, bible })
       });
 
