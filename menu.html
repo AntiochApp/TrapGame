@@ -487,11 +487,10 @@
     try {
       await fetch(API_URL, {
         method: "POST",
-        // [수정] 통신 안정성을 위한 헤더 및 리다이렉트 옵션 추가
         headers: { "Content-Type": "text/plain" },
         redirect: 'follow',
         body: JSON.stringify({ 
-          type: "saveGameData", 
+          type: "save", // [수정됨] saveGameData -> save (서버와 일치시킴)
           id: id,
           saveData: saveData
         })
@@ -538,7 +537,7 @@
 
 
   // ==========================================
-  // [수정] 공지사항 (안정적 통신 + 커스텀 비밀번호창)
+  // [수정] 공지사항 (타입 이름 및 삭제 로직 보완)
   // ==========================================
   
   // 비밀번호 인증을 위한 상태 변수
@@ -552,12 +551,12 @@
   async function loadNotices() {
     const listDiv = document.getElementById("noticeList");
     try {
-      // [수정] fetch 통신 옵션 강화 (redirect, headers) -> 로딩 실패 방지
       const res = await fetch(API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain" },
         redirect: 'follow',
-        body: JSON.stringify({ type: "getNotices" }) 
+        // [수정됨] getNotices -> getNotice (서버와 일치시킴)
+        body: JSON.stringify({ type: "getNotice" }) 
       });
       const txt = await res.text();
 
@@ -573,14 +572,17 @@
       }
 
       let html = "";
-      notices.forEach((n) => {
+      notices.forEach((n, index) => {
+        // [수정됨] 삭제 시 rowIndex가 없으면 목록 순서(index)를 사용하도록 안전장치 추가
+        const delIdx = (n.rowIndex !== undefined) ? n.rowIndex : index + 2; 
+        
         html += `
           <div class="notice-item">
             <span class="notice-title">📢 ${n.title}</span>
             <div class="notice-content">${n.content}</div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
               <span class="notice-date">${n.date} · ${n.writer}</span>
-              <button class="btn-mini btn-del" onclick="requestDelete(${n.rowIndex})">삭제</button>
+              <button class="btn-mini btn-del" onclick="requestDelete(${delIdx})">삭제</button>
             </div>
           </div>
         `;
@@ -589,7 +591,6 @@
       
     } catch(e) {
       console.warn("Notice Load Error:", e);
-      // 실패하더라도 리스트 초기화 메시지 띄우기 (실패 메시지 X)
       listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>공지사항을 불러오는 중 오류가 발생했습니다.</p>";
     }
   }
