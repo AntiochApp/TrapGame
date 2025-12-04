@@ -1474,7 +1474,32 @@
             }
         }
 
-        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
+        // [추가] 하은 스킨 보호막 충돌 처리
+        if (currentSkin === 'haeun' && haeunShieldActive && !o.destroyed) {
+            const rP = player.getBoundingClientRect();
+            const rO = o.getBoundingClientRect();
+            // 플레이어보다 조금 큰 범위로 충돌 체크 (보호막 크기 고려)
+            if (rP.right + 20 > rO.left && rP.left - 10 < rO.right && 
+                rP.bottom + 10 > rO.top && rP.top - 10 < rO.bottom) {
+                
+                o.destroyed = true;
+                haeunShieldActive = false; // 보호막 해제
+                removeHaeunShield();
+                
+                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+                
+                // 신앙심 코인 5-10개 생성 및 자동 흡수
+                let coins = Math.floor(randBetween(5, 11));
+                spawnFaithCoins(left, window.innerHeight - 150, coins, false, true);
+                
+                o.remove(); obstacles.splice(i, 1);
+                showFloatText("🛡️ 방어 & 파괴!");
+                playSound('clear');
+                continue;
+            }
+        }
+
+        if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
                 damageLife(); break;
