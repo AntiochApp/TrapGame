@@ -19,30 +19,54 @@
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* 노엘 에너지포 스타일 */
+    /* [수정] 노엘 에너지포 스타일: 에너르기파 느낌 강화 */
     .noel-beam {
-        position: absolute; left: 140px; width: 150vw; height: 100px;
-        background: linear-gradient(90deg, rgba(0, 255, 255, 0.8) 0%, rgba(255, 255, 255, 1) 20%, rgba(0, 100, 255, 0) 100%);
-        z-index: 89; transform-origin: left center; opacity: 0.9; pointer-events: none;
-        animation: beamPulse 0.1s infinite alternate; mix-blend-mode: screen;
-        border-left: 5px solid #fff; box-shadow: 0 0 30px cyan; border-radius: 0 50px 50px 0;
+        position: absolute;
+        left: 100px; /* 플레이어 몸체 중앙 부근 */
+        height: 140px; /* 빔 두께 */
+        width: 0; /* 애니메이션으로 확장됨 */
+        /* 코어(흰색)와 외곽(파란색) 그라데이션 */
+        background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
+        z-index: 89;
+        transform-origin: left center;
+        pointer-events: none;
+        /* 발사 애니메이션 */
+        animation: beamFire 0.4s ease-out forwards;
+        mix-blend-mode: screen;
+        /* 빛나는 효과 */
+        box-shadow: 0 0 40px cyan, 0 0 20px white;
+        border-radius: 100px 0 0 100px;
     }
-    @keyframes beamPulse { 
-        0% { transform: scaleY(1); opacity: 0.8; filter: hue-rotate(0deg); } 
-        100% { transform: scaleY(1.05); opacity: 1; filter: hue-rotate(10deg); } 
+    
+    /* 에너지포 발사구 (기 모으는 느낌) */
+    .noel-beam::before {
+        content: '';
+        position: absolute;
+        left: -20px; top: 50%;
+        transform: translateY(-50%);
+        width: 80px; height: 80px;
+        background: radial-gradient(circle, #fff 20%, #00ffff 80%, transparent 100%);
+        border-radius: 50%;
+        box-shadow: 0 0 50px #fff;
+        opacity: 0.9;
     }
 
-    /* [수정] 전찬 스킨 번개 이펙트: 지그재그 형태 */
+    /* 뻗어나가는 애니메이션 */
+    @keyframes beamFire { 
+        0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 
+        20% { width: 50vw; opacity: 1; transform: scaleY(1.2); }
+        100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } 
+    }
+
+    /* 전찬 스킨 번개 이펙트 */
     .jc-lightning {
         position: absolute;
-        height: 12px; /* 두께감 증가 */
-        background: #fff; /* 기본 흰색 */
+        height: 12px;
+        background: #fff;
         transform-origin: left center;
         z-index: 89;
-        /* 노란색 광원 효과 */
         box-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00; 
         pointer-events: none;
-        /* 지그재그 모양을 만드는 clip-path */
         clip-path: polygon(0% 45%, 10% 25%, 20% 65%, 30% 20%, 40% 70%, 50% 30%, 60% 75%, 70% 20%, 80% 80%, 90% 30%, 100% 50%, 100% 60%, 90% 40%, 80% 90%, 70% 30%, 60% 85%, 50% 40%, 40% 80%, 30% 30%, 20% 75%, 10% 35%, 0% 55%);
         animation: lightningFlash 0.2s ease-out forwards;
     }
@@ -1235,13 +1259,24 @@
         o.style.left = left + "px";
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
 
-        if (activeEffects.noelLaser > 0 && left < window.innerWidth && !o.destroyed) {
-            o.destroyed = true;
-            spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
-            o.remove(); obstacles.splice(i, 1);
-            showFloatText("💰 대박!");
-            continue;
+        // [수정] 노엘 스킬: 닿은 장애물만 파괴
+        if (activeEffects.noelLaser > 0 && !o.destroyed) {
+            const beam = document.getElementById('noelBeam');
+            if (beam) {
+                const rB = beam.getBoundingClientRect();
+                const rO = o.getBoundingClientRect();
+                // AABB 충돌 체크
+                if (rB.right > rO.left && rB.left < rO.right && 
+                    rB.bottom > rO.top && rB.top < rO.bottom) {
+                    
+                    o.destroyed = true;
+                    spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+                    spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
+                    o.remove(); obstacles.splice(i, 1);
+                    showFloatText("💰 대박!");
+                    continue;
+                }
+            }
         }
 
         if (isFeverTime && left < 180 && !o.destroyed) {
