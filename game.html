@@ -15,30 +15,39 @@
     /* 피버타임 시 배경 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
 
-    /* [추가] 지진 효과 (화면 흔들림) */
+    /* 지진 효과 (화면 흔들림) */
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
 
-    /* [추가] 노엘 에너지포 스타일 */
+    /* 노엘 에너지포 스타일 */
     .noel-beam {
-        position: absolute;
-        left: 150px; /* 플레이어 앞쪽 */
-        bottom: 0; /* 바닥부터 */
-        width: 150vw; /* 화면 전체를 덮을 만큼 길게 */
-        height: 100vh; /* 화면 전체 높이 */
+        position: absolute; left: 150px; bottom: 0; width: 50vw; height: 100vh;
         background: linear-gradient(90deg, rgba(0, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.8) 20%, rgba(0, 100, 255, 0) 100%);
-        z-index: 89; /* 장애물보다 위, 파티클보다 아래 */
-        transform-origin: left center;
-        opacity: 0.9;
-        pointer-events: none;
-        animation: beamPulse 0.2s infinite alternate;
-        mix-blend-mode: screen; /* 빛나는 효과 */
-        border-left: 10px solid #fff;
-        box-shadow: 0 0 50px cyan;
+        z-index: 89; transform-origin: left center; opacity: 0.9; pointer-events: none;
+        animation: beamPulse 0.2s infinite alternate; mix-blend-mode: screen;
+        border-left: 10px solid #fff; box-shadow: 0 0 50px cyan;
     }
     @keyframes beamPulse { 
         0% { transform: scaleY(1); opacity: 0.8; filter: hue-rotate(0deg); } 
         100% { transform: scaleY(1.05); opacity: 1; filter: hue-rotate(10deg); } 
+    }
+
+    /* [추가] 전찬 스킨 번개 이펙트 */
+    .jc-lightning {
+        position: absolute;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, #fff 10%, #fff700 100%);
+        transform-origin: left center;
+        z-index: 89;
+        box-shadow: 0 0 15px gold;
+        border-radius: 2px;
+        pointer-events: none;
+        animation: lightningFlash 0.3s ease-out forwards;
+    }
+    @keyframes lightningFlash {
+        0% { width: 0; opacity: 1; }
+        50% { width: 120vw; opacity: 1; }
+        100% { width: 120vw; opacity: 0; }
     }
 
     /* 배경 */
@@ -342,8 +351,9 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
+  // [수정] 전찬 스킨 설정 변경
   const SKIN_DATA = {
-    default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive", cd: 40 },
+    default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive" },
     haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 120 }, hahwi: { type: "Passive", cd: 20 },
     jihye: { type: "Passive" }, jun: { type: "Passive" }, stephanie: { type: "Passive" },
     yejun: { type: "Active", cd: 180 }, ganghui: { type: "Passive", cd: 20 }, jieun: { type: "Active", cd: 120 }
@@ -395,6 +405,9 @@
   let itemTimer = 0; let nextItemTime = 8;
   let abilityCD = 0;
   let missionUpdateTimer = 0;
+  
+  // [추가] 전찬 스킨용 타이머 변수
+  let jeonchanTimer = 0;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -548,9 +561,8 @@
     if(!running || abilityCD > 0) return;
     const s = SKIN_DATA[currentSkin];
     if(currentSkin === 'noel') {
-      // [수정] 노엘 스킬 로직 변경: 에너지포 발사 + 지진 효과
       showFloatText("🌊 에너지 파!");
-      activeEffects.noelLaser = 10; // 10초 유지
+      activeEffects.noelLaser = 10; 
       
       const beam = document.createElement('div');
       beam.id = 'noelBeam';
@@ -558,11 +570,59 @@
       gameArea.appendChild(beam);
       
       gameArea.classList.add('shake-screen');
-      playSound('clear'); // 임팩트 사운드
+      playSound('clear'); 
     } else if(currentSkin === 'jaeguk') { activeEffects.revive = 30; showFloatText("👼 자동 부활 On"); } 
     else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
     else if(currentSkin === 'jieun') { activeEffects.summon = 20; showFloatText("🛡️ 노엘 소환!"); }
     abilityCD = s.cd;
+  }
+
+  // [추가] 전찬 스킨 능력 발동 함수
+  function triggerJeonchanSkill() {
+      showFloatText("⚡ 심판의 번개!");
+      playSound('clear'); 
+
+      const pRect = player.getBoundingClientRect();
+      const px = pRect.left + pRect.width/2;
+      const py = pRect.top + pRect.height/2;
+
+      // 1. 번개 시각 효과 (6줄기)
+      for(let i=0; i<6; i++){
+          const angle = i * 60;
+          const beam = document.createElement('div');
+          beam.className = 'jc-lightning';
+          beam.style.left = px + 'px';
+          beam.style.top = py + 'px';
+          beam.style.transform = `rotate(${angle}deg)`;
+          gameArea.appendChild(beam);
+          setTimeout(()=>beam.remove(), 300);
+      }
+
+      // 2. 장애물 파괴 및 코인 생성 로직
+      // 화면 내에 있는 장애물을 찾기 위해 역순으로 순회
+      for(let i = obstacles.length - 1; i >= 0; i--) {
+          let o = obstacles[i];
+          let left = parseFloat(o.style.left);
+          
+          // 화면 안에 있고 이미 파괴되지 않은 장애물
+          if(left > -50 && left < window.innerWidth && !o.destroyed) {
+              // 랜덤 확률 (약 50% 확률로 파괴)
+              if(Math.random() < 0.5) {
+                  const rect = o.getBoundingClientRect();
+                  
+                  // 이펙트 생성
+                  spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
+
+                  // 신앙심 코인 1-5개 생성
+                  let coins = Math.floor(Math.random() * 5) + 1;
+                  spawnFaithCoins(left + 30, window.innerHeight - 150, coins);
+
+                  // 장애물 제거 (길 만들기)
+                  o.remove(); // DOM에서 제거
+                  obstacles.splice(i, 1); // 배열에서 제거
+              }
+          }
+      }
   }
 
   function updateBuffUI(delta) {
@@ -582,7 +642,6 @@
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
             
-            // [추가] 노엘 레이저 종료 처리
             if(k === 'noelLaser') {
                 if(activeEffects[k] <= 0) {
                     const beam = document.getElementById('noelBeam');
@@ -675,6 +734,15 @@
         
         missionUpdateTimer += safeDelta;
         if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
+
+        // [추가] 전찬 스킨 타이머 및 자동 발동 로직
+        if(currentSkin === 'jeonchan' && running && !isBossBattle) {
+            jeonchanTimer += safeDelta;
+            if(jeonchanTimer >= 15.0) {
+                triggerJeonchanSkill();
+                jeonchanTimer = 0;
+            }
+        }
 
         if (!isBossBattle) { 
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
@@ -793,7 +861,6 @@
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i]; e.timer += dt;
 
-        // [수정] 레이저 동기화: 적의 위치를 따라다님
         if(e.laserWarning) {
             e.laserWarning.style.width = e.x + "px";
             e.laserWarning.style.top = (e.y + 30) + "px";
@@ -803,10 +870,9 @@
             e.laserBeam.style.top = (e.y + 15) + "px";
         }
 
-        // [추가] 노엘 레이저에 맞으면 적도 파괴
         if (activeEffects.noelLaser > 0 && e.x < window.innerWidth) {
             spawnExplosionEffect(e.x + 30, e.y + 30);
-            spawnFaithCoins(e.x + 30, e.y + 30, Math.floor(randBetween(10, 31))); // 적 파괴시 코인 대량
+            spawnFaithCoins(e.x + 30, e.y + 30, Math.floor(randBetween(10, 31)));
             showFloatText("💥 레이저 분쇄!");
             e.isDead = true;
             if(e.laserWarning) e.laserWarning.remove();
@@ -836,7 +902,6 @@
             e.x -= 100 * dt;
             if (e.x < window.innerWidth - 150) { 
                 e.state = 'attack'; 
-                // [수정] 등장하자마자 즉시 공격을 위해 타이머를 강제 설정 (1.0 이상이면 발사)
                 e.timer = 1.1; 
             }
         } else if (e.state === 'attack') {
@@ -844,18 +909,15 @@
                 if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; 
                 else e.x -= 300 * dt; 
             }
-            // [수정] Enemy 2~5: 앞으로 가지 않고 위아래로만 움직임
             else if (e.type >= 2 && e.type <= 5) {
                 e.y += Math.sin(Date.now() / 400) * 1.5;
             }
 
-            // [수정] 1초마다 공격
             if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
             else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
             else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
-            else if (e.type === 5 && e.timer > 1.0 && !e.isFiring) { fireEnemyLaser(e); } // [수정] 레이저 쿨타임 체크 추가
+            else if (e.type === 5 && e.timer > 1.0 && !e.isFiring) { fireEnemyLaser(e); } 
             
-            // 2~5는 앞으로 전진하지 않음 (e.x 감소 로직 제거)
         }
         e.style.left = e.x + "px"; e.style.top = e.y + "px";
         
@@ -877,12 +939,12 @@
   function createProj(x, y, vx, vy, owner) {
       const p = document.createElement("div"); p.classList.add("projectile", "enemy-missile");
       p.style.left = x + "px"; p.style.top = y + "px"; p.x = x; p.y = y; p.vx = vx; p.vy = vy;
-      if(owner) p.owner = owner; // 주인 등록
+      if(owner) p.owner = owner; 
       gameArea.appendChild(p); projectiles.push(p); return p;
   }
 
   function fireEnemyLaser(e) {
-      e.isFiring = true; // [수정] 발사 중 상태 설정
+      e.isFiring = true; 
       const warning = document.createElement("div"); warning.className = "enemy-laser-warning";
       warning.style.left = "0px"; warning.style.width = e.x + "px"; warning.style.top = (e.y + 30) + "px";
       gameArea.appendChild(warning);
@@ -902,13 +964,11 @@
 
               duration += 0.1; let laserY = parseFloat(laser.style.top);
               if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) damageLife();
-              // [수정] 레이저 지속시간 5초로 증가
               if(duration > 5.0) { 
                   clearInterval(check); 
                   laser.remove(); 
                   e.laserBeam = null;
                   
-                  // [수정] 2초 뒤에 다시 쏠 수 있도록 쿨타임 부여
                   setTimeout(() => {
                       e.isFiring = false; 
                       e.timer = 0;
@@ -971,7 +1031,6 @@
         bossBody.classList.remove('boss-charging'); bossBody.classList.add('boss-dashing');
         bossContainer.style.transition = "right 0.4s ease-in"; 
         
-        // [수정] 플레이어 위치까지 돌진 (화면 너비 - 100px 지점)
         bossContainer.style.right = (window.innerWidth - 100) + "px"; 
         
         setTimeout(() => { 
@@ -1089,11 +1148,9 @@
         p.style.left = cx + "px"; p.style.top = cy + "px";
         if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
         
-        // [수정] Enemy 4 폭발 로직 변경: 캐릭터 가로선(120) 도달 시 폭발
         if (p.isExplosive && !p.exploded && cx <= 120) { 
              p.exploded = true;
              const boom = document.createElement("div"); boom.className = "explosion-area";
-             // [수정] 폭발 범위 넓게 (260px)
              boom.style.width = "260px"; boom.style.height = "260px"; 
              boom.style.left = (cx - 100) + "px"; boom.style.top = (cy - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
@@ -1150,11 +1207,9 @@
         o.style.left = left + "px";
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
 
-        // [추가] 노엘 레이저 스킬: 화면에 있는 모든 장애물 파괴 및 코인 생성
         if (activeEffects.noelLaser > 0 && left < window.innerWidth && !o.destroyed) {
             o.destroyed = true;
             spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-            // [추가] 10~30개 랜덤 코인 생성
             spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
             o.remove(); obstacles.splice(i, 1);
             showFloatText("💰 대박!");
