@@ -217,7 +217,7 @@
 
   .version { margin-top: 24px; font-size: 14px; color: #a1887f; opacity: 0.8; }
 
-  /* 모달 */
+  /* 모달 공통 */
   .modal-bg {
     display: none; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%; background: rgba(0,0,0,0.7);
@@ -390,6 +390,18 @@
   </div>
 </div>
 
+<div id="passwordModal" class="modal-bg">
+  <div class="modal" style="max-width:320px;">
+    <h2>🔒 관리자 인증</h2>
+    <p style="color:#666; font-size:14px; margin-bottom:15px;">관리자 비밀번호를 입력하세요.</p>
+    <input type="password" id="adminPasswordInput" class="input-field" placeholder="비밀번호" style="text-align:center;">
+    <div style="display:flex; gap:5px; margin-top:10px;">
+      <button class="btn-mini btn-write" style="flex:1" onclick="checkPassword()">확인</button>
+      <button class="btn-mini" style="background:#999; flex:1" onclick="closePasswordModal()">취소</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // [보안] F12 및 개발자 도구 단축키 차단
   document.addEventListener('keydown', function(e) {
@@ -475,6 +487,9 @@
     try {
       await fetch(API_URL, {
         method: "POST",
+        // [수정] 통신 안정성을 위한 헤더 및 리다이렉트 옵션 추가
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ 
           type: "saveGameData", 
           id: id,
@@ -495,7 +510,9 @@
     
     try {
       const res = await fetch(API_URL, { 
-        method: "POST", 
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "getRecentLog" }) 
       });
       const txt = await res.text();
@@ -521,8 +538,13 @@
 
 
   // ==========================================
-  // 공지사항 (백그라운드 로딩)
+  // [수정] 공지사항 (안정적 통신 + 커스텀 비밀번호창)
   // ==========================================
+  
+  // 비밀번호 인증을 위한 상태 변수
+  let authAction = null; // 'write' or 'delete'
+  let pendingDeleteIndex = null;
+
   function openNotice() {
     document.getElementById("noticeModal").style.display = "flex";
   }
@@ -530,8 +552,11 @@
   async function loadNotices() {
     const listDiv = document.getElementById("noticeList");
     try {
+      // [수정] fetch 통신 옵션 강화 (redirect, headers) -> 로딩 실패 방지
       const res = await fetch(API_URL, { 
         method: "POST", 
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "getNotices" }) 
       });
       const txt = await res.text();
@@ -555,7 +580,7 @@
             <div class="notice-content">${n.content}</div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
               <span class="notice-date">${n.date} · ${n.writer}</span>
-              <button class="btn-mini btn-del" onclick="deleteNotice(${n.rowIndex})">삭제</button>
+              <button class="btn-mini btn-del" onclick="requestDelete(${n.rowIndex})">삭제</button>
             </div>
           </div>
         `;
@@ -564,18 +589,56 @@
       
     } catch(e) {
       console.warn("Notice Load Error:", e);
-      listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>공지사항을 불러오지 못했습니다.</p>";
+      // 실패하더라도 리스트 초기화 메시지 띄우기 (실패 메시지 X)
+      listDiv.innerHTML = "<p style='color:#999; text-align:center; padding:20px;'>공지사항을 불러오는 중 오류가 발생했습니다.</p>";
     }
   }
 
+  // 글쓰기 시도 (커스텀 모달 호출)
   function tryWrite() {
-    const input = prompt("관리자 비밀번호를 입력하세요:", "");
+    authAction = 'write';
+    openPasswordModal();
+  }
+
+  // 삭제 시도 (커스텀 모달 호출)
+  function requestDelete(rowIndex) {
+    authAction = 'delete';
+    pendingDeleteIndex = rowIndex;
+    openPasswordModal();
+  }
+
+  // ---- 비밀번호 커스텀 모달 관련 함수 ----
+  function openPasswordModal() {
+    document.getElementById("passwordModal").style.display = "flex";
+    document.getElementById("adminPasswordInput").value = "";
+    document.getElementById("adminPasswordInput").focus();
+  }
+
+  function closePasswordModal() {
+    document.getElementById("passwordModal").style.display = "none";
+    document.getElementById("adminPasswordInput").value = "";
+    authAction = null;
+    pendingDeleteIndex = null;
+  }
+
+  function checkPassword() {
+    const input = document.getElementById("adminPasswordInput").value;
     if (input === ADMIN_PW) {
-      document.getElementById("writeForm").style.display = "block";
-      document.querySelector(".admin-controls").style.display = "none";
+      closePasswordModal(); // 인증 성공 시 창 닫기
+      if (authAction === 'write') {
+        showWriteForm();
+      } else if (authAction === 'delete') {
+        executeDelete(pendingDeleteIndex);
+      }
     } else {
-      if(input !== null) alert("비밀번호가 틀렸습니다.");
+      alert("비밀번호가 틀렸습니다.");
+      document.getElementById("adminPasswordInput").value = "";
     }
+  }
+
+  function showWriteForm() {
+    document.getElementById("writeForm").style.display = "block";
+    document.querySelector(".admin-controls").style.display = "none";
   }
 
   function cancelWrite() {
@@ -597,6 +660,8 @@
     try {
       await fetch(API_URL, { 
         method: "POST", 
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "addNotice", title, content, writer: "관리자" }) 
       });
       alert("공지사항이 등록되었습니다.");
@@ -605,30 +670,27 @@
     } catch(e) { alert("등록 실패"); loadNotices(); }
   }
 
-  async function deleteNotice(rowIndex) {
-    const input = prompt("삭제하려면 관리자 비밀번호를 입력하세요:", "");
-    if (input === ADMIN_PW) {
-       if(!confirm("정말 삭제하시겠습니까?")) return;
-       const listDiv = document.getElementById("noticeList");
-       listDiv.innerHTML = "<div class='spinner'></div><p style='text-align:center'>삭제 중...</p>";
+  async function executeDelete(rowIndex) {
+    if(!confirm("정말 삭제하시겠습니까?")) return;
+    const listDiv = document.getElementById("noticeList");
+    listDiv.innerHTML = "<div class='spinner'></div><p style='text-align:center'>삭제 중...</p>";
 
-       try {
-         const res = await fetch(API_URL, { 
-           method: "POST", 
-           body: JSON.stringify({ type: "deleteNotice", rowIndex }) 
-         });
-         const txt = await res.text();
-         if(txt === "success") {
-           alert("삭제되었습니다.");
-           loadNotices();
-         } else {
-           alert("삭제 실패");
-           loadNotices();
-         }
-       } catch(e) { alert("오류 발생"); loadNotices(); }
-    } else {
-      if(input !== null) alert("비밀번호가 틀렸습니다.");
-    }
+    try {
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
+        body: JSON.stringify({ type: "deleteNotice", rowIndex }) 
+      });
+      const txt = await res.text();
+      if(txt === "success") {
+        alert("삭제되었습니다.");
+        loadNotices();
+      } else {
+        alert("삭제 실패");
+        loadNotices();
+      }
+    } catch(e) { alert("오류 발생"); loadNotices(); }
   }
 
 
@@ -636,19 +698,21 @@
   // 랭킹 (백그라운드 로딩 + 안전장치)
   // ==========================================
   
-  // [수정됨] 랭킹 버튼 클릭 시: 로딩 과정 없이 바로 모달 열기
   function showRanking() {
     document.getElementById("rankingModal").style.display = "flex";
   }
 
-  // [수정됨] 실제 데이터 로드는 별도 함수로 분리하여 백그라운드에서 실행
   async function loadRanking() {
     const listDiv = document.getElementById("rankingList");
     try {
-      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "getRanking" }) });
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
+        body: JSON.stringify({ type: "getRanking" }) 
+      });
       const txt = await res.text();
 
-      // 안전장치: 응답이 "fail"이거나 비어있으면 파싱하지 않음
       if (!txt || txt.trim() === "fail") {
          listDiv.innerHTML = "<p>랭킹을 불러오지 못했습니다.</p>";
          return;
@@ -678,7 +742,6 @@
           `;
         });
       }
-      // 백그라운드에서 HTML 주입
       listDiv.innerHTML = html;
 
     } catch (e) {
@@ -707,6 +770,8 @@
     try {
       const res = await fetch(API_URL, {
         method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        redirect: 'follow',
         body: JSON.stringify({ type: "getSaveData", id })
       });
       const txt = await res.text();
@@ -717,7 +782,7 @@
   }
   refreshSave();
 
-  // [핵심] 페이지 로드 시 공지사항과 랭킹을 백그라운드에서 즉시 불러옵니다.
+  // [핵심] 페이지 로드 시 백그라운드 로딩
   loadNotices();
   loadRanking();
 
