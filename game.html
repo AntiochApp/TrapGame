@@ -26,44 +26,43 @@
         transition: opacity 0.1s;
     }
 
-    /* === [수정] 하휘 스킨 관련 이펙트 === */
+    /* === [수정 요청 1 반영] 하휘 스킨 포탈 비주얼 개선 === */
     .hahwi-portal {
-        position: absolute; width: 340px; height: 340px;
-        background: radial-gradient(circle, #1a0029 20%, #000 70%);
-        border: 2px solid #e040fb; border-radius: 50%;
-        box-shadow: 0 0 60px #d500f9, inset 0 0 50px #aa00ff;
+        position: absolute; width: 300px; height: 300px;
+        /* 네모난 느낌 제거, 이글거리는 에너지체 느낌 */
+        background: radial-gradient(circle at center, rgba(213, 0, 249, 0.8) 0%, rgba(170, 0, 255, 0.4) 40%, transparent 70%);
+        border-radius: 50%;
+        box-shadow: 
+            0 0 60px rgba(213, 0, 249, 0.6),
+            inset 0 0 40px rgba(170, 0, 255, 0.8);
         opacity: 0; transform: translate(-50%, -50%) scale(0);
-        z-index: 40; pointer-events: none; /* JS에서 충돌체크 하므로 pointer-events:none 유지 */
-        animation: portalOpen 0.5s ease-out forwards;
-        display: flex; justify-content: center; align-items: center;
+        z-index: 40; pointer-events: none; 
+        animation: portalOpen 0.5s ease-out forwards, portalPulse 2s infinite alternate;
+        /* 내부 요소 제거로 flex 필요 없음 */
     }
+    .hahwi-portal::after {
+        content: ''; position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+        border-radius: 50%;
+        background: conic-gradient(from 0deg, transparent, #e040fb, transparent 30%);
+        animation: spinLightning 1.5s linear infinite;
+        mix-blend-mode: screen; opacity: 0.7;
+    }
+
     .hahwi-portal.closing { animation: portalClose 0.5s ease-in forwards; }
     @keyframes portalOpen { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.95; } }
     @keyframes portalClose { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.95; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
+    @keyframes portalPulse { 0% { filter: brightness(1); scale: 1; } 100% { filter: brightness(1.3); scale: 1.05; } }
+    @keyframes spinLightning { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 360도 방사형 번개 */
-    .hahwi-lightning-ring {
-        position: absolute; width: 100%; height: 100%;
-        border-radius: 50%;
-        background: conic-gradient(from 0deg, transparent 0%, #d500f9 10%, transparent 20%, #fff 50%, transparent 60%, #aa00ff 90%, transparent 100%);
-        animation: spinLightning 0.2s linear infinite;
-        mix-blend-mode: screen; opacity: 0.6;
-    }
-    .hahwi-lightning-core {
-        position: absolute; width: 60%; height: 60%;
-        background: radial-gradient(circle, #fff, #d500f9, transparent);
-        mix-blend-mode: hard-light;
-        animation: pulseCore 0.1s infinite alternate;
-    }
-    @keyframes spinLightning { 0% { transform: rotate(0deg) scale(1); } 100% { transform: rotate(360deg) scale(1.1); } }
-    @keyframes pulseCore { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
-
+    /* [수정 요청 2 반영] 하휘 검 스타일 변경 (직진형) */
     .hahwi-sword {
-        position: absolute; width: 50px; height: 8px;
-        background: #fff; border-radius: 4px;
-        box-shadow: 0 0 10px currentColor;
+        position: absolute; height: 6px; /* 너비는 JS에서 랜덤 설정 */
+        background: #fff; border-radius: 3px;
+        box-shadow: 0 0 15px currentColor, 0 0 5px #fff;
         z-index: 65; pointer-events: none;
+        opacity: 0.9;
     }
+
     /* 검 적중 시 포탈 폭발 이펙트 */
     .portal-explosion {
         position: absolute; width: 140px; height: 140px;
@@ -74,15 +73,15 @@
     }
     @keyframes portalExplode { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
 
-    /* === [수정] 지혜 스킨 관련 이펙트 === */
-    /* 변신 전 구체 */
+    /* === [수정 요청 3 관련] 지혜 스킨 구체 (JS에서 위치 추적함) === */
     .jihye-transform-sphere {
         position: absolute; width: 100px; height: 100px;
         border-radius: 50%;
-        background: radial-gradient(circle, #fff, #ffd700);
-        box-shadow: 0 0 30px #ffd700, 0 0 60px #fff;
+        background: radial-gradient(circle at center, #fff 20%, #ffd700 80%);
+        box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff;
         z-index: 52; transform: translate(-50%, -50%);
         animation: sphereCharge 2s ease-in forwards;
+        mix-blend-mode: screen;
     }
     @keyframes sphereCharge { 
         0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
@@ -95,17 +94,16 @@
         position: absolute; width: 50px; height: 50px;
         background-size: contain; background-repeat: no-repeat;
         z-index: 55; 
-        transition: transform 0.2s; /* 부드러운 회전 */
+        transition: transform 0.2s;
         filter: drop-shadow(0 0 10px cyan);
     }
     
-    /* 힐러 이펙트 개선 */
     .jihye-healer {
         position: absolute; width: 70px; height: 70px;
         background-image: url('Skill_JHA.png');
         background-size: contain; background-repeat: no-repeat;
         z-index: 60; pointer-events: none;
-        transition: left 1.5s ease-out, top 1.5s ease-out; /* 등장/퇴장용 */
+        transition: left 1.5s ease-out, top 1.5s ease-out;
         filter: drop-shadow(0 0 15px gold);
     }
     .holy-light-pillar {
@@ -124,16 +122,32 @@
         box-shadow: 0 0 10px #00b0ff; z-index: 66;
     }
 
-    /* === [신규] 준 스킨 이펙트 (시공간 & 양) === */
+    /* === [수정 요청 4 반영] 준 스킨 포탈 비주얼 개선 === */
     .time-portal {
-        position: absolute; width: 100px; height: 180px;
-        background: radial-gradient(ellipse, #00ffff 20%, #000 80%);
-        border: 4px solid #fff; border-radius: 50px;
-        box-shadow: 0 0 30px #00ffff;
-        z-index: 45; transform: translate(-50%, -50%);
-        animation: portalSpin 1s infinite linear;
+        position: absolute; width: 120px; height: 200px;
+        /* 기존 단순 테두리 제거, 복합적인 빛 효과 적용 */
+        background: transparent;
+        border-radius: 50%;
+        transform: translate(-50%, -50%); z-index: 45;
+        display: flex; justify-content: center; align-items: center;
     }
-    @keyframes portalSpin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+    /* 포탈 외곽의 회전하는 빛 */
+    .time-portal::before {
+        content: ''; position: absolute; width: 100%; height: 100%;
+        border-radius: 50%;
+        box-shadow: inset 0 0 30px #00ffff, 0 0 40px #00ffff;
+        background: conic-gradient(from 0deg, transparent, #00ffff, rgba(0,0,255,0.5), transparent 50%);
+        animation: portalSpin 1.5s infinite linear;
+        mix-blend-mode: screen;
+    }
+    /* 포탈 내부의 깊이감 */
+    .time-portal::after {
+        content: ''; position: absolute; width: 80%; height: 80%;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, #000 20%, #000033 60%, transparent 100%);
+        box-shadow: inset 0 0 50px #000;
+    }
+    @keyframes portalSpin { 0% { transform: rotate(0deg); filter: hue-rotate(0deg); } 100% { transform: rotate(360deg); filter: hue-rotate(60deg); } }
 
     .time-tunnel-bg {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -149,24 +163,31 @@
     }
     @keyframes warpSpeed { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
 
+    /* === [수정 요청 5 반영] 준 스킨 양(Lamb) 개선 === */
     .lamb-unit {
-        position: absolute; width: 50px; height: 50px;
-        background: url('skin_default.png'); /* 임시: 양 이미지 없으면 기본사용하거나, 텍스트로 대체 */
-        /* 실제로는 양 이미지가 필요함. 여기선 css 도형으로 양 표현 */
-        background: radial-gradient(circle at 40% 40%, #fff, #eee);
-        border-radius: 50%; border: 2px solid #ccc;
-        z-index: 51; bottom: 40px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        transition: left 0.1s linear;
+        position: absolute; width: 60px; height: 60px;
+        /* 요청하신 Lamb.png 사용 */
+        background: url('Lamb.png') no-repeat center/contain;
+        z-index: 51; 
+        filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3));
+        /* transition 제거 후 JS로 제어 */
     }
-    .lamb-unit::after { content: '🐑'; font-size: 30px; position: absolute; left: 8px; top: 4px; }
+    /* 기존 CSS 도형 양 제거 */
+    .lamb-unit::after { content: none; }
+    
     .lamb-msg {
-        position: absolute; top: -30px; left: -20px;
-        background: #fff; border: 2px solid #333; padding: 4px 8px;
-        border-radius: 10px; font-size: 12px; font-weight: bold; white-space: nowrap;
+        position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+        background: #fff; border: 3px solid #3a2513; padding: 6px 12px;
+        border-radius: 15px; font-size: 14px; font-weight: 800; white-space: nowrap;
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.2); color: #3a2513;
+    }
+    .lamb-msg::after {
+        content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+        border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent;
+        display: block; width: 0;
     }
 
-    /* [수정] 재국 스킨 - 보바(타피오카 펄) 스타일 */
+    /* 재국 스킨 - 보바(타피오카 펄) 스타일 */
     .boba-unit {
         position: absolute; width: 18px; height: 18px;
         background: radial-gradient(circle at 30% 30%, #4e342e, #212121);
@@ -175,7 +196,7 @@
         z-index: 65; pointer-events: none;
     }
 
-    /* [신규] 재국 스킨 - 부활 천사 날개 이펙트 */
+    /* 재국 스킨 - 부활 천사 날개 이펙트 */
     .angel-wing-effect {
         position: absolute; width: 150px; height: 150px;
         left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -193,16 +214,6 @@
         100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } 
     }
 
-    /* [수정] 시공간 폭발 이펙트 (하휘/기타 공용) */
-    .spacetime-explosion {
-        position: absolute; width: 120px; height: 120px;
-        background: radial-gradient(circle, #fff, #d500f9, transparent);
-        border-radius: 50%; mix-blend-mode: screen;
-        transform: translate(-50%, -50%); z-index: 85;
-        animation: spaceExplode 0.4s ease-out forwards;
-    }
-    @keyframes spaceExplode { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
-
     /* 지은 스킨 전용 보호막 */
     .jieun-shield {
         position: absolute;
@@ -215,10 +226,10 @@
         pointer-events: none; z-index: 55;
     }
 
-    /* [수정됨] 노엘 스킨 애니메이션 (공통) */
+    /* 노엘 스킨 애니메이션 (공통) */
     .flying-noel {
         position: absolute; width: 50px; height: 50px;
-        background-image: url('skin_noel.png'); /* 파일명 수정 */
+        background-image: url('skin_noel.png'); 
         background-size: contain; background-repeat: no-repeat;
         z-index: 60; pointer-events: none;
     }
@@ -288,7 +299,7 @@
         background-image: url("disciple.png"); 
         background-position: center; background-size: contain; background-repeat: no-repeat; 
         image-rendering: pixelated; 
-        transition: opacity 0.2s, transform 0.3s, left 1.0s ease-in-out; 
+        transition: opacity 0.2s, transform 0.3s; /* left transition 제거 */
         filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
     
@@ -445,7 +456,7 @@
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
         [업데이트]<br>
-        ⚔️ <b>하휘:</b> 360도 전방위 무한 검제 (범위 폭발)<br>
+        ⚔️ <b>하휘:</b> 전방위 무한 검제 (직진 난사)<br>
         🛡️ <b>지혜:</b> 자율 비행 발키리 & 변신<br>
         ⏳ <b>준:</b> 시공간 초월 & 어린 양의 축복
       </div>
@@ -576,13 +587,13 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // [수정] 스킨 데이터 - 하휘(25s, 65s), 지혜(60s), 준(Active)
+  // 스킨 데이터
   const SKIN_DATA = {
     default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive" },
     haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 70 }, 
-    hahwi: { type: "Active", cd: 65 }, // 쿨타임 수정
+    hahwi: { type: "Active", cd: 65 }, 
     jihye: { type: "Active", cd: 60 }, 
-    jun: { type: "Active", cd: 90 }, // 준 액티브 변경
+    jun: { type: "Active", cd: 90 },
     stephanie: { type: "Passive" },
     yejun: { type: "Active", cd: 180 }, ganghui: { type: "Passive", cd: 20 }, jieun: { type: "Active", cd: 120 }
   };
@@ -607,7 +618,7 @@
   }
 
   let speedLines = document.getElementById("speedLines");
-  let timeTunnelBg = document.getElementById("timeTunnelBg"); // 준 스킨 배경
+  let timeTunnelBg = document.getElementById("timeTunnelBg");
 
   function createEl(tag, id, parent, before) {
     let el = document.createElement(tag); el.id = id;
@@ -643,12 +654,13 @@
   let jaegukRevivedOnce = false; 
   let bobas = []; 
   let hahwiSwords = []; 
-  let hahwiFireInterval = null; // 하휘 연사 인터벌
+  let hahwiFireInterval = null; 
   let jihyeUnits = []; 
   let jihyeMissiles = []; 
   let jihyePassiveTimer = 0; 
-  let junLambTimer = 0; // 준 스킨 양 타이머
-  let isJunTimeTravel = false; // 준 시공간 여행 상태
+  let jihyeSphereTracker = null; // [수정 요청 3 관련] 구체 추적 인터벌
+  let junLambTimer = 0;
+  let isJunTimeTravel = false;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -906,25 +918,19 @@
       playSound('item');
   }
 
-  // === [수정] 하휘 스킨 스킬 구현 ===
+  // === [수정 요청 1, 2 반영] 하휘 스킨 스킬 구현 (직진형 난사) ===
   function triggerHahwiSkill() {
     showFloatText("⚔️ 무한의 검제 (Overdrive)!");
-    // 지속시간 25초
     activeEffects.hahwiMode = 25; 
     
-    // 포탈 생성
     const portal = document.createElement('div');
     portal.id = 'hahwiPortal';
     portal.className = 'hahwi-portal';
-    // 360도 번개 링
-    const ring = document.createElement('div'); ring.className = 'hahwi-lightning-ring';
-    portal.appendChild(ring);
-    const core = document.createElement('div'); core.className = 'hahwi-lightning-core';
-    portal.appendChild(core);
+    // [수정 요청 1 반영] 내부 lightning 요소 제거
 
     gameArea.appendChild(portal);
 
-    // [수정] 무차별 난사 (20ms) - 360도
+    // [수정 요청 2 반영] 매우 빠른 속도로 다량의 검 발사
     if(hahwiFireInterval) clearInterval(hahwiFireInterval);
     hahwiFireInterval = setInterval(() => {
         if(activeEffects.hahwiMode <= 0 || !running) {
@@ -932,55 +938,65 @@
             return;
         }
         fireHahwiSword();
-    }, 20); // 매우 빠른 속도
+    }, 50); // 0.05초마다 발사 (매우 빠름)
     
     playSound('clear');
   }
 
   function fireHahwiSword() {
-      const pRect = player.getBoundingClientRect();
-      const s = document.createElement('div');
-      s.className = 'hahwi-sword';
-      
-      const hue = Math.floor(Math.random() * 360);
-      s.style.color = `hsl(${hue}, 100%, 70%)`; 
-      s.style.background = `linear-gradient(90deg, #fff, hsl(${hue}, 100%, 80%))`;
-      
-      const startX = pRect.left + pRect.width/2;
-      const startY = pRect.top + pRect.height/2;
-      
-      // [수정] 360도 랜덤 발사
-      const angleDeg = Math.random() * 360;
-      const angleRad = angleDeg * (Math.PI / 180);
-      
-      s.style.left = startX + 'px';
-      s.style.top = startY + 'px';
-      s.style.transform = `rotate(${angleDeg}deg)`;
-      
-      const speed = 1000;
-      s.vx = Math.cos(angleRad) * speed; 
-      s.vy = Math.sin(angleRad) * speed;
+      const portal = document.getElementById('hahwiPortal');
+      if(!portal) return;
+      const pRect = portal.getBoundingClientRect();
 
-      gameArea.appendChild(s);
-      hahwiSwords.push(s);
+      // [수정 요청 2 반영] 한 번에 여러 개의 검을 발사 (50개는 너무 많아 렉 유발 가능, 5개로 조정하여 빈도를 높임)
+      for(let i=0; i<5; i++) {
+          const s = document.createElement('div');
+          s.className = 'hahwi-sword';
+          
+          const hue = Math.floor(Math.random() * 360);
+          s.style.color = `hsl(${hue}, 100%, 70%)`; 
+          s.style.background = `linear-gradient(90deg, #fff, hsl(${hue}, 100%, 80%))`;
+          s.style.width = randBetween(40, 80) + 'px'; // 길이 랜덤
+
+          // 포탈 높이 내에서 랜덤한 수직 위치
+          const startY = pRect.top + randBetween(0, pRect.height);
+          // 포탈의 오른쪽 끝에서 시작
+          const startX = pRect.right - 20;
+          
+          s.style.left = startX + 'px';
+          s.style.top = startY + 'px';
+          
+          // [수정 요청 2 반영] 왼쪽으로 직진
+          s.vx = -1500; // 매우 빠른 속도
+          s.vy = 0;
+
+          gameArea.appendChild(s);
+          hahwiSwords.push(s);
+      }
   }
 
-  // === [수정] 지혜 스킨 스킬 구현 ===
+  // === [수정 요청 3 반영] 지혜 스킨 스킬 구현 (구체 추적 추가) ===
   function triggerJihyeSkill() {
       showFloatText("✨ 발키리 변신!");
       
       // 1. 변신 이펙트 (빛의 구체)
       const sphere = document.createElement('div');
       sphere.className = 'jihye-transform-sphere';
-      const pRect = player.getBoundingClientRect();
-      sphere.style.left = (pRect.left + 30) + 'px';
-      sphere.style.top = (pRect.top + 30) + 'px';
       gameArea.appendChild(sphere);
+
+      // [수정 요청 3 반영] 구체가 플레이어를 따라다니도록 인터벌 설정
+      if(jihyeSphereTracker) clearInterval(jihyeSphereTracker);
+      jihyeSphereTracker = setInterval(() => {
+           const currentPRect = player.getBoundingClientRect();
+           sphere.style.left = (currentPRect.left + 30) + 'px';
+           sphere.style.top = (currentPRect.top + 30) + 'px';
+      }, 16); // 약 60fps로 추적
 
       // 2초간 변신 대기 (무적 처리)
       activeEffects.invincible = 2.5;
       
       setTimeout(() => {
+          clearInterval(jihyeSphereTracker); // 추적 종료
           sphere.remove();
           // 변신 완료
           player.style.backgroundImage = `url('Skill_JH.png')`;
@@ -991,25 +1007,19 @@
           setTimeout(() => flash.style.opacity = '0', 300);
           playSound('clear');
 
-          activeEffects.jihyeSquad = 20; // 20초 지속
+          activeEffects.jihyeSquad = 20; 
 
-          // 부대 소환 (왼쪽에서 날아옴)
-          // [수정] JH1 ~ JH5 5명
+          // 부대 소환
           for(let i=1; i<=5; i++) {
               const unit = document.createElement('div');
               unit.className = 'jihye-unit';
               unit.style.backgroundImage = `url('Skill_JH${i}.png')`;
-              
-              // 왼쪽 화면 밖 시작
               unit.style.left = '-100px';
               unit.style.top = randBetween(50, window.innerHeight/2) + 'px';
-              
-              // 각자 자아가 있는 움직임 (목표 오프셋을 랜덤하게 계속 변경)
               unit.tx = (window.innerWidth / 2) + randBetween(-100, 100);
               unit.ty = (window.innerHeight / 2) + randBetween(-200, 0);
               unit.moveTimer = 0;
               unit.fireTimer = 0;
-              
               gameArea.appendChild(unit);
               jihyeUnits.push(unit);
           }
@@ -1018,32 +1028,27 @@
 
   function endJihyeSkill() {
       player.style.backgroundImage = `url('skin_jihye.png')`;
-      // 유닛 퇴장 (왼쪽으로 날아감)
       jihyeUnits.forEach(u => {
           u.style.transition = "left 1s ease-in, top 1s ease-in";
-          u.style.left = '-200px'; // 왼쪽 퇴장
+          u.style.left = '-200px'; 
           setTimeout(() => u.remove(), 1000);
       });
       jihyeUnits = [];
   }
 
-  // [수정] 지혜 패시브 힐 이펙트
+  // 지혜 패시브 힐 이펙트
   function triggerJihyeHeal() {
       const healer = document.createElement('div');
       healer.className = 'jihye-healer';
       const pRect = player.getBoundingClientRect();
-      
-      // 멀리서(왼쪽 위) 날아오는 연출
       healer.style.left = '-100px';
       healer.style.top = '-100px';
       gameArea.appendChild(healer);
       
-      // 성스러운 빛 기둥
       const pillar = document.createElement('div');
       pillar.className = 'holy-light-pillar';
       gameArea.appendChild(pillar);
 
-      // 이동 애니메이션 (플레이어에게 접근)
       requestAnimationFrame(() => {
          healer.style.left = (pRect.left + 10) + 'px';
          healer.style.top = (pRect.top - 80) + 'px';
@@ -1055,7 +1060,6 @@
           showFloatText("💖 천사의 치유 (+2)");
           playSound('item');
           
-          // 퇴장 (오른쪽 위로)
           healer.style.left = (window.innerWidth + 100) + 'px';
           healer.style.top = '-200px';
           setTimeout(() => {
@@ -1065,13 +1069,13 @@
       }, 1000);
   }
 
-  // === [신규] 준 스킨 스킬 구현 ===
+  // === [수정 요청 4 반영] 준 스킨 스킬 구현 (포탈 비주얼 및 등장 연출 개선) ===
   function triggerJunSkill() {
       if(isJunTimeTravel) return;
       isJunTimeTravel = true;
       showFloatText("⏳ 시공간 도약!");
 
-      // 1. 파란 포탈 생성
+      // 1. 개선된 포탈 생성
       const portal = document.createElement('div');
       portal.className = 'time-portal';
       const pRect = player.getBoundingClientRect();
@@ -1079,20 +1083,20 @@
       portal.style.top = (pRect.top + 30) + 'px';
       gameArea.appendChild(portal);
 
-      // 2. 플레이어 포탈로 점프
-      player.style.transition = "left 0.5s, top 0.5s, transform 0.5s";
+      // 2. 플레이어 포탈로 빨려들어감
+      player.style.transition = "left 0.5s, top 0.5s, transform 0.5s ease-in";
       player.style.left = (pRect.left + 150) + 'px';
-      player.style.transform = "scale(0)";
+      player.style.top = (pRect.top + 30) + 'px';
+      player.style.transform = "scale(0) rotate(360deg)";
       
       setTimeout(() => {
           // 3. 화면 하얗게 & 시공간 배경
           const flash = document.getElementById('flashEffect');
           flash.style.opacity = '1';
-          flash.style.transition = "opacity 2s"; // 서서히
+          flash.style.transition = "opacity 2s";
           
           timeTunnelBg.style.display = 'block';
           
-          // 별 생성 (터널 효과)
           for(let i=0; i<50; i++) {
               let star = document.createElement('div');
               star.className = 'tunnel-star';
@@ -1102,62 +1106,82 @@
           }
 
           setTimeout(() => {
-              // 4. 시공간 이동 중
               flash.style.opacity = '0';
               timeTunnelBg.style.opacity = '1';
-              
-              // 70m 전진 처리 (게임 로직 상)
               distance += 70;
               
               setTimeout(() => {
-                  // 5. 탈출 포탈
+                  // 5. 탈출 연출 (포탈에서 나옴)
                   timeTunnelBg.style.opacity = '0';
-                  portal.style.left = '100px'; // 다시 왼쪽에서
-                  portal.style.transform = 'translate(-50%, -50%) scale(1)';
+                  // 포탈 재배치
+                  portal.style.left = '150px'; 
+                  portal.style.top = '50%';
+
+                  // 플레이어 포탈 중앙에 배치 및 스케일 0
+                  player.style.transition = 'none';
+                  player.style.left = '150px';
+                  player.style.top = '50%';
+                  player.style.transform = 'scale(0)';
+                  
+                  requestAnimationFrame(()=>{
+                      // 플레이어 등장 애니메이션
+                      player.style.transition = "transform 0.5s ease-out, left 0.5s, top 0.5s";
+                      player.style.transform = 'scale(1)';
+                      player.style.left = '120px'; // 원래 위치로 복귀
+                      // top은 메인 루프의 중력에 의해 자연스럽게 맞춰짐
+                  });
                   
                   setTimeout(() => {
                       timeTunnelBg.style.display = 'none';
-                      timeTunnelBg.innerHTML = ''; // 별 제거
-                      
-                      // 플레이어 복귀
-                      player.style.left = '120px';
-                      player.style.transform = 'scale(1)';
-                      
+                      timeTunnelBg.innerHTML = '';
                       portal.remove();
                       isJunTimeTravel = false;
                       showFloatText("📍 +70m 이동 완료!");
                   }, 1000);
-              }, 3000); // 3초간 이동
+              }, 3000); 
           }, 1000);
       }, 500);
   }
 
-  // 준 스킨 - 어린 양 소환
+  // === [수정 요청 5 반영] 준 스킨 - 어린 양 소환 개선 ===
   function spawnLamb() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
-      lamb.style.left = '-60px';
+      // [수정 요청 5 반영] 왼쪽 하늘에서 시작
+      lamb.style.left = '-100px';
+      lamb.style.top = '50px'; 
       gameArea.appendChild(lamb);
       
-      // 1. 준에게 걸어옴
       let state = 'approach';
       let waitTimer = 0;
-      
+      // 랜덤 메시지 목록
+      const messages = ["화이팅!", "힘내세요!", "주님이 함께해요!", "기쁨이 가득하길!", "평안하세요!"];
+      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
       const lambLoop = setInterval(() => {
-          if(!running && !isJunTimeTravel) return; // 게임 멈추면 대기
+          if(!running && !isJunTimeTravel) return; 
           
           if(state === 'approach') {
-              let lx = parseFloat(lamb.style.left);
-              lx += 3; // 걷는 속도
-              lamb.style.left = lx + 'px';
-              
               const pRect = player.getBoundingClientRect();
-              if(lx >= pRect.left - 60) {
+              const targetX = pRect.left - 50;
+              const targetY = pRect.top - 50;
+              
+              let lx = parseFloat(lamb.style.left);
+              let ly = parseFloat(lamb.style.top);
+
+              // 플레이어에게 날아감
+              lx += (targetX - lx) * 0.05;
+              ly += (targetY - ly) * 0.05;
+
+              lamb.style.left = lx + 'px';
+              lamb.style.top = ly + 'px';
+              
+              if(Math.abs(lx - targetX) < 20 && Math.abs(ly - targetY) < 20) {
                   state = 'talk';
                   // 말풍선
                   const msg = document.createElement('div');
                   msg.className = 'lamb-msg';
-                  msg.innerText = "음메! 행복하세요!";
+                  msg.innerText = randomMsg; // [수정 요청 5 반영] 랜덤 메시지
                   lamb.appendChild(msg);
                   
                   // 힐
@@ -1169,21 +1193,22 @@
               }
           } else if(state === 'talk') {
               waitTimer += 0.05;
-              if(waitTimer > 2.0) {
+              if(waitTimer > 1.5) { // 대기 시간 단축
                   state = 'leave';
                   const msg = lamb.querySelector('.lamb-msg');
                   if(msg) msg.remove();
               }
           } else if(state === 'leave') {
+              // [수정 요청 5 반영] 오른쪽으로 사라짐
               let lx = parseFloat(lamb.style.left);
-              lx += 3;
+              lx += 8; // 빠르게 퇴장
               lamb.style.left = lx + 'px';
               if(lx > window.innerWidth) {
                   clearInterval(lambLoop);
                   lamb.remove();
               }
           }
-      }, 50);
+      }, 30); // 부드러운 움직임을 위해 간격 단축
   }
 
   function useAbility(e) {
@@ -1205,15 +1230,12 @@
     else if(currentSkin === 'jaeguk') { 
         triggerJaegukBobas();
     }
-    // [수정] 하휘 스킬
     else if(currentSkin === 'hahwi') {
         triggerHahwiSkill();
     }
-    // [수정] 지혜 스킬
     else if(currentSkin === 'jihye') {
         triggerJihyeSkill();
     }
-    // [신규] 준 스킬
     else if(currentSkin === 'jun') {
         triggerJunSkill();
     }
@@ -1290,12 +1312,12 @@
                 }
             }
             
-            // [수정] 하휘 스킬 업데이트
+            // 하휘 스킬 업데이트 (포탈 위치 추적)
             if(k === 'hahwiMode') {
                 const portal = document.getElementById('hahwiPortal');
                 if(portal) {
                      const pRect = player.getBoundingClientRect();
-                     // 플레이어보다 약간 뒤에 포탈 배치
+                     // [수정 요청 2 반영] 플레이어 앞에 포탈 배치
                      portal.style.left = (pRect.left - 20) + 'px'; 
                      portal.style.top = (pRect.top + pRect.height/2) + 'px';
                 }
@@ -1308,7 +1330,7 @@
                 }
             }
 
-            // [수정] 지혜 스킬 종료
+            // 지혜 스킬 종료
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) {
                 endJihyeSkill();
             }
@@ -1437,7 +1459,7 @@
             }
         }
 
-        // [수정] 지혜 패시브 힐 (25초마다)
+        // 지혜 패시브 힐 (25초마다)
         if(currentSkin === 'jihye' && running) {
             jihyePassiveTimer += safeDelta;
             if(jihyePassiveTimer >= 25.0) {
@@ -1446,7 +1468,7 @@
             }
         }
 
-        // [신규] 준 패시브 (어린 양) - 30초마다
+        // 준 패시브 (어린 양) - 30초마다
         if(currentSkin === 'jun' && running) {
             junLambTimer += safeDelta;
             if(junLambTimer >= 30.0) {
@@ -1462,46 +1484,27 @@
             }
         }
 
-        // [수정] 하휘 스킨 포탈 충돌 로직 추가
-        if(activeEffects.hahwiMode > 0) {
-             const portal = document.getElementById('hahwiPortal');
-             if(portal) {
-                 const pRect = portal.getBoundingClientRect();
-                 // 포탈이 장애물과 닿으면 부숨
-                 for(let i=obstacles.length-1; i>=0; i--) {
-                     const o = obstacles[i];
-                     const oRect = o.getBoundingClientRect();
-                     if(oRect.left > 0 && !o.destroyed) {
-                         const dist = Math.hypot((oRect.left+30)-(pRect.left+170), (oRect.top+30)-(pRect.top+170));
-                         if(dist < 150) { // 포탈 반지름 근처
-                             o.destroyed = true;
-                             spawnExplosionEffect(oRect.left+30, oRect.top+30);
-                             o.remove(); obstacles.splice(i, 1);
-                         }
-                     }
-                 }
-             }
-        }
+        // [수정 요청 1 반영] 하휘 스킨 포탈 충돌 로직 제거 (검만 충돌)
 
-        // [수정] 하휘 검 로직 (360도)
+        // [수정 요청 2 반영] 하휘 검 로직 (직진형)
         if(hahwiSwords.length > 0) {
             for(let i=hahwiSwords.length-1; i>=0; i--) {
                 const s = hahwiSwords[i];
                 let sx = parseFloat(s.style.left);
                 let sy = parseFloat(s.style.top);
-                sx += s.vx * safeDelta;
-                sy += s.vy * safeDelta;
+                sx += s.vx * safeDelta; // 왼쪽으로 직진
+                // sy += s.vy * safeDelta; // 수직 이동 없음
                 s.style.left = sx + 'px';
                 s.style.top = sy + 'px';
                 
-                if(sx > window.innerWidth || sx < -100 || sy < -100 || sy > window.innerHeight + 100) {
+                if(sx < -100) { // 화면 왼쪽 밖으로 나가면 제거
                     s.remove();
                     hahwiSwords.splice(i, 1);
                     continue;
                 }
                 
                 let hit = false;
-                // 장애물 충돌 (범위 데미지)
+                // 장애물 충돌
                 for(let j=obstacles.length-1; j>=0; j--) {
                     const o = obstacles[j];
                     const oRect = o.getBoundingClientRect();
@@ -1511,7 +1514,7 @@
                          if (sRect.right > oRect.left && sRect.left < oRect.right && 
                              sRect.bottom > oRect.top && sRect.top < oRect.bottom) {
                              
-                             // [수정] 포탈 열리듯 폭발 (범위 데미지)
+                             // 폭발 이펙트
                              const ex = document.createElement('div');
                              ex.className = 'portal-explosion';
                              ex.style.left = sx + 'px';
@@ -1519,18 +1522,10 @@
                              gameArea.appendChild(ex);
                              setTimeout(() => ex.remove(), 400);
 
-                             // 주변 장애물 같이 파괴
-                             obstacles.forEach(subO => {
-                                 if(!subO.destroyed) {
-                                     const subRect = subO.getBoundingClientRect();
-                                     const dist = Math.hypot((subRect.left)-(sx), (subRect.top)-(sy));
-                                     if(dist < 100) { // 폭발 반경
-                                         subO.destroyed = true;
-                                         spawnFaithCoins(subRect.left, subRect.top, 1, false, true);
-                                         subO.remove();
-                                     }
-                                 }
-                             });
+                             o.destroyed = true;
+                             spawnFaithCoins(oRect.left, oRect.top, 1, false, true);
+                             o.remove();
+                             obstacles.splice(j, 1); 
                              
                              hit = true;
                              break;
@@ -1577,13 +1572,12 @@
             }
         }
 
-        // [수정] 지혜 스킨 유닛 - 자율 비행 로직
+        // 지혜 스킨 유닛 - 자율 비행 로직
         if(activeEffects.jihyeSquad > 0) {
             const pRect = player.getBoundingClientRect();
             
             jihyeUnits.forEach(u => {
                 u.moveTimer += safeDelta;
-                // 1초마다 새로운 목표 위치 설정 (자아를 가진 듯)
                 if(u.moveTimer > 1.0) {
                     u.tx = (window.innerWidth / 2) + randBetween(-200, 200);
                     u.ty = (window.innerHeight / 2) + randBetween(-200, 200);
@@ -1592,14 +1586,11 @@
                 
                 const cx = parseFloat(u.style.left);
                 const cy = parseFloat(u.style.top);
-                // 부드럽게 이동
                 u.style.left = (cx + (u.tx - cx) * 0.05) + 'px';
                 u.style.top = (cy + (u.ty - cy) * 0.05) + 'px';
                 
-                // 공격 로직
                 u.fireTimer += safeDelta;
                 if(u.fireTimer > 0.6) { 
-                    // 가장 가까운 적 찾기
                     let target = null;
                     let minDist = 600;
                     
@@ -2376,7 +2367,7 @@
         t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=bh+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
-        gameArea.appendChild(t); obstacles.push(t); gameArea.appendChild(b); obstacles.push(b);
+        gameArea.appendChild(t); obstacles.push(b); gameArea.appendChild(b); obstacles.push(b);
     }
   }
 
