@@ -26,7 +26,7 @@
         transition: opacity 0.1s;
     }
 
-    /* [신규] 재국 스킨 - 보바(타피오카 펄) 스타일 */
+    /* [수정] 재국 스킨 - 보바(타피오카 펄) 스타일 */
     .boba-unit {
         position: absolute; width: 18px; height: 18px;
         background: radial-gradient(circle at 30% 30%, #4e342e, #212121);
@@ -53,35 +53,83 @@
         100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } 
     }
 
-    /* [신규] 하휘 스킨 - 포탈 이펙트 */
+    /* [신규] 하휘 스킨 - 웅장한 포탈 이펙트 */
     .hahwi-portal {
-        position: absolute; width: 250px; height: 250px;
-        background: radial-gradient(circle, #4a148c 20%, #000 70%);
-        border: 4px solid #ea80fc; border-radius: 50%;
-        box-shadow: 0 0 30px #ea80fc, inset 0 0 20px #aa00ff;
+        position: absolute; width: 300px; height: 300px;
+        background: radial-gradient(circle, #2a003e 10%, #000 70%);
+        border: 4px solid #d500f9; border-radius: 50%;
+        box-shadow: 0 0 50px #d500f9, inset 0 0 40px #aa00ff;
         opacity: 0; transform: translate(-50%, -50%) scale(0);
         z-index: 40; pointer-events: none;
         animation: portalOpen 0.5s ease-out forwards;
     }
-    @keyframes portalOpen {
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-        100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+    .hahwi-portal.closing { animation: portalClose 0.5s ease-in forwards; }
+    @keyframes portalOpen { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; } }
+    @keyframes portalClose { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
+
+    /* [신규] 하휘 포탈 내부 번개 스파크 */
+    .hahwi-spark {
+        position: absolute; width: 4px; background: #fff;
+        box-shadow: 0 0 10px cyan, 0 0 20px violet;
+        transform-origin: top center; z-index: 41; pointer-events: none;
+        animation: sparkStrike 0.2s linear forwards;
     }
-    
-    /* [신규] 하휘 스킨 - 검 투사체 */
+    @keyframes sparkStrike { 0% { height: 0; opacity: 1; } 50% { height: 150px; opacity: 1; } 100% { height: 150px; opacity: 0; transform: scaleY(0.1); } }
+
+    /* [신규] 하휘 스킨 - 검 (다양한 색상) */
     .hahwi-sword {
-        position: absolute; width: 40px; height: 10px;
-        background: linear-gradient(90deg, #fff, #b39ddb, #6200ea);
+        position: absolute; width: 60px; height: 12px;
+        background: linear-gradient(90deg, #fff, #e0e0e0);
         border: 1px solid #fff; border-radius: 2px;
-        box-shadow: 0 0 8px #d1c4e9;
+        box-shadow: 0 0 15px currentColor; /* JS에서 색상 지정 */
         z-index: 65;
     }
     .hahwi-sword::after {
-        content: ''; position: absolute; right: -5px; top: 0;
+        content: ''; position: absolute; right: -10px; top: 0;
         width: 0; height: 0;
-        border-top: 5px solid transparent;
-        border-bottom: 5px solid transparent;
-        border-left: 10px solid #fff;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 12px solid #fff;
+    }
+    /* 검 주변 스파크 */
+    .hahwi-sword-spark {
+        position: absolute; width: 100%; height: 100%;
+        border: 2px solid rgba(255,255,255,0.8);
+        filter: blur(2px); animation: swordPulse 0.1s infinite;
+    }
+    @keyframes swordPulse { 0% { opacity: 0.5; transform: scale(1); } 100% { opacity: 1; transform: scale(1.2); } }
+
+    /* [신규] 시공간 폭발 이펙트 */
+    .spacetime-explosion {
+        position: absolute; width: 120px; height: 120px;
+        background: radial-gradient(circle, #fff, #d500f9, transparent);
+        border-radius: 50%; mix-blend-mode: screen;
+        transform: translate(-50%, -50%); z-index: 85;
+        animation: spaceExplode 0.4s ease-out forwards;
+    }
+    @keyframes spaceExplode { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
+
+    /* [신규] 지혜 스킨 유닛 및 이펙트 */
+    .jihye-unit {
+        position: absolute; width: 50px; height: 50px;
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 55; transition: top 0.5s, left 0.5s;
+        filter: drop-shadow(0 0 10px cyan);
+    }
+    .jihye-healer {
+        position: absolute; width: 60px; height: 60px;
+        background-image: url('Skill_JHA.png');
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 60; pointer-events: none;
+        animation: healerFloat 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes healerFloat { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+    .jihye-missile {
+        position: absolute; width: 30px; height: 30px;
+        background: radial-gradient(circle, orange, red);
+        border-radius: 50%; border: 2px solid yellow;
+        box-shadow: 0 0 10px orange; z-index: 66;
     }
 
     /* 지은 스킨 전용 보호막 */
@@ -335,8 +383,8 @@
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
         [업데이트]<br>
-        🛡️ <b>보스전:</b> 캐릭터가 뒤로 물러나 회피가 쉬워집니다!<br>
-        👶 <b>초반:</b> 50m까지는 지상 장애물만 나옵니다.
+        ⚔️ <b>하휘:</b> 무한의 검제 리메이크! (범위 폭발)<br>
+        🛡️ <b>지혜:</b> 발키리 부대 소환 & 패시브 힐
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -464,11 +512,11 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // [수정] 스킨 데이터 - 하휘 스킨 리뉴얼 (Active, CD 50초)
+  // [수정] 스킨 데이터 - 하휘(50s), 지혜(60s)
   const SKIN_DATA = {
     default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive" },
     haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 70 }, hahwi: { type: "Active", cd: 50 },
-    jihye: { type: "Passive" }, jun: { type: "Passive" }, stephanie: { type: "Passive" },
+    jihye: { type: "Active", cd: 60 }, jun: { type: "Passive" }, stephanie: { type: "Passive" },
     yejun: { type: "Active", cd: 180 }, ganghui: { type: "Passive", cd: 20 }, jieun: { type: "Active", cd: 120 }
   };
 
@@ -519,7 +567,7 @@
   let abilityCD = 0;
   let missionUpdateTimer = 0;
   
-  // [추가] 전찬, 하은, 재국, 하휘 스킨용 타이머 및 상태 변수
+  // [추가] 전찬, 하은, 재국, 하휘, 지혜 스킨용 타이머 및 상태 변수
   let jeonchanTimer = 0;
   let haeunLifeTimer = 0;
   let haeunShieldTimer = 0;
@@ -527,13 +575,16 @@
   let jaegukRevivedOnce = false; // 재국 1회 부활 체크
   let bobas = []; // 재국 보바 저장 배열
   let hahwiSwords = []; // 하휘 검 저장 배열
-  let hahwiSwordTimer = 0; // 하휘 검 발사 타이머
+  let hahwiLightningTimer = 0; // 하휘 포탈 번개 타이머
+  let jihyeUnits = []; // 지혜 부대원
+  let jihyeMissiles = []; // 지혜 바주카
+  let jihyePassiveTimer = 0; // 지혜 패시브 힐 타이머
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
   let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
-  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0, bobaTime: 0, hahwiMode: 0 };
+  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0, bobaTime: 0, hahwiMode: 0, jihyeSquad: 0 };
 
   let feverGauge = 0;
   const MAX_FEVER = 100;
@@ -806,10 +857,11 @@
       playSound('item');
   }
 
-  // [신규] 하휘 스킨 - 스킬 발동 함수
+  // [수정] 하휘 스킨 - 스킬 발동 함수 (강화판)
   function triggerHahwiSkill() {
     showFloatText("⚔️ 무한의 검제!");
-    activeEffects.hahwiMode = 15;
+    activeEffects.hahwiMode = 15; 
+    activeEffects.invincible = 15; // 스킬 발동 중 무적
     
     // 포탈 생성
     const portal = document.createElement('div');
@@ -817,36 +869,115 @@
     portal.className = 'hahwi-portal';
     gameArea.appendChild(portal);
 
-    // 0.1초마다 검 발사
+    // 50개의 검이 계속 쏟아져 나오도록 빠른 인터벌 설정 (0.05초마다)
     const swordInterval = setInterval(() => {
         if(activeEffects.hahwiMode <= 0 || !running) {
             clearInterval(swordInterval);
             return;
         }
         fireHahwiSword();
-    }, 100);
+    }, 50);
     
     // 포탈 위치 업데이트를 위한 루프는 gameLoop에서 처리
     playSound('clear');
   }
 
+  // [수정] 하휘 검 발사 로직 (부채꼴, 다양한 색상)
   function fireHahwiSword() {
       const pRect = player.getBoundingClientRect();
       const s = document.createElement('div');
       s.className = 'hahwi-sword';
       
+      // 랜덤 색상 (HSL)
+      const hue = Math.floor(Math.random() * 360);
+      s.style.color = `hsl(${hue}, 100%, 70%)`; // box-shadow color
+      s.style.background = `linear-gradient(90deg, #fff, hsl(${hue}, 100%, 80%))`;
+
+      // 스파크 자식 요소 추가
+      const spark = document.createElement('div');
+      spark.className = 'hahwi-sword-spark';
+      s.appendChild(spark);
+      
       // 플레이어 중앙에서 발사
       const startX = pRect.left + pRect.width/2;
       const startY = pRect.top + pRect.height/2;
       
-      // 약간의 랜덤 Y 분산
-      const randomY = (Math.random() - 0.5) * 60;
+      // 부채꼴 각도 (-15도 ~ +15도)
+      const angleDeg = (Math.random() - 0.5) * 30;
+      const angleRad = angleDeg * (Math.PI / 180);
       
       s.style.left = startX + 'px';
-      s.style.top = (startY + randomY) + 'px';
+      s.style.top = startY + 'px';
+      s.style.transform = `rotate(${angleDeg}deg)`;
       
+      s.vx = Math.cos(angleRad) * 900; // 속도
+      s.vy = Math.sin(angleRad) * 900;
+
       gameArea.appendChild(s);
       hahwiSwords.push(s);
+  }
+
+  // [신규] 지혜 스킨 - 스킬 발동 함수
+  function triggerJihyeSkill() {
+      showFloatText("⚔️ 발키리 부대 호출!");
+      // 변신 & 무적
+      player.style.backgroundImage = `url('Skill_JH.png')`;
+      activeEffects.jihyeSquad = 20; // 20초 지속
+      activeEffects.invincible = 20;
+
+      // 화면 반짝임
+      const flash = document.getElementById('flashEffect');
+      flash.style.opacity = '0.8';
+      setTimeout(() => flash.style.opacity = '0', 100);
+      playSound('clear');
+
+      // 부채꼴 형태로 4명 소환 (JH1 ~ JH4)
+      for(let i=1; i<=4; i++) {
+          const unit = document.createElement('div');
+          unit.className = 'jihye-unit';
+          unit.style.backgroundImage = `url('Skill_JH${i}.png')`;
+          // 초기 위치: 하늘 위
+          unit.style.left = (window.innerWidth / 2) + 'px';
+          unit.style.top = '-100px';
+          
+          // 목표 오프셋 (플레이어 기준)
+          // i=1: (-60, -80), i=2: (-20, -100), i=3: (20, -100), i=4: (60, -80)
+          unit.offsetX = (i - 2.5) * 50; 
+          unit.offsetY = -80 - (Math.abs(i - 2.5) * 20); // 부채꼴 형태
+          unit.fireTimer = 0;
+          
+          gameArea.appendChild(unit);
+          jihyeUnits.push(unit);
+      }
+  }
+
+  function endJihyeSkill() {
+      player.style.backgroundImage = `url('skin_jihye.png')`;
+      // 유닛 퇴장
+      jihyeUnits.forEach(u => {
+          u.style.transition = "top 1s ease-in";
+          u.style.top = '-200px'; // 하늘로 퇴장
+          setTimeout(() => u.remove(), 1000);
+      });
+      jihyeUnits = [];
+  }
+
+  // [신규] 지혜 패시브 힐
+  function triggerJihyeHeal() {
+      const healer = document.createElement('div');
+      healer.className = 'jihye-healer';
+      const pRect = player.getBoundingClientRect();
+      healer.style.left = (pRect.left + 10) + 'px';
+      healer.style.top = (pRect.top - 50) + 'px';
+      gameArea.appendChild(healer);
+      
+      showHealEffect();
+      life = Math.min(life + 2, maxLife + 5); // 최대치 조금 넘겨도 됨
+      document.getElementById("lifeText").innerText = life;
+      showFloatText("💖 의무관 지원 (+2)");
+      playSound('item');
+
+      setTimeout(() => healer.remove(), 2000);
   }
 
   function useAbility(e) {
@@ -872,6 +1003,10 @@
     // [신규] 하휘 스킬: 포탈 소환
     else if(currentSkin === 'hahwi') {
         triggerHahwiSkill();
+    }
+    // [신규] 지혜 스킬: 부대 소환
+    else if(currentSkin === 'jihye') {
+        triggerJihyeSkill();
     }
     else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
     else if(currentSkin === 'jieun') { 
@@ -954,12 +1089,35 @@
                 if(portal) {
                      // 포탈 위치 플레이어 뒤로 계속 업데이트
                      const pRect = player.getBoundingClientRect();
-                     portal.style.left = (pRect.left + pRect.width/2) + 'px';
+                     portal.style.left = (pRect.left + pRect.width/2 - 20) + 'px'; // 플레이어 뒤
                      portal.style.top = (pRect.top + pRect.height/2) + 'px';
+                     
+                     // 포탈 중심부 번개 스파크 효과
+                     hahwiLightningTimer += delta;
+                     if(hahwiLightningTimer > 0.1) {
+                         const spark = document.createElement('div');
+                         spark.className = 'hahwi-spark';
+                         spark.style.left = (parseFloat(portal.style.left) + randBetween(-20, 20)) + 'px';
+                         spark.style.top = parseFloat(portal.style.top) + 'px';
+                         spark.style.transform = `rotate(${randBetween(-180, 180)}deg)`;
+                         gameArea.appendChild(spark);
+                         setTimeout(() => spark.remove(), 200);
+                         hahwiLightningTimer = 0;
+                     }
                 }
                 if(activeEffects[k] <= 0) {
-                    if(portal) portal.remove();
+                    if(portal) {
+                        portal.classList.add('closing');
+                        setTimeout(() => portal.remove(), 500);
+                    }
+                    activeEffects.invincible = 0; // 무적 해제
                 }
+            }
+
+            // [신규] 지혜 스킬 종료 처리
+            if(k === 'jihyeSquad' && activeEffects[k] <= 0) {
+                endJihyeSkill();
+                activeEffects.invincible = 0; // 무적 해제
             }
 
             // [추가] 재국 보바 시간 종료
@@ -979,6 +1137,7 @@
                 else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "소환"; }
                 else if(k === 'bobaTime') { color = "#795548"; icon = "🧋"; label = "보바 타임"; }
                 else if(k === 'hahwiMode') { color = "#d500f9"; icon = "⚔️"; label = "검제"; }
+                else if(k === 'jihyeSquad') { color = "#ff9100"; icon = "⚔️"; label = "발키리"; }
                 if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
@@ -1085,6 +1244,15 @@
                 }
             }
         }
+
+        // [신규] 지혜 스킨 패시브 (25초마다 힐)
+        if(currentSkin === 'jihye' && running) {
+            jihyePassiveTimer += safeDelta;
+            if(jihyePassiveTimer >= 25.0) {
+                triggerJihyeHeal();
+                jihyePassiveTimer = 0;
+            }
+        }
         
         if(activeEffects.noelLaser > 0) {
             const beam = document.getElementById('noelBeam');
@@ -1098,17 +1266,20 @@
             for(let i=hahwiSwords.length-1; i>=0; i--) {
                 const s = hahwiSwords[i];
                 let sx = parseFloat(s.style.left);
-                sx += 800 * safeDelta; // 검 이동 속도
+                let sy = parseFloat(s.style.top);
+                sx += s.vx * safeDelta;
+                sy += s.vy * safeDelta;
                 s.style.left = sx + 'px';
+                s.style.top = sy + 'px';
                 
                 // 화면 밖으로 나가면 제거
-                if(sx > window.innerWidth) {
+                if(sx > window.innerWidth || sx < -100 || sy < -100 || sy > window.innerHeight + 100) {
                     s.remove();
                     hahwiSwords.splice(i, 1);
                     continue;
                 }
                 
-                // 충돌 체크 (장애물)
+                // 충돌 체크 (장애물 - 시공간 폭발)
                 let hit = false;
                 for(let j=obstacles.length-1; j>=0; j--) {
                     const o = obstacles[j];
@@ -1121,7 +1292,14 @@
                              sRect.bottom > oRect.top && sRect.top < oRect.bottom) {
                              
                              o.destroyed = true;
-                             spawnExplosionEffect(oRect.left + 30, oRect.top + 30);
+                             // 시공간 폭발 이펙트
+                             const ex = document.createElement('div');
+                             ex.className = 'spacetime-explosion';
+                             ex.style.left = oRect.left + 30 + 'px';
+                             ex.style.top = oRect.top + 30 + 'px';
+                             gameArea.appendChild(ex);
+                             setTimeout(() => ex.remove(), 400);
+                             
                              // 하휘 스킨 전용 코인 드랍 (manualCollection=true로 설정하여 획득 시 텍스트 표시)
                              let coins = Math.floor(randBetween(1, 6)); // 1~5개
                              spawnFaithCoins(oRect.left, oRect.top, coins, true, false); 
@@ -1148,7 +1326,13 @@
                                  e.isDead = true;
                                  if(e.laserWarning) e.laserWarning.remove();
                                  if(e.laserBeam) e.laserBeam.remove();
-                                 spawnExplosionEffect(eRect.left + 30, eRect.top + 30);
+                                 // 시공간 폭발 이펙트
+                                 const ex = document.createElement('div');
+                                 ex.className = 'spacetime-explosion';
+                                 ex.style.left = eRect.left + 30 + 'px';
+                                 ex.style.top = eRect.top + 30 + 'px';
+                                 gameArea.appendChild(ex);
+                                 setTimeout(() => ex.remove(), 400);
                                  
                                  // 코인 드랍
                                  let coins = Math.floor(randBetween(1, 6));
@@ -1166,6 +1350,148 @@
                 if(hit) {
                     s.remove();
                     hahwiSwords.splice(i, 1);
+                }
+            }
+        }
+
+        // [신규] 지혜 스킨 유닛 및 미사일 로직
+        if(activeEffects.jihyeSquad > 0) {
+            const pRect = player.getBoundingClientRect();
+            
+            jihyeUnits.forEach(u => {
+                // 목표 위치 계산 (플레이어 기준 편대 비행)
+                const tx = pRect.left + u.offsetX;
+                const ty = pRect.top + u.offsetY;
+                
+                // 부드러운 이동 (Lerp)
+                const cx = parseFloat(u.style.left);
+                const cy = parseFloat(u.style.top);
+                u.style.left = (cx + (tx - cx) * 0.1) + 'px';
+                u.style.top = (cy + (ty - cy) * 0.1) + 'px';
+                
+                // 공격 로직
+                u.fireTimer += safeDelta;
+                if(u.fireTimer > 0.8) { // 0.8초마다 발사
+                    // 가장 가까운 적 찾기
+                    let target = null;
+                    let minDist = 600;
+                    
+                    // 장애물 우선 검색
+                    obstacles.forEach(o => {
+                        const dist = o.getBoundingClientRect().left - cx;
+                        if(dist > 0 && dist < minDist && !o.destroyed) {
+                            minDist = dist;
+                            target = o;
+                        }
+                    });
+                    
+                    // 적군 검색
+                    if(!target) {
+                        enemies.forEach(e => {
+                            const dist = e.getBoundingClientRect().left - cx;
+                            if(dist > 0 && dist < minDist && !e.isDead) {
+                                minDist = dist;
+                                target = e;
+                            }
+                        });
+                    }
+                    
+                    // 미사일 발사
+                    const m = document.createElement('div');
+                    m.className = 'jihye-missile';
+                    m.style.left = (cx + 25) + 'px';
+                    m.style.top = (cy + 25) + 'px';
+                    
+                    if(target) {
+                        const tRect = target.getBoundingClientRect();
+                        const angle = Math.atan2((tRect.top+30) - (cy+25), (tRect.left+30) - (cx+25));
+                        m.vx = Math.cos(angle) * 700;
+                        m.vy = Math.sin(angle) * 700;
+                    } else {
+                        m.vx = 700; // 타겟 없으면 직진
+                        m.vy = 0;
+                    }
+                    
+                    gameArea.appendChild(m);
+                    jihyeMissiles.push(m);
+                    u.fireTimer = 0;
+                }
+            });
+        }
+        
+        // 지혜 미사일 업데이트 및 충돌
+        if(jihyeMissiles.length > 0) {
+            for(let i=jihyeMissiles.length-1; i>=0; i--) {
+                const m = jihyeMissiles[i];
+                let mx = parseFloat(m.style.left);
+                let my = parseFloat(m.style.top);
+                mx += m.vx * safeDelta;
+                my += m.vy * safeDelta;
+                m.style.left = mx + 'px';
+                m.style.top = my + 'px';
+                
+                // 화면 밖 제거
+                if(mx > window.innerWidth || mx < -50 || my < -50 || my > window.innerHeight + 50) {
+                    m.remove();
+                    jihyeMissiles.splice(i, 1);
+                    continue;
+                }
+                
+                let hit = false;
+                const mRect = m.getBoundingClientRect();
+                
+                // 장애물 충돌
+                for(let j=obstacles.length-1; j>=0; j--) {
+                    const o = obstacles[j];
+                    const oRect = o.getBoundingClientRect();
+                    
+                    if(oRect.left > 0 && !o.destroyed) {
+                        if (mRect.right > oRect.left && mRect.left < oRect.right && 
+                            mRect.bottom > oRect.top && mRect.top < oRect.bottom) {
+                            
+                            o.destroyed = true;
+                            spawnExplosionEffect(oRect.left+30, oRect.top+30);
+                            let coins = Math.floor(randBetween(3, 8)); // 대량 코인
+                            spawnFaithCoins(oRect.left, oRect.top, coins, false, true); // 자동 흡수
+                            
+                            o.remove();
+                            obstacles.splice(j, 1);
+                            hit = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if(!hit) {
+                    // 적군 충돌 (보스 제외)
+                    for(let k=enemies.length-1; k>=0; k--) {
+                        const e = enemies[k];
+                        const eRect = e.getBoundingClientRect();
+                        
+                        if(eRect.left > 0 && !e.isDead) {
+                            if (mRect.right > eRect.left && mRect.left < eRect.right && 
+                                mRect.bottom > eRect.top && mRect.top < eRect.bottom) {
+                                
+                                e.isDead = true;
+                                if(e.laserWarning) e.laserWarning.remove();
+                                if(e.laserBeam) e.laserBeam.remove();
+                                
+                                spawnExplosionEffect(eRect.left+30, eRect.top+30);
+                                let coins = Math.floor(randBetween(3, 8)); // 대량 코인
+                                spawnFaithCoins(eRect.left, eRect.top, coins, false, true); // 자동 흡수
+                                
+                                e.remove();
+                                enemies.splice(k, 1);
+                                hit = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if(hit) {
+                    m.remove();
+                    jihyeMissiles.splice(i, 1);
                 }
             }
         }
