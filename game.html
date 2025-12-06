@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Final Fixed Ver.</title>
+  <title>Disciple Run – Remastered Optimized</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -12,238 +12,100 @@
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* [수정6] 하휘 스킬 시 배경 변경용 클래스 */
+    /* 하휘 스킬 배경 */
     #gameArea.sand-bg { background: url('Sand.png') no-repeat center/cover !important; }
 
-    /* 피버타임 시 배경 효과 */
+    /* 화면 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
     #gameArea.sandstorm-mode { filter: sepia(80%) brightness(0.9); }
-
-    /* 지진 효과 */
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-3px, 4px); } 50% { transform: translate(3px, -4px); } 75% { transform: translate(-4px, -3px); } 100% { transform: translate(0, 0); } }
 
-    #flashEffect {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: white; opacity: 0; pointer-events: none; z-index: 200;
-        transition: opacity 0.1s;
-    }
+    #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* === [수정1] 전찬: 강력한 번개 (스타일 수정) === */
-    .jc-lightning-strike {
-        position: absolute; width: 15px; height: 100vh;
-        background: linear-gradient(to bottom, #fff, #ffd700, transparent);
-        z-index: 89; pointer-events: none;
-        box-shadow: 0 0 20px #ffd700, 0 0 40px #fff;
-        transform-origin: top center;
-        opacity: 0;
-    }
-    /* 번개 애니메이션은 JS에서 동적으로 처리 */
+    /* 전찬: 번개 및 해머 */
+    .jc-lightning-strike { position: absolute; width: 15px; height: 100vh; background: linear-gradient(to bottom, #fff, #ffd700, transparent); z-index: 89; pointer-events: none; box-shadow: 0 0 20px #ffd700, 0 0 40px #fff; transform-origin: top center; opacity: 0; }
+    .hammer-skill { position: absolute; width: 66vh; height: 66vh; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 10px #000); }
 
-    /* === [수정2] 전찬: 해머 (크기 확대) === */
-    .hammer-skill {
-        position: absolute; width: 66vh; height: 66vh; /* 화면 2/3 */
-        background: url('Hammer.png') no-repeat center/contain;
-        z-index: 95; pointer-events: none;
-        filter: drop-shadow(0 0 10px #000);
-    }
-
-    /* === 지은: 음계 파도 === */
-    .music-note {
-        position: absolute; font-size: 40px; font-weight: bold;
-        z-index: 65; pointer-events: none;
-        text-shadow: 2px 2px 0 #fff;
-        animation: noteFloat 1s infinite ease-in-out alternate;
-    }
+    /* 지은: 음계 및 배경 */
+    .music-note { position: absolute; font-size: 40px; font-weight: bold; z-index: 65; pointer-events: none; text-shadow: 2px 2px 0 #fff; animation: noteFloat 1s infinite ease-in-out alternate; }
     @keyframes noteFloat { from { transform: translateY(0); } to { transform: translateY(-15px); } }
-    .jieun-wave-bg {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(90deg, rgba(255,0,150,0.2), rgba(0,204,255,0.2));
-        z-index: 4; pointer-events: none; opacity: 0; transition: opacity 1s;
-    }
+    .jieun-wave-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(255,0,150,0.2), rgba(0,204,255,0.2)); z-index: 4; pointer-events: none; opacity: 0; transition: opacity 1s; }
 
-    /* === 노엘: 거대화 오로라 === */
-    .noel-aura {
-        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-        width: 140px; height: 140px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,215,0,0.4), transparent 70%);
-        box-shadow: 0 0 50px gold; z-index: 49; pointer-events: none;
-        animation: auraPulse 0.5s infinite alternate;
-    }
+    /* 노엘: 오로라 */
+    .noel-aura { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,0,0.4), transparent 70%); box-shadow: 0 0 50px gold; z-index: 49; pointer-events: none; animation: auraPulse 0.5s infinite alternate; }
     @keyframes auraPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } }
 
-    /* === 지혜: 힐러 및 기둥 === */
-    .jihye-healer {
-        position: absolute; width: 70px; height: 70px;
-        background-image: url('Skill_JHA.png');
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 60; pointer-events: none;
-        transition: left 1.5s ease-out, top 1.5s ease-out;
-        filter: drop-shadow(0 0 15px gold);
-    }
-    .holy-light-pillar {
-        position: absolute; width: 100px; height: 100vh;
-        background: linear-gradient(to bottom, transparent, rgba(255, 255, 200, 0.6), transparent);
-        bottom: 0; transform: translateX(-50%);
-        z-index: 59; pointer-events: none;
-        animation: lightPillar 2.0s ease-out forwards;
-    }
+    /* 지혜: 힐러 및 기둥 */
+    .jihye-healer { position: absolute; width: 70px; height: 70px; background-image: url('Skill_JHA.png'); background-size: contain; background-repeat: no-repeat; z-index: 60; pointer-events: none; transition: left 1.5s ease-out, top 1.5s ease-out; filter: drop-shadow(0 0 15px gold); }
+    .holy-light-pillar { position: absolute; width: 100px; height: 100vh; background: linear-gradient(to bottom, transparent, rgba(255, 255, 200, 0.6), transparent); bottom: 0; transform: translateX(-50%); z-index: 59; pointer-events: none; animation: lightPillar 2.0s ease-out forwards; }
     @keyframes lightPillar { 0% { opacity: 0; width: 0; } 20% { opacity: 1; width: 120px; } 80% { opacity: 1; width: 120px; } 100% { opacity: 0; width: 0; } }
 
-    /* === 하휘: 인피니티 스톤 & 모래폭풍 === */
-    .infinity-stone {
-        position: absolute; width: 24px; height: 24px; border-radius: 50%;
-        box-shadow: 0 0 15px currentColor; z-index: 65; pointer-events: none;
-        border: 2px solid white;
-    }
-    .sandstorm-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: url('noise.png'); 
-        background-color: rgba(194, 178, 128, 0.3);
-        z-index: 85; pointer-events: none; opacity: 0; transition: opacity 0.5s;
-        animation: sandMove 0.2s infinite linear;
-    }
+    /* 하휘: 인피니티 스톤 & 모래폭풍 */
+    .infinity-stone { position: absolute; width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 15px currentColor; z-index: 65; pointer-events: none; border: 2px solid white; }
+    .sandstorm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('noise.png'); background-color: rgba(194, 178, 128, 0.3); z-index: 85; pointer-events: none; opacity: 0; transition: opacity 0.5s; animation: sandMove 0.2s infinite linear; }
     @keyframes sandMove { 0% { background-position: 0 0; } 100% { background-position: 100px 50px; } }
-    .dust-effect {
-        position: absolute; width: 60px; height: 60px;
-        background: radial-gradient(circle, #d2b48c, transparent);
-        opacity: 0.8; border-radius: 50%; z-index: 80;
-        animation: turnToDust 0.6s ease-out forwards;
-    }
+    .dust-effect { position: absolute; width: 60px; height: 60px; background: radial-gradient(circle, #d2b48c, transparent); opacity: 0.8; border-radius: 50%; z-index: 80; animation: turnToDust 0.6s ease-out forwards; }
     @keyframes turnToDust { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2) translateY(-20px); opacity: 0; } }
 
-    /* === 준: 리얼 포탈 & 미니게임 === */
-    .real-portal {
-        position: absolute; width: 140px; height: 140px;
-        background: radial-gradient(circle, #000, #4b0082, #00ffff);
-        border-radius: 50%; border: 4px solid #fff;
-        box-shadow: 0 0 30px #00ffff, inset 0 0 50px #000;
-        z-index: 45; transform: translate(-50%, -50%) scale(0);
-    }
+    /* 준: 포탈 & 미니게임 */
+    .real-portal { position: absolute; width: 140px; height: 140px; background: radial-gradient(circle, #000, #4b0082, #00ffff); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 30px #00ffff, inset 0 0 50px #000; z-index: 45; transform: translate(-50%, -50%) scale(0); }
     .portal-opening { animation: pOpen 0.5s forwards; }
     .portal-closing { animation: pClose 0.5s forwards; }
     @keyframes pOpen { 0% { transform: translate(-50%, -50%) scale(0); } 100% { transform: translate(-50%, -50%) scale(1); } }
     @keyframes pClose { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(0); } }
 
-    #timeTunnelBg {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #000; z-index: 2900; pointer-events: none; /* UI보다 뒤에 */
-        opacity: 0; transition: opacity 0.5s; display: none;
-    }
-    .tunnel-star {
-       position: absolute; width: 100px; height: 2px; background: #fff;
-       box-shadow: 0 0 10px #fff; animation: warpSpeed 0.5s linear infinite;
-    }
+    #timeTunnelBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2900; pointer-events: none; opacity: 0; transition: opacity 0.5s; display: none; }
+    .tunnel-star { position: absolute; width: 100px; height: 2px; background: #fff; box-shadow: 0 0 10px #fff; animation: warpSpeed 0.5s linear infinite; }
     @keyframes warpSpeed { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
 
-    #junMiniGameUI {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5); z-index: 3000; /* 터널보다 앞에 */
-        flex-direction: column; justify-content: center; align-items: center;
-        color: #fff; text-align: center;
-    }
-    .warp-btn {
-        width: 120px; height: 120px; border-radius: 50%; background: #00ffff;
-        color: #000; font-weight: 900; font-size: 24px; border: 5px solid #fff;
-        box-shadow: 0 0 20px #00ffff; margin-top: 30px;
-        display: flex; justify-content: center; align-items: center;
-        animation: pulseBtn 0.2s infinite alternate; cursor: pointer;
-    }
+    #junMiniGameUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
+    .warp-btn { width: 120px; height: 120px; border-radius: 50%; background: #00ffff; color: #000; font-weight: 900; font-size: 24px; border: 5px solid #fff; box-shadow: 0 0 20px #00ffff; margin-top: 30px; display: flex; justify-content: center; align-items: center; animation: pulseBtn 0.2s infinite alternate; cursor: pointer; }
     @keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-    /* === 강희: 판넬 & 건담 === */
-    .funnel-unit {
-        position: absolute; width: 40px; height: 40px;
-        background: url('Panel.png') no-repeat center/contain;
-        z-index: 60; pointer-events: none;
-        /* [수정12] 움직임 로직은 JS에서 직접 제어하므로 transition 제거 또는 조정 */
-    }
-    .funnel-laser {
-        position: absolute; height: 6px; background: #ff00ff;
-        box-shadow: 0 0 10px #ff00ff; z-index: 58; transform-origin: left center;
-        opacity: 0; pointer-events: none;
-    }
+    /* 강희: 판넬 (CSS transition 제거하고 JS 제어) */
+    .funnel-unit { position: absolute; width: 40px; height: 40px; background: url('Panel.png') no-repeat center/contain; z-index: 60; pointer-events: none; }
+    .funnel-laser { position: absolute; height: 6px; background: #ff00ff; box-shadow: 0 0 10px #ff00ff; z-index: 58; transform-origin: left center; opacity: 0; pointer-events: none; }
 
-    /* === 예준: 도플갱어 & 날개 === */
-    .yejun-clone {
-        position: absolute; width: 50px; height: 50px;
-        background-image: url('skin_yejun.png'); 
-        background-size: contain; background-repeat: no-repeat;
-        opacity: 0.8; z-index: 49; 
-        filter: hue-rotate(180deg) brightness(1.2);
-        /* [수정11] 자유로운 움직임을 위해 JS 제어 */
-    }
-    .yejun-wing {
-        position: absolute; width: 100px; height: 100px;
-        background: url('Wings.png') no-repeat center/contain;
-        left: -20px; top: -20px; opacity: 0.8; mix-blend-mode: screen; pointer-events: none;
-    }
+    /* 예준: 도플갱어 & 날개 */
+    .yejun-clone { position: absolute; width: 50px; height: 50px; background-image: url('skin_yejun.png'); background-size: contain; background-repeat: no-repeat; opacity: 0.8; z-index: 49; filter: hue-rotate(180deg) brightness(1.2); }
+    .yejun-wing { position: absolute; width: 100px; height: 100px; background: url('Wings.png') no-repeat center/contain; left: -20px; top: -20px; opacity: 0.8; mix-blend-mode: screen; pointer-events: none; }
 
-    /* === 스테파니: 케이크 월드 === */
-    .cake-item {
-        position: absolute; width: 60px; height: 60px;
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 88; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
-    }
-    .heart-emit {
-        position: absolute; font-size: 30px; color: #ff69b4; font-weight: bold;
-        animation: heartFloat 1s forwards; z-index: 99;
-    }
+    /* 스테파니: 케이크 */
+    .cake-item { position: absolute; width: 60px; height: 60px; background-size: contain; background-repeat: no-repeat; z-index: 88; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
+    .heart-emit { position: absolute; font-size: 30px; color: #ff69b4; font-weight: bold; animation: heartFloat 1s forwards; z-index: 99; }
     @keyframes heartFloat { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
-    .cake-bg {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 0;
-        transition: opacity 1s;
-    }
+    .cake-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 0; transition: opacity 1s; }
 
-    /* === 지혜 스킨 === */
-    .jihye-transform-sphere {
-        position: absolute; width: 100px; height: 100px;
-        border-radius: 50%;
-        background: radial-gradient(circle at center, #fff 20%, #ffd700 80%);
-        box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff;
-        z-index: 52; transform: translate(-50%, -50%);
-        animation: sphereCharge 2s ease-in forwards;
-        mix-blend-mode: screen;
-    }
-    @keyframes sphereCharge { 
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
-        20% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-        80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; filter: brightness(2); }
-        100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
-    }
-    .jihye-unit {
-        position: absolute; width: 50px; height: 50px;
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 55; filter: drop-shadow(0 0 10px cyan);
-    }
-    .jihye-missile {
-        position: absolute; width: 24px; height: 24px;
-        background: radial-gradient(circle, #fff, #00b0ff);
-        border-radius: 50%; box-shadow: 0 0 10px #00b0ff; z-index: 66;
-    }
+    /* 지혜 스킨 변신 */
+    .jihye-transform-sphere { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle at center, #fff 20%, #ffd700 80%); box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff; z-index: 52; transform: translate(-50%, -50%); animation: sphereCharge 2s ease-in forwards; mix-blend-mode: screen; }
+    @keyframes sphereCharge { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; filter: brightness(2); } 100% { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
+    .jihye-unit { position: absolute; width: 50px; height: 50px; background-size: contain; background-repeat: no-repeat; z-index: 55; filter: drop-shadow(0 0 10px cyan); }
+    .jihye-missile { position: absolute; width: 24px; height: 24px; background: radial-gradient(circle, #fff, #00b0ff); border-radius: 50%; box-shadow: 0 0 10px #00b0ff; z-index: 66; }
 
-    /* === [수정3] 배경 레이어 수정 (CSS 확실하게 정의) === */
+    /* 배경 레이어 */
     .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-repeat: repeat-x; }
     #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("bg_mountain.png"); z-index: 2; background-size: auto 60%; background-position: 0 bottom; }
     #bgLayer3 { background-image: url("bg_forest.png"); z-index: 3; background-size: auto 40%; background-position: 0 bottom; }
     
-    /* 기본 구조 스타일들 */
     .flying-noel { position: absolute; width: 80px; height: 80px; background-image: url('skin_noel.png'); background-size: contain; background-repeat: no-repeat; z-index: 60; pointer-events: none; }
-    /* [수정13] 지은 소환 애니메이션용 클래스는 JS에서 직접 제어하지만 기본 설정은 유지 */
     
     .jieun-shield { position: absolute; width: 90px; height: 90px; left: -15px; bottom: -15px; border-right: 8px solid rgba(255, 255, 255, 0.8); border-radius: 50%; box-shadow: 0 0 20px rgba(255, 255, 255, 0.6); background: linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.2) 100%); pointer-events: none; z-index: 55; }
     .haeun-shield { position: absolute; width: 80px; height: 80px; left: -10px; bottom: -10px; border-right: 6px solid rgba(255, 255, 255, 0.9); border-radius: 50%; box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5); pointer-events: none; z-index: 55; animation: shieldBreath 2s infinite ease-in-out; }
     @keyframes shieldBreath { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
+    
     .heal-effect-visual { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: radial-gradient(circle, rgba(255,50,50,0) 20%, rgba(255,0,0,0.6) 60%, transparent 100%); border: 2px solid rgba(255, 100, 100, 0.8); border-radius: 50%; animation: healExpand 0.6s ease-out forwards; z-index: 95; pointer-events: none; }
     @keyframes healExpand { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; } }
+
     .noel-beam { position: absolute; left: 170px; height: 140px; width: 0; background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%); z-index: 89; transform-origin: left center; pointer-events: none; animation: beamFire 0.4s ease-out forwards; mix-blend-mode: screen; box-shadow: 0 0 40px cyan, 0 0 20px white; border-radius: 100px 0 0 100px; }
     .noel-beam::before { content: ''; position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 80px; height: 80px; background: radial-gradient(circle, #fff 20%, #00ffff 80%, transparent 100%); border-radius: 50%; box-shadow: 0 0 50px #fff; opacity: 0.9; }
     @keyframes beamFire { 0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 20% { width: 50vw; opacity: 1; transform: scaleY(1.2); } 100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } }
+
     #ground { display: none; }
     #player { position: absolute; z-index: 50; left: 120px; bottom: 40px; width: 60px; height: 60px; background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; transition: opacity 0.2s, transform 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); }
     #player.fever-active { transform: scale(1.3); filter: drop-shadow(0 0 20px gold); }
+
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; border-radius: 4px; }
     .obs-ground.obs-cap::after { top: -12px; } .obs-ceil.obs-cap::after { bottom: -12px; }
@@ -252,41 +114,55 @@
     .obs-rock { width: 60px; background-color: #9E9E9E; border-left: 4px solid #616161; border-right: 4px solid #616161; background-image: radial-gradient(circle, rgba(0,0,0,0.1) 20%, transparent 20%); }
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
+
     .obstacle-explosion { position: absolute; z-index: 85; width: 100px; height: 100px; background: radial-gradient(circle, #fff, orange, transparent); border-radius: 50%; animation: obsExplode 0.4s ease-out forwards; transform: translate(-50%, -50%); }
     @keyframes obsExplode { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
     .faith-coin { position: absolute; z-index: 88; width: 24px; height: 24px; background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 10px gold; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; color: #fff; }
     .faith-coin::after { content: '✝'; }
+
     .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
     .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; transition: opacity 0.2s; }
     .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
     .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
     .player-missile { position: absolute; width: 50px; height: 24px; background: linear-gradient(90deg, #00ffff, #0099ff); border-radius: 12px; box-shadow: 0 0 15px cyan, 0 0 5px white; z-index: 65; border: 2px solid #fff; }
+    
     .explosion-area { position: absolute; border-radius: 50%; background: rgba(255, 69, 0, 0.5); border: 2px solid orange; animation: explode 0.5s forwards; z-index: 59; }
     @keyframes explode { 0% { transform: scale(0.1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+
     .enemy-laser-warning { position: absolute; height: 2px; background: rgba(255,0,0,0.5); z-index: 49; }
     .enemy-laser-beam { position: absolute; height: 30px; background: linear-gradient(to bottom, transparent, red, transparent); box-shadow: 0 0 15px red; z-index: 50; }
     .reflected-missile { background: #00ff00 !important; box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
     .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
     @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
+    
     #pauseBtn { position: fixed; z-index: 900; top: 15px; right: 15px; width: 50px; height: 50px; background: #fdfaf2; border: 4px solid #3a2513; border-radius: 12px; box-shadow: 0 4px 0 #8b4f26; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; color: #3a2513; transition: transform 0.1s, box-shadow 0.1s; }
     #pauseBtn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b4f26; }
+
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
     #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
+
     #subActionBtn { position: fixed; bottom: 150px; left: 20px; width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fff; color: white; font-weight: 900; font-size: 20px; text-align: center; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.1s, background-color 0.2s; }
     #subActionBtn:active { transform: scale(0.9); }
     #subActionBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
     .btn-attack { background-color: #D32F2F !important; }
     .btn-defence { background-color: #1976D2 !important; }
+
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
+
     #bossContainer { position: absolute; right: -200px; top: 50%; width: 120px; height: 120px; z-index: 55; display: none; transition: right 1s ease-out; }
     #bossBody { width: 100%; height: 100%; background: url('boss.png') no-repeat center/contain; image-rendering: pixelated; filter: drop-shadow(0 0 10px red); animation: bossFloat 2s ease-in-out infinite; }
     .boss-charging { filter: drop-shadow(0 0 20px yellow) !important; transform: scale(1.1); }
@@ -294,16 +170,21 @@
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     #bossHpBar { position: absolute; top: -20px; left: 0; width: 100%; height: 10px; background: #333; border: 2px solid #000; border-radius: 5px; overflow: hidden; }
     #bossHpFill { width: 100%; height: 100%; background: #d32f2f; transition: width 0.2s; }
+
     #bossWarning { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000; display: none; z-index: 2000; animation: blink 0.5s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     .boss-laser { position: absolute; right: 0; height: 40px; background: linear-gradient(to bottom, #ff0000, #fff, #ff0000); z-index: 58; opacity: 0.8; border-top: 2px solid #fff; border-bottom: 2px solid #fff; box-shadow: 0 0 20px #ff0000; pointer-events: none; display: none; }
+
     #speedLines { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 80; background: radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.8) 90%); mix-blend-mode: overlay; pointer-events: none; animation: speedShake 0.1s infinite; }
     @keyframes speedShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, -2px); } 100% { transform: translate(0, 0); } }
+
     .float-text { position: absolute; color: #ffe24f; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 0 #3a2513; z-index: 1000; pointer-events: none; animation: floatUp 1s ease-out forwards; }
     @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
+
     #comboEffect, #correctEffect { position: fixed; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; pointer-events: none; font-weight: 900; text-shadow: 3px 3px #000; }
     #comboEffect { top: 20%; font-size: 40px; color: #ffe24f; text-shadow: 3px 3px #8b4f26; }
     #correctEffect { top: 40%; font-size: 48px; color: #00ffcc; text-shadow: 3px 3px #006644; }
+
     .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); display: none; justify-content: center; align-items: center; padding: 16px; z-index: 20000; }
     .modal-box { width: 90%; max-width: 420px; background: var(--panel-bg); border-radius: 14px; border: 4px solid #3a2513; padding: 28px 24px; box-shadow: 0 0 0 4px #fff, 0 10px 0 #b79b76; text-align: center; }
     .start-btn, .choice-btn, .action-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; box-shadow: 0 4px 0 var(--accent-dark); cursor: pointer; }
@@ -311,10 +192,13 @@
     .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
     .modal-input { width: 85%; max-width: 320px; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #b8a792; margin: 8px auto 18px; display: block; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
+
     .lamb-unit { position: absolute; width: 60px; height: 60px; background: url('Lamb.png') no-repeat center/contain; z-index: 51; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3)); }
     .lamb-msg { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #fff; border: 3px solid #3a2513; padding: 6px 12px; border-radius: 15px; font-size: 14px; font-weight: 800; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); color: #3a2513; }
     .lamb-msg::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent; display: block; width: 0; }
+
     .boba-unit { position: absolute; width: 18px; height: 18px; background: radial-gradient(circle at 30% 30%, #4e342e, #212121); border: 1px solid #000; border-radius: 50%; box-shadow: 2px 2px 3px rgba(0,0,0,0.4); z-index: 65; pointer-events: none; }
+    
     .angel-wing-effect { position: absolute; width: 150px; height: 150px; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; font-size: 100px; z-index: 100; text-shadow: 0 0 20px gold, 0 0 40px white; animation: wingRise 2s ease-out forwards; pointer-events: none; }
     .angel-wing-effect::after { content: '🪽'; }
     @keyframes wingRise { 0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; transform: translate(-50%, -80%) scale(1.3); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } }
@@ -429,16 +313,12 @@
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
 
 <script>
-  // [보안] F12 및 개발자 도구 단축키 차단
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || 
-       (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-       (e.ctrlKey && e.shiftKey && e.key === 'J') || 
-       (e.ctrlKey && e.key === 'U')) {
-      e.preventDefault();
-      alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
-    }
-  });
+  // [최적화] 충돌 박스 계산 헬퍼 함수 (DOM 접근 최소화)
+  function isColliding(a, b) {
+    // a, b는 {x, y, w, h} 형태의 객체여야 함
+    return (a.x < b.x + b.w && a.x + a.w > b.x &&
+            a.y < b.y + b.h && a.y + a.h > b.y);
+  }
 
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
@@ -483,7 +363,6 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // 스킨 데이터 [수정10] 예준 쿨타임 변경 (60 -> 40)
   const SKIN_DATA = {
     default: { type: "none" }, 
     noel: { type: "Active", cd: 60 },  
@@ -521,13 +400,9 @@
   let speedLines = document.getElementById("speedLines");
   let timeTunnelBg = document.getElementById("timeTunnelBg");
 
-  function createEl(tag, id, parent, before) {
-    let el = document.createElement(tag); el.id = id;
-    if(before) parent.insertBefore(el, before); else parent.appendChild(el);
-    return el;
-  }
-
-  let playerY = 40; let velocity = 0; 
+  // [최적화] 플레이어 좌표 객체 관리
+  let playerObj = { x: 120, y: 40, w: 40, h: 50 }; // 히트박스 약간 작게 조정
+  let velocity = 0; 
   let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
     
   let targetY = 0;
@@ -548,22 +423,26 @@
   let missionUpdateTimer = 0;
   
   // 상태 변수들
-  let jeonchanTimer = 0; // 전찬 패시브(번개) 타이머
+  let jeonchanTimer = 0;
   let haeunLifeTimer = 0;
   let haeunShieldTimer = 0;
   let haeunShieldActive = false;
   let jaegukRevivedOnce = false; 
   let bobas = []; 
-  let hahwiSwords = []; 
-  let hahwiFireInterval = null; 
   let jihyeUnits = []; 
   let jihyeMissiles = []; 
   let jihyePassiveTimer = 0; 
-  let jihyeSphereTracker = null; 
+  
+  // [최적화] 지혜 스킨 변신 추적을 위한 플래그 (setInterval 대체)
+  let jihyeSphereActive = false;
+  let jihyeSphereEl = null;
+
   let junLambTimer = 0;
   let isJunTimeTravel = false;
   
-  // [신규 변수]
+  // [최적화] 준 스킨 어린양 관리를 위한 객체 (setInterval 대체)
+  let activeLamb = null;
+
   let noelGiantTimer = 0;
   let hahwiStoneTimer = 0;
   let infinityStones = [];
@@ -581,7 +460,7 @@
   let musicNotes = [];
   let musicWaveActive = false;
   let musicNoteTimer = 0;
-  let jieunNoelTimer = 0; // 지은 패시브 타이머
+  let jieunNoelTimer = 0;
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -643,6 +522,8 @@
           const spreadX = (Math.random() - 0.5) * 100 * spreadMult;
           const spreadY = (Math.random() - 0.5) * 100 * spreadMult;
           coin.style.left = x + 'px'; coin.style.top = y + 'px';
+          // [최적화] 동전 좌표 변수 추가
+          coin.x = x; coin.y = y;
           coin.vx = spreadX; coin.vy = spreadY; coin.timer = 0;
           gameArea.appendChild(coin); faithCoins.push(coin);
       }
@@ -669,7 +550,6 @@
       setTimeout(()=>heal.remove(), 600);
   }
 
-  // 지은: 음계 파도 스킬
   function triggerJieunMusicWave() {
       showFloatText("🎵 뮤직 웨이브!");
       activeEffects.musicWave = 10;
@@ -678,22 +558,20 @@
   }
 
   function activateJieunBuff() {
-      // [수정13] 지은 소환 애니메이션: 노엘 등장 (부채꼴 오른쪽->왼쪽)
       const noelFly = document.createElement('div');
       noelFly.className = 'flying-noel';
       noelFly.style.left = (window.innerWidth + 100) + 'px';
       noelFly.style.top = '-50px';
       gameArea.appendChild(noelFly);
 
-      const pRect = player.getBoundingClientRect();
-      // 날아오는 애니메이션
+      const pRect = { left: playerObj.x, top: window.innerHeight - playerObj.y - playerObj.h }; // 근사치
+
       noelFly.animate([
          { left: (window.innerWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
-         { left: pRect.left + 'px', top: pRect.top + 'px', transform: 'rotate(0deg)' }
+         { left: '120px', top: (window.innerHeight - playerObj.y - 60) + 'px', transform: 'rotate(0deg)' }
       ], { duration: 800, easing: 'ease-out', fill: 'forwards' }).onfinish = () => {
          noelFly.remove();
          
-         // 도착 후 변신
          const flash = document.getElementById('flashEffect');
          flash.style.opacity = '0.8';
          setTimeout(() => flash.style.opacity = '0', 100);
@@ -706,7 +584,7 @@
          shield.className = 'jieun-shield';
          player.appendChild(shield);
 
-         activeEffects.summon = 15; // 15초 지속
+         activeEffects.summon = 15;
          showFloatText("🛡️ 노엘 소환!");
       };
   }
@@ -721,23 +599,20 @@
       const shield = document.getElementById('jieunShield');
       if(shield) shield.remove();
 
-      // [수정13] 합체 해제 애니메이션 (오른쪽 위로 떠남)
       const noel = document.createElement('div');
       noel.className = 'flying-noel';
-      const pRect = player.getBoundingClientRect();
-      noel.style.left = pRect.left + 'px';
-      noel.style.top = pRect.top + 'px';
+      noel.style.left = '120px';
+      noel.style.top = (window.innerHeight - playerObj.y - 60) + 'px';
       gameArea.appendChild(noel);
 
       noel.animate([
-          { left: pRect.left + 'px', top: pRect.top + 'px' },
+          { left: '120px', top: (window.innerHeight - playerObj.y - 60) + 'px' },
           { left: (window.innerWidth + 200) + 'px', top: '-200px' }
       ], { duration: 800, easing: 'ease-in', fill: 'forwards' }).onfinish = () => noel.remove();
   }
 
   function jump() {
     if (!running) {
-        // 준 미니게임 중 점프키/터치 처리
         if (junMiniGameActive) {
             junWarpDist++;
             if(junWarpDist > 50) junWarpDist = 50;
@@ -817,18 +692,17 @@
     shieldCooldown = 0.5;
     subActionBtn.classList.add('cooldown');
     let reflected = false;
+    // [최적화] JS 변수 좌표 기반으로 거리 계산
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
-            const pRect = p.getBoundingClientRect();
-            const plRect = player.getBoundingClientRect();
-            const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
+            const dist = Math.hypot(p.x - playerObj.x, p.y - (window.innerHeight - playerObj.y - 30));
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
                 p.classList.add('reflected-missile');
                 p.vx = Math.abs(p.vx) * 1.5; p.vy = -p.vy * 0.5; 
                 reflected = true;
-                spawnParticles(pRect.left, pRect.top, 'spark');
+                spawnParticles(p.x, p.y, 'spark');
             }
         }
     });
@@ -838,26 +712,24 @@
 
   function playerShoot() {
       const m = document.createElement("div"); m.classList.add("player-missile");
-      const pRect = player.getBoundingClientRect();
-      const startX = pRect.right - 10;
-      const startY = pRect.top + (pRect.height / 2) - 12;
+      const startX = playerObj.x + 50;
+      const startY = (window.innerHeight - playerObj.y - 40);
       m.style.left = startX + "px"; m.style.top = startY + "px"; 
       gameArea.appendChild(m); playerMissiles.push(m);
       playSound('jump');
   }
 
-  // [수정4] 재국 버블 AI 수정: 타겟 추적 -> 파괴 -> 회수
   function triggerJaegukBobas() {
       showFloatText("🧋 버블티 파워!");
       activeEffects.bobaTime = 20; 
-      activeEffects.invincible = 20; // 스킬 지속시간 동안 무적
+      activeEffects.invincible = 20; 
       
       for(let i=0; i<5; i++) {
           const b = document.createElement('div');
           b.className = 'boba-unit';
           b.angle = (i / 5) * Math.PI * 2; 
           b.radius = 60;
-          b.state = 'orbit'; // orbit, attack, return
+          b.state = 'orbit'; 
           b.target = null;
           gameArea.appendChild(b);
           bobas.push(b);
@@ -865,13 +737,12 @@
       playSound('item');
   }
 
-  // [수정5,6] 하휘 스킬 로직 수정 및 배경 변경
   function triggerHahwiSkill() {
     showFloatText("🌪️ 사막의 폭풍!");
     activeEffects.sandstorm = 15;
     document.getElementById('sandstormOverlay').style.opacity = '1';
     gameArea.classList.add('sandstorm-mode');
-    gameArea.classList.add('sand-bg'); // 배경 변경
+    gameArea.classList.add('sand-bg');
     playSound('clear');
   }
 
@@ -882,18 +753,17 @@
       sphere.className = 'jihye-transform-sphere';
       gameArea.appendChild(sphere);
 
-      if(jihyeSphereTracker) clearInterval(jihyeSphereTracker);
-      jihyeSphereTracker = setInterval(() => {
-            const currentPRect = player.getBoundingClientRect();
-            sphere.style.left = (currentPRect.left + 30) + 'px';
-            sphere.style.top = (currentPRect.top + 30) + 'px';
-      }, 16);
+      // [최적화] setInterval 제거하고 게임 루프에서 추적
+      jihyeSphereEl = sphere;
+      jihyeSphereActive = true;
 
       activeEffects.invincible = 2.5;
       
       setTimeout(() => {
-          clearInterval(jihyeSphereTracker); 
+          jihyeSphereActive = false;
           sphere.remove();
+          jihyeSphereEl = null;
+
           player.style.backgroundImage = `url('Skill_JH.png')`;
           
           const flash = document.getElementById('flashEffect');
@@ -907,8 +777,9 @@
               const unit = document.createElement('div');
               unit.className = 'jihye-unit';
               unit.style.backgroundImage = `url('Skill_JH${i}.png')`;
-              unit.style.left = '-100px';
-              unit.style.top = randBetween(50, window.innerHeight/2) + 'px';
+              unit.x = -100; unit.y = randBetween(50, window.innerHeight/2);
+              unit.style.left = unit.x + 'px';
+              unit.style.top = unit.y + 'px';
               unit.tx = (window.innerWidth / 2) + randBetween(-100, 100);
               unit.ty = (window.innerHeight / 2) + randBetween(-200, 0);
               unit.moveTimer = 0;
@@ -919,13 +790,11 @@
       }, 2000);
   }
 
-  // [수정7] 지혜 변신 해제 애니메이션 추가
   function endJihyeSkill() {
       const sphere = document.createElement('div');
       sphere.className = 'jihye-transform-sphere';
-      const pRect = player.getBoundingClientRect();
-      sphere.style.left = (pRect.left + 30) + 'px';
-      sphere.style.top = (pRect.top + 30) + 'px';
+      sphere.style.left = (playerObj.x + 30) + 'px';
+      sphere.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
       gameArea.appendChild(sphere);
 
       activeEffects.invincible = 2.0;
@@ -951,14 +820,11 @@
       pillar.className = 'holy-light-pillar';
       gameArea.appendChild(pillar);
 
-      const updatePos = () => {
-         const crtP = player.getBoundingClientRect();
-         healer.style.left = (crtP.left + 10) + 'px';
-         healer.style.top = (crtP.top - 80) + 'px';
-         pillar.style.left = (crtP.left + 30) + 'px';
-      };
-      
-      const tracker = setInterval(updatePos, 16);
+      // [최적화] 힐러 이동 애니메이션도 CSS transition으로 처리하거나 requestAnimation 내에서 처리 권장
+      // 여기서는 CSS transition 사용 중이므로 위치만 초기화
+      healer.style.left = (playerObj.x + 10) + 'px';
+      healer.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
+      pillar.style.left = (playerObj.x + 30) + 'px';
 
       setTimeout(() => {
           life = Math.min(life + 2, maxLife + 5); 
@@ -966,8 +832,6 @@
           showFloatText("💖 천사의 치유 (+2)");
           playSound('item');
           
-          clearInterval(tracker);
-          healer.style.transition = "left 0.5s, top 0.5s";
           healer.style.left = (window.innerWidth + 100) + 'px';
           healer.style.top = '-200px';
           setTimeout(() => {
@@ -984,15 +848,14 @@
 
       const portal = document.createElement('div');
       portal.className = 'real-portal portal-opening';
-      const pRect = player.getBoundingClientRect();
-      portal.style.left = (pRect.left + 150) + 'px';
-      portal.style.top = (pRect.top + 30) + 'px';
+      portal.style.left = (playerObj.x + 150) + 'px';
+      portal.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
       gameArea.appendChild(portal);
 
       setTimeout(() => {
           player.style.transition = "transform 0.5s, left 0.5s, top 0.5s";
-          player.style.left = (pRect.left + 150) + 'px';
-          player.style.top = (pRect.top + 30) + 'px';
+          player.style.left = (playerObj.x + 150) + 'px';
+          player.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
           player.style.transform = "scale(0) rotate(720deg)";
       }, 500);
 
@@ -1007,7 +870,6 @@
               junWarpDist = 0;
               document.getElementById('warpDistance').innerText = "0";
 
-              // [수정8] 미니게임 시간 3초로 단축
               setTimeout(() => {
                     finishJunMiniGame(portal);
               }, 3000);
@@ -1020,7 +882,6 @@
       document.getElementById('junMiniGameUI').style.display = 'none';
       junMiniGameActive = false;
       
-      // [수정9] 프리징 버그 수정: 플레이어 상태 및 게임 실행 상태 확실하게 복구
       portal.style.left = '200px'; 
       portal.style.top = '50%';
       
@@ -1038,10 +899,10 @@
           player.style.transition = "transform 0.5s ease-out, left 0.5s";
           player.style.transform = 'scale(1) rotate(0deg)';
           player.style.left = '120px';
-          playerY = window.innerHeight / 2;
-          velocity = 0; // 속도 초기화하여 낙하 방지
+          playerObj.y = window.innerHeight / 2;
+          velocity = 0;
           
-          running = true; // 게임 재개
+          running = true; 
           
           setTimeout(() => {
               portal.classList.remove('portal-opening');
@@ -1054,65 +915,71 @@
   function spawnLamb() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
-      lamb.style.left = (window.innerWidth + 50) + 'px';
-      lamb.style.top = '50px'; 
+      lamb.x = window.innerWidth + 50;
+      lamb.y = 50;
+      lamb.style.left = lamb.x + 'px';
+      lamb.style.top = lamb.y + 'px'; 
       lamb.style.transform = "scaleX(-1)";
       gameArea.appendChild(lamb);
       
-      let state = 'approach';
-      let waitTimer = 0;
-      const messages = ["화이팅!", "힘내세요!", "주님이 함께해요!", "기쁨이 가득하길!", "평안하세요!"];
-      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+      // [최적화] setInterval 제거하고 활성 객체로 등록
+      activeLamb = {
+          el: lamb,
+          state: 'approach',
+          waitTimer: 0,
+          msgEl: null
+      };
+  }
 
-      const lambLoop = setInterval(() => {
-          if(!running && !isJunTimeTravel && !junMiniGameActive) return; 
+  // [최적화] 램 업데이트 로직 (GameLoop에서 호출)
+  function updateLamb(dt) {
+      if(!activeLamb) return;
+      const lamb = activeLamb;
+      const pRect = { x: playerObj.x, y: window.innerHeight - playerObj.y - 60 };
+      
+      if(lamb.state === 'approach') {
+          const targetX = pRect.x + 50;
+          const targetY = pRect.y - 50;
           
-          if(state === 'approach') {
-              const pRect = player.getBoundingClientRect();
-              const targetX = pRect.left + 50;
-              const targetY = pRect.top - 50;
+          lamb.el.x += (targetX - lamb.el.x) * 0.03;
+          lamb.el.y += (targetY - lamb.el.y) * 0.03;
+          
+          lamb.el.style.left = lamb.el.x + 'px';
+          lamb.el.style.top = lamb.el.y + 'px';
+          
+          if(Math.abs(lamb.el.x - targetX) < 30 && Math.abs(lamb.el.y - targetY) < 30) {
+              lamb.state = 'talk';
+              const messages = ["화이팅!", "힘내세요!", "주님이 함께해요!", "기쁨이 가득하길!", "평안하세요!"];
+              const randomMsg = messages[Math.floor(Math.random() * messages.length)];
               
-              let lx = parseFloat(lamb.style.left);
-              let ly = parseFloat(lamb.style.top);
-
-              lx += (targetX - lx) * 0.03; 
-              ly += (targetY - ly) * 0.03;
-
-              lamb.style.left = lx + 'px';
-              lamb.style.top = ly + 'px';
+              const msg = document.createElement('div');
+              msg.className = 'lamb-msg';
+              msg.innerText = randomMsg;
+              msg.style.transform = "scaleX(-1)";
+              msg.style.display = "inline-block";
+              lamb.el.appendChild(msg);
+              lamb.msgEl = msg;
               
-              if(Math.abs(lx - targetX) < 30 && Math.abs(ly - targetY) < 30) {
-                  state = 'talk';
-                  const msg = document.createElement('div');
-                  msg.className = 'lamb-msg';
-                  msg.innerText = randomMsg;
-                  msg.style.transform = "scaleX(-1)"; 
-                  msg.style.display = "inline-block";
-                  lamb.appendChild(msg);
-                  
-                  if(life < maxLife + 5) {
-                      life++;
-                      document.getElementById("lifeText").innerText = life;
-                      showHealEffect();
-                  }
-              }
-          } else if(state === 'talk') {
-              waitTimer += 0.05;
-              if(waitTimer > 1.5) { 
-                  state = 'leave';
-                  const msg = lamb.querySelector('.lamb-msg');
-                  if(msg) msg.remove();
-              }
-          } else if(state === 'leave') {
-              let lx = parseFloat(lamb.style.left);
-              lx -= 8; 
-              lamb.style.left = lx + 'px';
-              if(lx < -100) {
-                  clearInterval(lambLoop);
-                  lamb.remove();
+              if(life < maxLife + 5) {
+                  life++;
+                  document.getElementById("lifeText").innerText = life;
+                  showHealEffect();
               }
           }
-      }, 30);
+      } else if(lamb.state === 'talk') {
+          lamb.waitTimer += dt;
+          if(lamb.waitTimer > 1.5) { 
+              lamb.state = 'leave';
+              if(lamb.msgEl) lamb.msgEl.remove();
+          }
+      } else if(lamb.state === 'leave') {
+          lamb.el.x -= 300 * dt;
+          lamb.el.style.left = lamb.el.x + 'px';
+          if(lamb.el.x < -100) {
+              lamb.el.remove();
+              activeLamb = null;
+          }
+      }
   }
   
   function triggerJeonchanHammer() {
@@ -1122,8 +989,8 @@
 
       hammerObj = document.createElement('div');
       hammerObj.className = 'hammer-skill';
-      hammerObj.style.left = '-60vw'; // 시작 위치 조정
-      hammerObj.style.top = '15%'; // 화면 중앙 정렬
+      hammerObj.style.left = '-60vw'; 
+      hammerObj.style.top = '15%'; 
       gameArea.appendChild(hammerObj);
 
       hammerObj.animate([
@@ -1140,32 +1007,29 @@
       };
   }
 
-  // [수정1] 전찬 번개 로직 개선: 20개 연속, 대각선, 랜덤 컬러
   function triggerJeonchanLightning() {
       showFloatText("⚡ 천둥 번개!");
       let count = 0;
+      // [참고] 번개는 순간적인 시각 효과라 setInterval 사용 유지하되 충돌은 좌표 기반으로
       const strikeLoop = setInterval(() => {
           if(count >= 20) { clearInterval(strikeLoop); return; }
           
           const strike = document.createElement('div');
           strike.className = 'jc-lightning-strike';
           
-          // 랜덤 위치 및 대각선 각도
           const randX = randBetween(50, window.innerWidth - 50);
           strike.style.left = randX + 'px';
           strike.style.top = '-50vh';
           strike.style.height = '150vh';
-          strike.style.transform = `rotate(${randBetween(10, 30)}deg)`; // 오른쪽 대각선
+          strike.style.transform = `rotate(${randBetween(10, 30)}deg)`;
           
-          // 랜덤 색상 (아름답게)
-          const hue = randBetween(200, 300); // 파랑~보라 계열 + 골드
+          const hue = randBetween(200, 300);
           strike.style.background = (Math.random() > 0.5) 
             ? `linear-gradient(to bottom, #fff, gold, transparent)` 
             : `linear-gradient(to bottom, #fff, hsl(${hue}, 100%, 70%), transparent)`;
             
           gameArea.appendChild(strike);
           
-          // 애니메이션
           strike.animate([
               { opacity: 0, height: '0' },
               { opacity: 1, height: '150vh' },
@@ -1174,13 +1038,12 @@
 
           playSound('clear');
 
-          // 충돌 판정 (번개 라인 근처)
+          // [최적화] JS 배열 순회하여 충돌 체크
           obstacles.forEach(o => {
-              const oRect = o.getBoundingClientRect();
-              if(Math.abs(oRect.left - randX) < 100 && !o.destroyed) {
+              if(Math.abs(o.x - randX) < 100 && !o.destroyed) {
                   o.destroyed = true;
-                  spawnExplosionEffect(oRect.left, oRect.top);
-                  spawnFaithCoins(oRect.left, oRect.top, 3, false, true);
+                  spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
+                  spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
                   o.remove();
               }
           });
@@ -1194,7 +1057,7 @@
           });
 
           count++;
-      }, 100); // 0.1초 간격으로 20번 = 2초
+      }, 100);
   }
 
   function triggerStephanieSkill() {
@@ -1204,19 +1067,18 @@
       cakeDropTimer = 0;
   }
   
-  // [수정10, 11] 예준 스킨: 지속 15s, 쿨 40s(SKIN_DATA), 전방위 랜덤 이동
   function triggerYejunClones() {
       showFloatText("💨 도플갱어 소환!");
-      const pRect = player.getBoundingClientRect();
-      activeEffects.invincible = 15; // 분신 있는 동안 무적 느낌 부여 (선택사항)
+      activeEffects.invincible = 15;
 
       for(let i=0; i<5; i++) {
           const clone = document.createElement('div');
           clone.className = 'yejun-clone';
-          clone.style.left = (pRect.left + randBetween(-50, 50)) + 'px';
-          clone.style.bottom = (parseFloat(player.style.bottom) + randBetween(20, 100)) + 'px';
+          clone.x = playerObj.x + randBetween(-50, 50);
+          clone.y = playerObj.y + randBetween(20, 100);
+          clone.style.left = clone.x + 'px';
+          clone.style.bottom = clone.y + 'px';
           
-          // 랜덤 이동을 위한 속도 벡터
           clone.vx = randBetween(-3, 3);
           clone.vy = randBetween(-3, 3);
           
@@ -1226,7 +1088,7 @@
       
       setTimeout(() => {
           yejunClones.forEach(c => {
-              spawnParticles(parseFloat(c.el.style.left), parseFloat(c.el.style.bottom), 'dust');
+              spawnParticles(c.el.x, c.el.y, 'dust');
               c.el.remove();
           });
           yejunClones = [];
@@ -1253,8 +1115,9 @@
       if(funnels.length >= 8) return;
       const f = document.createElement('div');
       f.className = 'funnel-unit';
-      f.style.left = '-50px';
-      f.style.top = randBetween(50, window.innerHeight-100) + 'px';
+      f.x = -50; f.y = randBetween(50, window.innerHeight-100);
+      f.style.left = f.x + 'px';
+      f.style.top = f.y + 'px';
       f.tx = randBetween(100, window.innerWidth-100);
       f.ty = randBetween(50, window.innerHeight-100);
       f.timer = 0;
@@ -1326,7 +1189,7 @@
             if(k === 'sandstorm' && activeEffects[k] <= 0) {
                 document.getElementById('sandstormOverlay').style.opacity = '0';
                 gameArea.classList.remove('sandstorm-mode');
-                gameArea.classList.remove('sand-bg'); // 배경 복구
+                gameArea.classList.remove('sand-bg');
             }
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) endJihyeSkill();
             if(k === 'bobaTime' && activeEffects[k] <= 0) { bobas.forEach(b => b.remove()); bobas = []; activeEffects.invincible = 0; }
@@ -1436,6 +1299,15 @@
         
         missionUpdateTimer += safeDelta;
         if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
+        
+        // [최적화] 지혜 변신 추적
+        if(jihyeSphereActive && jihyeSphereEl) {
+            jihyeSphereEl.style.left = (playerObj.x + 30) + 'px';
+            jihyeSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+        }
+
+        // [최적화] 어린 양 업데이트
+        updateLamb(safeDelta);
 
         // 전찬 패시브: 15초마다 번개
         if(currentSkin === 'jeonchan' && running) {
@@ -1448,10 +1320,10 @@
 
         // 지은 패시브: 노엘 소환 (40초마다 15초 지속)
         if(currentSkin === 'jieun' && running) {
-            if(activeEffects.summon <= 0) { // 이미 소환중이 아닐 때만 카운트
+            if(activeEffects.summon <= 0) { 
                 jieunNoelTimer += safeDelta;
                 if(jieunNoelTimer >= 40.0) {
-                    activateJieunBuff(); // 15초 소환 시작
+                    activateJieunBuff(); 
                     jieunNoelTimer = 0;
                 }
             }
@@ -1505,6 +1377,7 @@
                 showFloatText("⚡ 초 거대화!");
                 activeEffects.giant = 10; 
                 player.style.transform = "scale(2)";
+                // Hitbox 보정은 충돌 로직에서 처리
                 const aura = document.createElement('div'); aura.className = 'noel-aura';
                 player.appendChild(aura);
                 noelGiantTimer = 0;
@@ -1515,7 +1388,7 @@
             }
         }
 
-        // [수정5] 하휘 인피니티 스톤 (30초마다) - AI 추적 로직은 updatePhysics에서 처리
+        // 하휘 인피니티 스톤 (30초마다)
         if(currentSkin === 'hahwi' && running) {
             hahwiStoneTimer += safeDelta;
             if(hahwiStoneTimer >= 30.0) {
@@ -1528,10 +1401,10 @@
                     stone.style.background = colors[i%6];
                     stone.angle = (i/6)*Math.PI*2;
                     stone.radius = 80;
-                    stone.state = 'orbit'; // orbit, attack, return
-                    const pRect = player.getBoundingClientRect();
-                    stone.style.left = (pRect.left + 30) + 'px';
-                    stone.style.top = (pRect.top + 30) + 'px';
+                    stone.state = 'orbit'; 
+                    const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+                    stone.style.left = px + 'px';
+                    stone.style.top = py + 'px';
                     gameArea.appendChild(stone);
                     infinityStones.push(stone);
                 }
@@ -1568,8 +1441,7 @@
                 }
                 const heart = document.createElement('div');
                 heart.className = 'heart-emit'; heart.innerText = "❤️";
-                const pRect = player.getBoundingClientRect();
-                heart.style.left = (pRect.left+15)+'px'; heart.style.top = (pRect.top-20)+'px';
+                heart.style.left = (playerObj.x+15)+'px'; heart.style.top = (window.innerHeight - playerObj.y - 40)+'px';
                 gameArea.appendChild(heart);
                 setTimeout(()=>heart.remove(), 1000);
                 stephanieHeartTimer = 0;
@@ -1578,7 +1450,7 @@
         
         if(activeEffects.noelLaser > 0) {
             const beam = document.getElementById('noelBeam');
-            if(beam) { beam.style.bottom = (playerY - 20) + "px"; }
+            if(beam) { beam.style.bottom = (playerObj.y - 20) + "px"; }
         }
 
         // 지혜 스킨 유닛 
@@ -1590,14 +1462,16 @@
                     u.ty = (window.innerHeight / 2) + randBetween(-200, 200);
                     u.moveTimer = 0;
                 }
-                const cx = parseFloat(u.style.left); const cy = parseFloat(u.style.top);
-                u.style.left = (cx + (u.tx - cx) * 0.05) + 'px';
-                u.style.top = (cy + (u.ty - cy) * 0.05) + 'px';
+                u.x += (u.tx - u.x) * 0.05;
+                u.y += (u.ty - u.y) * 0.05;
+                u.style.left = u.x + 'px';
+                u.style.top = u.y + 'px';
                 
                 u.fireTimer += safeDelta;
                 if(u.fireTimer > 0.6) { 
                       const m = document.createElement('div'); m.className = 'jihye-missile';
-                      m.style.left = (cx + 25) + 'px'; m.style.top = (cy + 25) + 'px';
+                      m.x = u.x + 25; m.y = u.y + 25; m.w=24; m.h=24;
+                      m.style.left = m.x + 'px'; m.style.top = m.y + 'px';
                       m.vx = 700; m.vy = 0; 
                       gameArea.appendChild(m); jihyeMissiles.push(m);
                       u.fireTimer = 0;
@@ -1605,10 +1479,9 @@
             });
         }
         
-        // [수정5] 하휘 인피니티 스톤 AI (재국 버블과 유사하게: 추적->파괴->회수)
+        // 하휘 인피니티 스톤 AI
         if(infinityStones.length > 0) {
-            const pRect = player.getBoundingClientRect();
-            const px = pRect.left + 30; const py = pRect.top + 30;
+            const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             for(let i=infinityStones.length-1; i>=0; i--) {
                 const s = infinityStones[i];
                 let sx = parseFloat(s.style.left);
@@ -1618,30 +1491,24 @@
                     s.angle += 3 * safeDelta;
                     const tx = px + Math.cos(s.angle) * s.radius;
                     const ty = py + Math.sin(s.angle) * s.radius;
-                    s.style.left = (sx + (tx-sx)*0.1) + 'px';
-                    s.style.top = (sy + (ty-sy)*0.1) + 'px';
+                    sx += (tx-sx)*0.1;
+                    sy += (ty-sy)*0.1;
 
-                    // 적 탐지
                     let found = null;
-                    obstacles.forEach(o => { if(!o.destroyed && o.getBoundingClientRect().left < window.innerWidth) found = o; });
+                    obstacles.forEach(o => { if(!o.destroyed && o.x < window.innerWidth) found = o; });
                     if(!found) enemies.forEach(e => { if(!e.isDead) found = e; });
                     if(found) { s.state = 'attack'; s.target = found; }
                 } 
                 else if(s.state === 'attack') {
                     if(!s.target || s.target.destroyed || s.target.isDead) { s.state = 'return'; }
                     else {
-                        const tRect = s.target.getBoundingClientRect();
-                        const tx = tRect.left + tRect.width/2;
-                        const ty = tRect.top + tRect.height/2;
+                        const tx = s.target.x + 30;
+                        const ty = s.target.y || (window.innerHeight - parseFloat(s.target.style.bottom || 0) - 50);
                         
-                        // 날아감 (중간 속도)
                         sx += (tx - sx) * 0.15;
                         sy += (ty - sy) * 0.15;
-                        s.style.left = sx + 'px';
-                        s.style.top = sy + 'px';
                         
                         if(Math.hypot(tx-sx, ty-sy) < 40) {
-                            // 명중
                             spawnExplosionEffect(tx, ty);
                             spawnFaithCoins(tx, ty, 5, false, false);
                             if(s.target.classList.contains('obstacle')) { s.target.destroyed = true; s.target.remove(); }
@@ -1651,18 +1518,17 @@
                     }
                 }
                 else if(s.state === 'return') {
-                     sx += (px - sx) * 0.1;
-                     sy += (py - sy) * 0.1;
-                     s.style.left = sx + 'px'; s.style.top = sy + 'px';
-                     if(Math.hypot(px-sx, py-sy) < 50) s.state = 'orbit';
+                      sx += (px - sx) * 0.1;
+                      sy += (py - sy) * 0.1;
+                      if(Math.hypot(px-sx, py-sy) < 50) s.state = 'orbit';
                 }
+                s.style.left = sx + 'px'; s.style.top = sy + 'px';
             }
         }
         
-        // [수정4] 재국 버블 AI 로직 (하휘와 동일: 추적->파괴->회수)
+        // 재국 버블 AI 로직
         if(activeEffects.bobaTime > 0 && bobas.length > 0) {
-            const pRect = player.getBoundingClientRect();
-            const px = pRect.left + 30; const py = pRect.top + 30;
+            const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             
             bobas.forEach(b => {
                 let bx = parseFloat(b.style.left) || px;
@@ -1672,24 +1538,22 @@
                     b.angle += 3 * safeDelta;
                     const tx = px + Math.cos(b.angle) * b.radius;
                     const ty = py + Math.sin(b.angle) * b.radius;
-                    b.style.left = (bx + (tx-bx)*0.1) + 'px';
-                    b.style.top = (by + (ty-by)*0.1) + 'px';
+                    bx += (tx-bx)*0.1;
+                    by += (ty-by)*0.1;
                     
                     let found = null;
-                    obstacles.forEach(o => { if(!o.destroyed && o.getBoundingClientRect().left < window.innerWidth) found = o; });
+                    obstacles.forEach(o => { if(!o.destroyed && o.x < window.innerWidth) found = o; });
                     if(!found) enemies.forEach(e => { if(!e.isDead) found = e; });
                     if(found) { b.state = 'attack'; b.target = found; }
                 } 
                 else if(b.state === 'attack') {
                     if(!b.target || b.target.destroyed || b.target.isDead) { b.state = 'return'; }
                     else {
-                        const tRect = b.target.getBoundingClientRect();
-                        const tx = tRect.left + tRect.width/2;
-                        const ty = tRect.top + tRect.height/2;
+                        const tx = b.target.x + 30;
+                        const ty = b.target.y || (window.innerHeight - parseFloat(b.target.style.bottom || 0) - 50);
                         
                         bx += (tx - bx) * 0.15;
                         by += (ty - by) * 0.15;
-                        b.style.left = bx + 'px'; b.style.top = by + 'px';
                         
                         if(Math.hypot(tx-bx, ty-by) < 40) {
                             spawnExplosionEffect(tx, ty);
@@ -1701,79 +1565,84 @@
                     }
                 }
                 else if(b.state === 'return') {
-                     bx += (px - bx) * 0.1;
-                     by += (py - by) * 0.1;
-                     b.style.left = bx + 'px'; b.style.top = by + 'px';
-                     if(Math.hypot(px-bx, py-by) < 50) b.state = 'orbit';
+                      bx += (px - bx) * 0.1;
+                      by += (py - by) * 0.1;
+                      if(Math.hypot(px-bx, py-by) < 50) b.state = 'orbit';
                 }
+                b.style.left = bx + 'px'; b.style.top = by + 'px';
             });
         }
 
-        // [수정12] 강희 판넬 로직 개선: 레이저 발사 위치 & 판넬 파괴
+        // 강희 판넬 로직
         funnels.forEach(f => {
-            const fx = parseFloat(f.style.left); const fy = parseFloat(f.style.top);
-            f.style.left = (fx + (f.tx - fx)*0.02) + 'px';
-            f.style.top = (fy + (f.ty - fy)*0.02) + 'px';
-            if(Math.abs(f.tx - fx) < 20) {
+            f.x += (f.tx - f.x)*0.02;
+            f.y += (f.ty - f.y)*0.02;
+            f.style.left = f.x + 'px';
+            f.style.top = f.y + 'px';
+
+            if(Math.abs(f.tx - f.x) < 20) {
                 f.tx = randBetween(50, window.innerWidth-50);
                 f.ty = randBetween(50, window.innerHeight-50);
             }
             
-            // 판넬 본체 충돌 체크 (장애물/적)
-            const fRect = f.getBoundingClientRect();
+            // 판넬 본체 충돌 체크
             let crashed = false;
-            obstacles.forEach(o => {
-                if(!crashed && !o.destroyed) {
-                    const oRect = o.getBoundingClientRect();
-                    if(fRect.right > oRect.left && fRect.left < oRect.right && fRect.bottom > oRect.top && fRect.top < oRect.bottom) {
-                        o.destroyed = true; o.remove();
-                        spawnExplosionEffect(fRect.left, fRect.top);
+            const fRect = {x: f.x, y: f.y, w: 40, h: 40};
+            
+            for(let i=obstacles.length-1; i>=0; i--) {
+                if(crashed) break;
+                const o = obstacles[i];
+                // Obstacle의 Y값 계산 (Bottom 기준)
+                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - (parseFloat(o.style.height));
+                const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
+                
+                if(!o.destroyed && isColliding(fRect, oRect)) {
+                     o.destroyed = true; o.remove(); obstacles.splice(i,1);
+                     spawnExplosionEffect(f.x, f.y);
+                     crashed = true;
+                }
+            }
+            if(!crashed) {
+                for(let i=enemies.length-1; i>=0; i--) {
+                    const e = enemies[i];
+                    const eRect = {x: e.x, y: e.y, w: 60, h: 60};
+                    if(!e.isDead && isColliding(fRect, eRect)) {
+                        e.isDead = true; e.remove(); enemies.splice(i,1);
+                        spawnExplosionEffect(f.x, f.y);
                         crashed = true;
+                        break;
                     }
                 }
-            });
-            enemies.forEach(e => {
-                if(!crashed && !e.isDead) {
-                    const eRect = e.getBoundingClientRect();
-                    if(fRect.right > eRect.left && fRect.left < eRect.right && fRect.bottom > eRect.top && fRect.top < eRect.bottom) {
-                        e.isDead = true; e.remove();
-                        spawnExplosionEffect(fRect.left, fRect.top);
-                        crashed = true;
-                    }
-                }
-            });
+            }
             if(crashed) { 
                 f.remove(); 
                 funnels.splice(funnels.indexOf(f), 1); 
-                return; // 루프 건너뜀
+                return; 
             }
 
             f.timer += safeDelta;
             if(f.timer > f.fireCD) {
                 const l = document.createElement('div'); l.className = 'funnel-laser';
-                // [수정12] 레이저가 판넬 중심에서 발사되도록
-                l.style.left = (fx + 20) + 'px'; l.style.top = (fy+20) + 'px';
+                l.style.left = (f.x + 20) + 'px'; l.style.top = (f.y+20) + 'px';
                 l.style.width = '100vw'; 
                 gameArea.appendChild(l);
                 l.animate([{opacity:1}, {opacity:0}], {duration:300}).onfinish = () => l.remove();
                 
-                // 판넬이 레이저로 적 파괴
                 let hit = false;
                 obstacles.forEach(o => {
-                    const oRect = o.getBoundingClientRect();
-                    // 레이저 범위 대략적용
-                    if(!hit && oRect.top < fy+60 && oRect.bottom > fy-20 && !o.destroyed && oRect.left < window.innerWidth) {
+                    const oTop = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oBottom = window.innerHeight - parseFloat(o.style.bottom || 0);
+                    if(!hit && oTop < f.y+60 && oBottom > f.y-20 && !o.destroyed && o.x < window.innerWidth) {
                         o.destroyed = true;
-                        spawnExplosionEffect(oRect.left, oRect.top);
+                        spawnExplosionEffect(o.x, oTop);
                         o.remove();
                         hit = true;
                     }
                 });
                 enemies.forEach(e => {
-                      const eRect = e.getBoundingClientRect();
-                      if(!hit && eRect.top < fy+60 && eRect.bottom > fy-20 && !e.isDead) {
+                      if(!hit && e.y < f.y+60 && e.y+60 > f.y-20 && !e.isDead) {
                           e.isDead = true;
-                          spawnExplosionEffect(eRect.left, eRect.top);
+                          spawnExplosionEffect(e.x, e.y);
                           e.remove();
                           hit = true;
                       }
@@ -1783,27 +1652,22 @@
             }
         });
         
-        // [수정11] 예준 도플갱어 로직 개선: 상하좌우 랜덤 이동
+        // 예준 도플갱어 로직
         yejunClones.forEach(c => {
-            let cx = parseFloat(c.el.style.left);
-            let cy = parseFloat(c.el.style.bottom); // bottom 기준
-            
-            cx += c.vx; 
-            cy += c.vy;
+            c.el.x += c.vx; 
+            c.el.y += c.vy;
 
-            // 화면 밖으로 나가지 않게
-            if(cx < 0 || cx > window.innerWidth) c.vx *= -1;
-            if(cy < 20 || cy > window.innerHeight) c.vy *= -1;
+            if(c.el.x < 0 || c.el.x > window.innerWidth) c.vx *= -1;
+            if(c.el.y < 20 || c.el.y > window.innerHeight) c.vy *= -1;
 
-            c.el.style.left = cx + 'px';
-            c.el.style.bottom = cy + 'px';
+            c.el.style.left = c.el.x + 'px';
+            c.el.style.bottom = c.el.y + 'px';
             
             c.fireTimer += safeDelta;
             if(c.fireTimer > 0.8) {
                 const m = document.createElement("div"); m.classList.add("player-missile");
-                const rect = c.el.getBoundingClientRect();
-                m.style.left = (rect.right) + 'px'; 
-                m.style.top = (rect.top + 20) + 'px';
+                m.style.left = (c.el.x + 50) + 'px'; 
+                m.style.top = (window.innerHeight - c.el.y - 20) + 'px';
                 gameArea.appendChild(m); playerMissiles.push(m);
                 c.fireTimer = 0;
             }
@@ -1816,8 +1680,11 @@
                 const c = document.createElement('div');
                 c.className = 'cake-item';
                 c.style.backgroundImage = `url('Cake${Math.ceil(Math.random()*3)}.png')`;
-                c.style.left = randBetween(50, window.innerWidth-50) + 'px';
-                c.style.top = '-60px';
+                c.y = -60;
+                c.x = randBetween(50, window.innerWidth-50);
+                c.style.left = c.x + 'px';
+                c.style.top = c.y + 'px';
+                c.w = 60; c.h = 60;
                 gameArea.appendChild(c);
                 cakes.push(c);
                 cakeDropTimer = 0;
@@ -1825,22 +1692,26 @@
         }
         for(let i=cakes.length-1; i>=0; i--) {
             const c = cakes[i];
-            const cy = parseFloat(c.style.top);
-            c.style.top = (cy + 300*safeDelta) + 'px';
-            if(cy > window.innerHeight) { c.remove(); cakes.splice(i,1); continue; }
+            c.y += 300 * safeDelta;
+            c.style.top = c.y + 'px';
+            if(c.y > window.innerHeight) { c.remove(); cakes.splice(i,1); continue; }
             
-            const cRect = c.getBoundingClientRect();
+            const cRect = {x: c.x, y: c.y, w: 60, h: 60};
             let hit = false;
-            obstacles.forEach(o => {
-                const oRect = o.getBoundingClientRect();
-                if(!hit && !o.destroyed && cRect.right > oRect.left && cRect.left < oRect.right && cRect.bottom > oRect.top && cRect.top < oRect.bottom) {
+            for(let j=obstacles.length-1; j>=0; j--) {
+                const o = obstacles[j];
+                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
+                
+                if(!o.destroyed && isColliding(cRect, oRect)) {
                     o.destroyed = true;
-                    spawnExplosionEffect(oRect.left, oRect.top);
-                    spawnFaithCoins(oRect.left, oRect.top, Math.floor(randBetween(1,6)), false, false);
-                    o.remove();
+                    spawnExplosionEffect(o.x, oY);
+                    spawnFaithCoins(o.x, oY, Math.floor(randBetween(1,6)), false, false);
+                    o.remove(); obstacles.splice(j,1);
                     hit = true;
+                    break;
                 }
-            });
+            }
             if(hit) { c.remove(); cakes.splice(i,1); }
         }
         
@@ -1852,8 +1723,10 @@
                 n.className = 'music-note';
                 n.innerText = ['♪', '♫', '♬', '♩'][Math.floor(Math.random()*4)];
                 n.style.color = `hsl(${Math.random()*360}, 100%, 50%)`;
-                n.style.left = '-30px';
-                n.style.top = randBetween(50, window.innerHeight-100) + 'px';
+                n.x = -30; n.y = randBetween(50, window.innerHeight-100);
+                n.w = 40; n.h = 40;
+                n.style.left = n.x + 'px';
+                n.style.top = n.y + 'px';
                 gameArea.appendChild(n);
                 musicNotes.push(n);
                 musicNoteTimer = 0;
@@ -1861,32 +1734,39 @@
         }
         for(let i=musicNotes.length-1; i>=0; i--) {
             const n = musicNotes[i];
-            const nx = parseFloat(n.style.left);
-            n.style.left = (nx + 400*safeDelta) + 'px';
-            if(nx > window.innerWidth) { n.remove(); musicNotes.splice(i,1); continue; }
+            n.x += 400 * safeDelta;
+            n.style.left = n.x + 'px';
+            if(n.x > window.innerWidth) { n.remove(); musicNotes.splice(i,1); continue; }
             
-            const nRect = n.getBoundingClientRect();
+            const nRect = {x: n.x, y: n.y, w: 40, h: 40};
             let hit = false;
-            obstacles.forEach(o => {
-                const oRect = o.getBoundingClientRect();
-                if(!hit && !o.destroyed && nRect.right > oRect.left && nRect.left < oRect.right && nRect.bottom > oRect.top && nRect.top < oRect.bottom) {
+            for(let j=obstacles.length-1; j>=0; j--) {
+                const o = obstacles[j];
+                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
+                if(!o.destroyed && isColliding(nRect, oRect)) {
                     o.destroyed = true;
-                    spawnExplosionEffect(oRect.left, oRect.top);
-                    spawnFaithCoins(oRect.left, oRect.top, Math.floor(randBetween(1,6)), false, false); 
-                    o.remove();
+                    spawnExplosionEffect(o.x, oY);
+                    spawnFaithCoins(o.x, oY, Math.floor(randBetween(1,6)), false, false); 
+                    o.remove(); obstacles.splice(j,1);
                     hit = true;
+                    break;
                 }
-            });
-            enemies.forEach(e => {
-                const eRect = e.getBoundingClientRect();
-                if(!hit && !e.isDead && nRect.right > eRect.left && nRect.left < eRect.right && nRect.bottom > eRect.top && nRect.top < eRect.bottom) {
-                    e.isDead = true;
-                    spawnExplosionEffect(eRect.left, eRect.top);
-                    spawnFaithCoins(eRect.left, eRect.top, Math.floor(randBetween(1,6)), false, false); 
-                    e.remove();
-                    hit = true;
+            }
+            if(!hit) {
+                for(let k=enemies.length-1; k>=0; k--) {
+                    const e = enemies[k];
+                    const eRect = {x: e.x, y: e.y, w: 60, h: 60};
+                    if(!e.isDead && isColliding(nRect, eRect)) {
+                        e.isDead = true;
+                        spawnExplosionEffect(e.x, e.y);
+                        spawnFaithCoins(e.x, e.y, Math.floor(randBetween(1,6)), false, false); 
+                        e.remove(); enemies.splice(k,1);
+                        hit = true;
+                        break;
+                    }
                 }
-            });
+            }
             if(hit) { n.remove(); musicNotes.splice(i,1); }
         }
 
@@ -1894,83 +1774,55 @@
         if(jihyeMissiles.length > 0) {
             for(let i=jihyeMissiles.length-1; i>=0; i--) {
                 const m = jihyeMissiles[i];
-                let mx = parseFloat(m.style.left);
-                let my = parseFloat(m.style.top);
-                mx += m.vx * safeDelta;
-                my += m.vy * safeDelta;
-                m.style.left = mx + 'px';
-                m.style.top = my + 'px';
+                m.x += m.vx * safeDelta;
+                m.y += m.vy * safeDelta;
+                m.style.left = m.x + 'px';
+                m.style.top = m.y + 'px';
                 
-                if(mx > window.innerWidth || mx < -50 || my < -50 || my > window.innerHeight + 50) {
+                if(m.x > window.innerWidth || m.x < -50 || m.y < -50 || m.y > window.innerHeight + 50) {
                     m.remove();
                     jihyeMissiles.splice(i, 1);
                     continue;
                 }
                 
                 let hit = false;
-                const mRect = m.getBoundingClientRect();
+                const mRect = {x: m.x, y: m.y, w: 24, h: 24};
                 
                 for(let j=obstacles.length-1; j>=0; j--) {
                     const o = obstacles[j];
-                    const oRect = o.getBoundingClientRect();
+                    const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                     
-                    if(oRect.left > 0 && !o.destroyed) {
-                        if (mRect.right > oRect.left && mRect.left < oRect.right && 
-                            mRect.bottom > oRect.top && mRect.top < oRect.bottom) {
-                            o.destroyed = true;
-                            spawnExplosionEffect(oRect.left+30, oRect.top+30);
-                            spawnFaithCoins(oRect.left, oRect.top, 5, false, true);
-                            o.remove(); obstacles.splice(j, 1);
-                            hit = true;
-                            break;
-                        }
+                    if(!o.destroyed && isColliding(mRect, oRect)) {
+                        o.destroyed = true;
+                        spawnExplosionEffect(o.x+30, oY+30);
+                        spawnFaithCoins(o.x, oY, 5, false, true);
+                        o.remove(); obstacles.splice(j, 1);
+                        hit = true;
+                        break;
                     }
                 }
                 if(hit) { m.remove(); jihyeMissiles.splice(i, 1); }
             }
         }
         
-        // 전찬 해머 충돌
-        if(hammerObj) {
-            const hRect = hammerObj.getBoundingClientRect();
-             obstacles.forEach(o => {
-                const oRect = o.getBoundingClientRect();
-                if(!o.destroyed && hRect.right > oRect.left && hRect.left < oRect.right) {
-                    o.destroyed = true;
-                    spawnExplosionEffect(oRect.left, oRect.top);
-                    spawnFaithCoins(oRect.left, oRect.top, Math.floor(randBetween(1,6)), false, false);
-                    o.remove();
-                }
-            });
-            enemies.forEach(e => {
-                 const eRect = e.getBoundingClientRect();
-                 if(!e.isDead && hRect.right > eRect.left && hRect.left < eRect.right) {
-                     e.isDead = true;
-                     spawnExplosionEffect(eRect.left, eRect.top);
-                     spawnFaithCoins(eRect.left, eRect.top, Math.floor(randBetween(1,6)), false, false);
-                     e.remove();
-                 }
-            });
-        }
-        
         // 하휘 모래폭풍 충돌
         if(activeEffects.sandstorm > 0) {
-             const pRect = player.getBoundingClientRect();
+             const pX = playerObj.x; const pY = window.innerHeight - playerObj.y - playerObj.h;
              obstacles.forEach(o => {
-                const oRect = o.getBoundingClientRect();
-                const dist = Math.hypot(oRect.left - pRect.left, oRect.top - pRect.top);
+                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const dist = Math.hypot(o.x - pX, oY - pY);
                 if(!o.destroyed && dist < 250) {
                     o.destroyed = true;
                     const dust = document.createElement('div'); dust.className = 'dust-effect';
-                    dust.style.left = oRect.left+'px'; dust.style.top = oRect.top+'px';
+                    dust.style.left = o.x+'px'; dust.style.top = oY+'px';
                     gameArea.appendChild(dust); setTimeout(()=>dust.remove(), 600);
-                    spawnFaithCoins(oRect.left, oRect.top, Math.floor(randBetween(1,6)), false, false);
+                    spawnFaithCoins(o.x, oY, Math.floor(randBetween(1,6)), false, false);
                     o.remove();
                 }
-            });
+             });
         }
 
-        // [준 스킨 시공간 여행 중이면 게임 진행 멈춤]
         if (!isBossBattle && !isJunTimeTravel && !junMiniGameActive) { 
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
             distance += safeDelta * 1 * distMultiplier;
@@ -2011,23 +1863,27 @@
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
             if (activeEffects.magnet > 0) {
-                const pRect = player.getBoundingClientRect(); const iRect = it.getBoundingClientRect();
-                const px = pRect.left + pRect.width/2; const py = pRect.top + pRect.height/2;
-                const ix = iRect.left + iRect.width/2; const iy = iRect.top + iRect.height/2;
+                const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+                const ix = it.x + 24; const iy = it.y + 24;
                 const dx = px - ix; const dy = py - iy; const dist = Math.sqrt(dx*dx + dy*dy);
                 if(dist < 400) {
-                    it.style.left = (parseFloat(it.style.left) + (dx/dist)*12) + "px";
-                    it.style.top = (parseFloat(it.style.top) + (dy/dist)*12) + "px";
+                    it.x += (dx/dist)*12;
+                    it.y += (dy/dist)*12;
+                    it.style.left = it.x + "px";
+                    it.style.top = it.y + "px";
                 }
             }
-            let left = parseFloat(it.style.left) || window.innerWidth;
-            left -= gameSpeed * safeDelta;
-            it.style.left = left + "px";
-            if (left < -60) { it.remove(); items.splice(i, 1); continue; }
-            const rP = player.getBoundingClientRect(); const rI = it.getBoundingClientRect();
-            if (rP.left < rI.right && rP.right > rI.left && rP.top < rI.bottom && rP.bottom > rI.top) {
+            it.x -= gameSpeed * safeDelta;
+            it.style.left = it.x + "px";
+            if (it.x < -60) { it.remove(); items.splice(i, 1); continue; }
+            
+            const iRect = {x: it.x, y: it.y, w: 48, h: 48};
+            // 플레이어 히트박스
+            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+
+            if (isColliding(pRect, iRect)) {
                 activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
-                spawnParticles(rI.left, rI.top, 'item'); playSound('item');
+                spawnParticles(it.x, it.y, 'item'); playSound('item');
                 if(!isFeverTime) feverGauge = Math.min(feverGauge + 10, MAX_FEVER);
                 saveProgress();
             }
@@ -2047,32 +1903,26 @@
    function updateFaithCoinsLogic(dt) {
       for(let i = faithCoins.length - 1; i >= 0; i--) {
           const coin = faithCoins[i]; coin.timer += dt;
-          let cx = parseFloat(coin.style.left); let cy = parseFloat(coin.style.top);
           
           if (coin.timer < 0.3) { 
-              cx += coin.vx * dt * 2; 
-              cy += coin.vy * dt * 2; 
+              coin.x += coin.vx * dt * 2; 
+              coin.y += coin.vy * dt * 2; 
           } 
           else {
-              const pRect = player.getBoundingClientRect();
-              const targetX = pRect.left + pRect.width/2; const targetY = pRect.top + pRect.height/2;
-              const dx = targetX - cx; const dy = targetY - cy;
+              const targetX = playerObj.x + 30; const targetY = window.innerHeight - playerObj.y - 30;
+              const dx = targetX - coin.x; const dy = targetY - coin.y;
 
               if (coin.isAutoCollect || !coin.isManual) {
-                  // manual이 false면 플레이어에게 안감 -> 플레이어가 다가가야 함
                   if(coin.isAutoCollect) {
-                       cx += dx * 8 * dt; 
-                       cy += dy * 8 * dt;
+                        coin.x += dx * 8 * dt; 
+                        coin.y += dy * 8 * dt;
                   } else {
-                       // 멈춰있거나 게임 스피드 따라 이동
-                       cx -= gameSpeed * dt;
+                        coin.x -= gameSpeed * dt;
                   }
               } else {
-                  // manual이 true여도 플레이어에게 안감 (텍스트로만 처리됨)
-                   cx -= gameSpeed * dt;
+                    coin.x -= gameSpeed * dt;
               }
               
-              // 충돌 체크 (직접 획득)
               if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { 
                   let gain = 1;
                   if(collectionBuff && Math.random() < 0.1) gain = 2;
@@ -2089,11 +1939,11 @@
               }
           }
           
-          if(cx < -50) {
+          if(coin.x < -50) {
               coin.remove(); faithCoins.splice(i, 1); continue;
           }
 
-          coin.style.left = cx + "px"; coin.style.top = cy + "px";
+          coin.style.left = coin.x + "px"; coin.style.top = coin.y + "px";
       }
   }
 
@@ -2222,7 +2072,8 @@
               if(e.isDead) { clearInterval(check); laser.remove(); return; }
 
               duration += 0.1; let laserY = parseFloat(laser.style.top);
-              if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) damageLife();
+              // [최적화] JS 변수로 충돌 체크
+              if(Math.abs((window.innerHeight - playerObj.y) - laserY) < 30 && !invincible) damageLife();
               if(duration > 5.0) { 
                   clearInterval(check); 
                   laser.remove(); 
@@ -2242,7 +2093,9 @@
     const images = { 'invincible': 'url("item_cross.png")', 'turbo': 'url("item_wings.png")', 'slow': 'url("item_wind.png")', 'faith': 'url("item_bible.png")' };
     const item = document.createElement("div"); const type = types[Math.floor(Math.random() * types.length)];
     item.classList.add("item"); item.dataset.type = type; item.style.backgroundImage = images[type]; 
-    item.x = window.innerWidth + 50; item.style.left = item.x + "px"; item.style.top = randBetween(100, window.innerHeight - 150) + "px";
+    item.x = window.innerWidth + 50; 
+    item.y = randBetween(100, window.innerHeight - 150);
+    item.style.left = item.x + "px"; item.style.top = item.y + "px";
     document.getElementById("gameArea").appendChild(item); items.push(item);
   }
 
@@ -2269,7 +2122,11 @@
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning'); warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block'; setTimeout(() => warning.style.display = 'none', 3000);
-    obstacles.forEach(o => o.remove()); obstacles = []; enemies.forEach(e => e.remove()); enemies = []; 
+    
+    // 정리
+    obstacles.forEach(o => o.remove()); obstacles = []; 
+    enemies.forEach(e => e.remove()); enemies = []; 
+    
     bossContainer.style.display = 'block'; setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
     document.getElementById('dailyMissionBox').style.display = 'none'; saveProgress();
   }
@@ -2293,7 +2150,9 @@
         bossContainer.style.right = (window.innerWidth - 100) + "px"; 
         
         setTimeout(() => { 
-            if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) {
+            // 보스 Y는 %단위, 플레이어 Y는 px(bottom) 단위. 변환 필요
+            const bossYPx = (100 - boss.y) / 100 * window.innerHeight;
+            if(playerObj.y > bossYPx - 100 && playerObj.y < bossYPx + 50) {
                 damageLife(); 
             }
         }, 200);
@@ -2309,7 +2168,10 @@
     boss.state = 'laser'; showFloatText("⚡ 레이저 충전!");
     setTimeout(() => {
         const laser = document.createElement('div'); laser.className = 'boss-laser'; laser.style.top = (boss.y + 5) + "%"; laser.style.display = 'block'; gameArea.appendChild(laser);
-        let checkLaser = setInterval(() => { let laserH = (100 - boss.y) / 100 * window.innerHeight; if (Math.abs(playerY - laserH + 50) < 40 && !invincible) damageLife(); }, 50);
+        let checkLaser = setInterval(() => { 
+            let laserH = (100 - boss.y) / 100 * window.innerHeight; 
+            if (Math.abs(playerObj.y - (window.innerHeight - laserH) - 50) < 40 && !invincible) damageLife(); 
+        }, 50);
         setTimeout(() => { clearInterval(checkLaser); laser.remove(); boss.state = 'idle'; boss.actionTimer = 0; }, 1000);
     }, 1500);
   }
@@ -2320,7 +2182,8 @@
             const m = document.createElement("div"); m.classList.add("projectile", "boss-missile");
             const rect = bossContainer.getBoundingClientRect();
             const startX = rect.left; const startY = rect.top + 30; 
-            const pX = 120; const pY = window.innerHeight - playerY - 30;
+            
+            const pX = 120; const pY = window.innerHeight - playerObj.y - 30;
             const dx = pX - startX; const dy = pY - startY; const dist = Math.sqrt(dx*dx + dy*dy);
             const speed = 300 * speedMult;
             const vx = (dx / dist) * speed; const vy = (dy / dist) * speed;
@@ -2347,16 +2210,16 @@
   }
 
   function updatePhysics(delta) {
-    if(isJunTimeTravel || junMiniGameActive) return; // 물리 업데이트 중지
+    if(isJunTimeTravel || junMiniGameActive) return; 
 
-    if (activeEffects.fly > 0) { playerY += (targetY - playerY) * 0.1; velocity = 0; if(speedLines) speedLines.style.display = "none"; } 
+    if (activeEffects.fly > 0) { playerObj.y += (targetY - playerObj.y) * 0.1; velocity = 0; if(speedLines) speedLines.style.display = "none"; } 
     else if (activeEffects.turbo > 0) { velocity = 0; if(speedLines)
     speedLines.style.display = "block"; } 
-    else { velocity += gravity; playerY += velocity; if(speedLines) speedLines.style.display = "none"; }
+    else { velocity += gravity; playerObj.y += velocity; if(speedLines) speedLines.style.display = "none"; }
 
-    if (playerY < 0) playerY = 0;
-    if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
-    player.style.bottom = playerY + "px";
+    if (playerObj.y < 0) playerObj.y = 0;
+    if (playerObj.y > window.innerHeight - 110) playerObj.y = window.innerHeight - 110;
+    player.style.bottom = playerObj.y + "px";
 
     const safeActive = (val) => (val && val > 0);
 
@@ -2370,14 +2233,14 @@
 
         for (let j = enemies.length - 1; j >= 0; j--) {
             let e = enemies[j];
-            let rM = m.getBoundingClientRect();
-            let rE = e.getBoundingClientRect();
+            const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
+            const eRect = {x: e.x, y: e.y, w: 60, h: 60};
             
-            if (rM.right > rE.left && rM.left < rE.right && rM.bottom > rE.top && rM.top < rE.bottom) {
+            if (isColliding(mRect, eRect)) {
                 e.hp--; m.remove(); playerMissiles.splice(i, 1);
                 
                 const ex = document.createElement('div'); ex.className = 'explosion-area';
-                ex.style.left = rE.left + 'px'; ex.style.top = rE.top + 'px'; ex.style.width='60px'; ex.style.height='60px';
+                ex.style.left = eRect.x + 'px'; ex.style.top = eRect.y + 'px'; ex.style.width='60px'; ex.style.height='60px';
                 gameArea.appendChild(ex); setTimeout(()=>ex.remove(), 500);
 
                 if (e.hp <= 0) { 
@@ -2410,28 +2273,32 @@
             }
         }
 
-        let cx = parseFloat(p.style.left) || p.x; let cy = parseFloat(p.style.top) || p.y;
-        cx += p.vx * delta; cy += p.vy * delta;
-        p.style.left = cx + "px"; p.style.top = cy + "px";
-        if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
+        p.x += p.vx * delta; p.y += p.vy * delta;
+        p.style.left = p.x + "px"; p.style.top = p.y + "px";
+        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
         
-        if (p.isExplosive && !p.exploded && cx <= 120) { 
+        if (p.isExplosive && !p.exploded && p.x <= 120) { 
              p.exploded = true;
              const boom = document.createElement("div"); boom.className = "explosion-area";
              boom.style.width = "260px"; boom.style.height = "260px"; 
-             boom.style.left = (cx - 100) + "px"; boom.style.top = (cy - 100) + "px";
+             boom.style.left = (p.x - 100) + "px"; boom.style.top = (p.y - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
              
-             const pRect = player.getBoundingClientRect(); const bRect = boom.getBoundingClientRect();
-             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
+             // [최적화] AABB 충돌 계산
+             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+             const bRect = {x: p.x - 100, y: p.y - 100, w: 260, h: 260};
+
+             if (isColliding(pRect, bRect)) {
                  if(!invincible && !safeActive(activeEffects.invincible)) damageLife();
              }
              p.remove(); projectiles.splice(i, 1); continue;
         }
 
         if (!p.isReflected && !p.isFading) {
-            const rP = player.getBoundingClientRect(); const rM = p.getBoundingClientRect();
-            if (rP.right > rM.left && rP.left < rM.right && rP.bottom > rM.top && rP.top < rM.bottom) {
+            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const mRect = {x: p.x, y: p.y, w: 30, h: 30};
+            
+            if (isColliding(pRect, mRect)) {
                 if (isFeverTime) { 
                     p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; 
                 } 
@@ -2442,7 +2309,11 @@
         }
 
         if (isBossBattle && p.isReflected) {
-            const bRect = bossContainer.getBoundingClientRect(); const pRect = p.getBoundingClientRect();
+            const bRect = bossContainer.getBoundingClientRect(); 
+            // 보스 Rect는 DOM에서 가져오되 빈도수가 적으므로 허용, 혹은 최적화 가능
+            // 여기서는 투사체가 적으므로 getBoundingClientRect 써도 무방하지만 일관성을 위해직접 계산 추천
+            // 하지만 보스 컨테이너는 CSS 애니메이션이 많아 getBoundingClientRect 유지 (BossBattle 중에는 오브젝트 수가 적음)
+            const pRect = p.getBoundingClientRect();
             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) { damageBoss(); p.remove(); projectiles.splice(i, 1); continue; }
         }
     }
@@ -2451,8 +2322,10 @@
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         if (!safeActive(activeEffects.invincible) && !invincible) {
-            const rP = player.getBoundingClientRect(); const rE = e.getBoundingClientRect();
-            if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
+            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const eRect = {x: e.x, y: e.y, w: 60, h: 60};
+            
+            if (isColliding(pRect, eRect)) {
                 // 노엘 거대화 충돌 처리
                 if(activeEffects.giant > 0) {
                      e.isDead = true;
@@ -2461,7 +2334,7 @@
                     e.remove(); enemies.splice(i, 1);
                     spawnFaithCoins(e.x + 30, e.y + 30, Math.floor(randBetween(1,6)), false, false);
                     showFloatText("💥 거대화 격파!");
-                    spawnExplosionEffect(rE.left, rE.top); continue;
+                    spawnExplosionEffect(e.x, e.y); continue;
                 }
 
                 if (isFeverTime) { 
@@ -2475,7 +2348,7 @@
                     spawnFaithCoins(e.x + 30, e.y + 30, count, true, false); 
                     
                     showFloatText("💥 적군 분쇄! (+5)"); 
-                    spawnExplosionEffect(rE.left, rE.top); continue; 
+                    spawnExplosionEffect(e.x, e.y); continue; 
                 } 
                 else { damageLife(); e.remove(); enemies.splice(i, 1); continue; }
             }
@@ -2485,23 +2358,23 @@
     // 장애물 이동 및 충돌 체크
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
-        let left = parseFloat(o.style.left) || window.innerWidth;
-        left -= gameSpeed * delta;
-        o.style.left = left + "px";
+        o.x -= gameSpeed * delta;
+        o.style.left = o.x + "px";
+        
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
-
+        const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+        const oRect = {x: o.x, y: oY, w: rw, h: parseFloat(o.style.height)};
+        
         // 노엘 스킨: 에너지파 충돌
         if (activeEffects.noelLaser > 0 && !o.destroyed) {
             const beam = document.getElementById('noelBeam');
             if (beam) {
-                const rB = beam.getBoundingClientRect();
-                const rO = o.getBoundingClientRect();
-                if (rB.right > rO.left && rB.left < rO.right && 
-                    rB.bottom > rO.top && rB.top < rO.bottom) {
-                    
+                // 빔은 고정 위치이므로 하드코딩된 Rect 사용 가능
+                const bRect = {x: 170, y: window.innerHeight - playerObj.y - 120, w: window.innerWidth, h: 100};
+                if (isColliding(bRect, oRect)) {
                     o.destroyed = true;
-                    spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                    spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
+                    spawnExplosionEffect(o.x + 30, oY);
+                    spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
                     o.remove(); obstacles.splice(i, 1);
                     showFloatText("💰 대박!");
                     continue;
@@ -2511,12 +2384,11 @@
         
         // 노엘 거대화 충돌
         if(activeEffects.giant > 0 && !o.destroyed) {
-             const rP = player.getBoundingClientRect();
-             const rO = o.getBoundingClientRect();
-             if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
+             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+             if (isColliding(pRect, oRect)) {
                  o.destroyed = true;
-                 spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                 spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(1, 6)), false, false);
+                 spawnExplosionEffect(o.x + 30, oY);
+                 spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(1, 6)), false, false);
                  o.remove(); obstacles.splice(i, 1);
                  showFloatText("🦶 밟았다!");
                  continue;
@@ -2524,17 +2396,17 @@
         }
 
         // 피버타임 충돌
-        if (isFeverTime && left < 180 && !o.destroyed) {
+        if (isFeverTime && o.x < 180 && !o.destroyed) {
             o.destroyed = true; 
-            spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
+            spawnExplosionEffect(o.x + 30, oY);
+            spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
             o.remove(); obstacles.splice(i, 1);
             showFloatText("💰 격파!");
             continue;
         }
 
         // 화면 밖으로 나감 (회피 성공)
-        if (left + rw < 0) {
+        if (o.x + rw < 0) {
             o.remove(); obstacles.splice(i, 1); obstacleSurviveCount++;
             if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
             if (obstacleSurviveCount >= 5) {
@@ -2547,15 +2419,13 @@
         
         // 지은 스킨: 소환 상태 충돌 (보호막 범위)
         if (currentSkin === 'jieun' && activeEffects.summon > 0 && !o.destroyed) {
-            const rP = player.getBoundingClientRect();
-            const rO = o.getBoundingClientRect();
+            // 보호막은 플레이어보다 약간 큼
+            const sRect = {x: playerObj.x - 20, y: window.innerHeight - playerObj.y - playerObj.h - 20, w: playerObj.w + 40, h: playerObj.h + 40};
             
-            if (rP.right + 20 > rO.left && rP.left - 20 < rO.right && 
-                rP.bottom + 20 > rO.top && rP.top - 20 < rO.bottom) {
-                
+            if (isColliding(sRect, oRect)) {
                 o.destroyed = true;
-                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                spawnFaithCoins(left, window.innerHeight - 150, 3, false, true);
+                spawnExplosionEffect(o.x + 30, oY);
+                spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
                 o.remove(); obstacles.splice(i, 1);
                 showFloatText("💥 파괴!");
                 continue;
@@ -2564,20 +2434,16 @@
 
         // 하은 스킨: 보호막 충돌
         if (currentSkin === 'haeun' && haeunShieldActive && !o.destroyed) {
-            const rP = player.getBoundingClientRect();
-            const rO = o.getBoundingClientRect();
+            const sRect = {x: playerObj.x - 10, y: window.innerHeight - playerObj.y - playerObj.h - 10, w: playerObj.w + 20, h: playerObj.h + 20};
             
-            if (rP.right + 20 > rO.left && rP.left - 10 < rO.right && 
-                rP.bottom + 10 > rO.top && rP.top - 10 < rO.bottom) {
-                
+            if (isColliding(sRect, oRect)) {
                 o.destroyed = true;
                 haeunShieldActive = false; // 보호막 해제
                 removeHaeunShield();
                 
-                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                
+                spawnExplosionEffect(o.x + 30, oY);
                 let coins = Math.floor(randBetween(5, 11));
-                spawnFaithCoins(left, window.innerHeight - 150, coins, false, true);
+                spawnFaithCoins(o.x, window.innerHeight - 150, coins, false, true);
                 
                 o.remove(); obstacles.splice(i, 1);
                 showFloatText("🛡️ 방어 & 파괴!");
@@ -2588,12 +2454,12 @@
 
         // 일반 충돌 (피버X, 무적X, 소환X, 하은쉴드X)
         if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
-            const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
-            if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
+            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            if (isColliding(pRect, oRect)) {
                 damageLife(); break;
             }
         }
-        if(currentSkin === 'stephanie' && left < 50 && !o.passed) { faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true; }
+        if(currentSkin === 'stephanie' && o.x < 50 && !o.passed) { faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true; }
     }
   }
 
@@ -2644,7 +2510,6 @@
   }
 
   function damageLife() {
-    // 재국 스킨 - 1회용 즉시 부활 (최대 체력)
     if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
         jaegukRevivedOnce = true;
         life = maxLife;
@@ -2665,7 +2530,6 @@
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
     
-    // 하은 스킨 보호막 파괴
     if(currentSkin === 'haeun' && haeunShieldActive) {
         haeunShieldActive = false;
         removeHaeunShield();
@@ -2773,4 +2637,3 @@
   let lastT=0; document.addEventListener("touchend",e=>{const n=Date.now();if(n-lastT<300)e.preventDefault();lastT=n;},{passive:false});
 </script>
 </body>
-</html>
