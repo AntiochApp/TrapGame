@@ -24,7 +24,7 @@
     #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
     /* 전찬: 번개 및 해머 */
-    .jc-lightning-strike { position: absolute; width: 15px; height: 100vh; background: linear-gradient(to bottom, #fff, #ffd700, transparent); z-index: 89; pointer-events: none; box-shadow: 0 0 20px #ffd700, 0 0 40px #fff; transform-origin: top center; opacity: 0; }
+    .jc-lightning-strike { position: absolute; width: 15px; height: 150vh; background: linear-gradient(to bottom, #fff, #ffd700, transparent); z-index: 89; pointer-events: none; box-shadow: 0 0 20px #ffd700, 0 0 40px #fff; transform-origin: top center; opacity: 0; }
     .hammer-skill { position: absolute; width: 66vh; height: 66vh; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 10px #000); }
 
     /* 지은: 음계 및 배경 */
@@ -66,6 +66,9 @@
     /* 강희: 판넬 (CSS transition 제거하고 JS 제어) */
     .funnel-unit { position: absolute; width: 40px; height: 40px; background: url('Panel.png') no-repeat center/contain; z-index: 60; pointer-events: none; }
     .funnel-laser { position: absolute; height: 6px; background: #ff00ff; box-shadow: 0 0 10px #ff00ff; z-index: 58; transform-origin: left center; opacity: 0; pointer-events: none; }
+    /* 강희 변신 아우라 */
+    .gundam-aura { position: absolute; width: 120px; height: 120px; background: radial-gradient(circle, rgba(0,0,255,0.4), transparent 70%); border-radius: 50%; box-shadow: 0 0 30px #00f; z-index: 51; pointer-events: none; transform: translate(-50%, -50%); mix-blend-mode: screen; animation: gundamPulse 1s infinite alternate; }
+    @keyframes gundamPulse { from { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } }
 
     /* 예준: 도플갱어 & 날개 */
     .yejun-clone { position: absolute; width: 50px; height: 50px; background-image: url('skin_yejun.png'); background-size: contain; background-repeat: no-repeat; opacity: 0.8; z-index: 49; filter: hue-rotate(180deg) brightness(1.2); }
@@ -373,7 +376,7 @@
     jihye: { type: "Active", cd: 60 }, 
     jun: { type: "Active", cd: 90 },
     stephanie: { type: "Active", cd: 70 },
-    yejun: { type: "Active", cd: 40 },
+    yejun: { type: "Active", cd: 50 },
     ganghui: { type: "Active", cd: 60 },
     jieun: { type: "Active", cd: 60 }
   };
@@ -436,6 +439,7 @@
   // [최적화] 지혜 스킨 변신 추적을 위한 플래그 (setInterval 대체)
   let jihyeSphereActive = false;
   let jihyeSphereEl = null;
+  let jihyeEndSphereEl = null;
 
   let junLambTimer = 0;
   let isJunTimeTravel = false;
@@ -451,6 +455,7 @@
   let junWarpDist = 0;
   let ganghuiPanelTimer = 0;
   let funnels = [];
+  let gundamAura = null;
   let yejunCloneTimer = 0;
   let yejunClones = [];
   let stephanieHeartTimer = 0;
@@ -796,10 +801,14 @@
       sphere.style.left = (playerObj.x + 30) + 'px';
       sphere.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
       gameArea.appendChild(sphere);
+      
+      // 변신 해제 시 구체가 플레이어를 따라다니도록 설정
+      jihyeEndSphereEl = sphere;
 
       activeEffects.invincible = 2.0;
 
       setTimeout(() => {
+        jihyeEndSphereEl = null;
         sphere.remove();
         player.style.backgroundImage = `url('skin_jihye.png')`;
         jihyeUnits.forEach(u => {
@@ -856,7 +865,7 @@
           player.style.transition = "transform 0.5s, left 0.5s, top 0.5s";
           player.style.left = (playerObj.x + 150) + 'px';
           player.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
-          player.style.transform = "scale(0) rotate(720deg)";
+          player.style.transform = "scale(0)"; // 회전 제거, 걸어 들어가는 효과
       }, 500);
 
       setTimeout(() => {
@@ -893,6 +902,7 @@
       setTimeout(() => timeTunnelBg.style.display = 'none', 500);
 
       distance += junWarpDist;
+      document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
       showFloatText(`📍 +${junWarpDist}m 이동!`);
 
       setTimeout(() => {
@@ -903,6 +913,8 @@
           velocity = 0;
           
           running = true; 
+          lastTime = performance.now();
+          requestAnimationFrame(gameLoop);
           
           setTimeout(() => {
               portal.classList.remove('portal-opening');
@@ -1017,11 +1029,13 @@
           const strike = document.createElement('div');
           strike.className = 'jc-lightning-strike';
           
-          const randX = randBetween(50, window.innerWidth - 50);
+          const randX = randBetween(0, window.innerWidth * 0.5); // 왼쪽에서 시작하도록
           strike.style.left = randX + 'px';
           strike.style.top = '-50vh';
-          strike.style.height = '150vh';
-          strike.style.transform = `rotate(${randBetween(10, 30)}deg)`;
+          // 왼쪽 하늘에서 오른쪽 땅으로 대각선 (\ 모양) -> transform-origin은 css에서 top center. 
+          // top center 기준 음수 회전은 왼쪽 위로 감. 양수 회전은 오른쪽 아래로 뻗음? 
+          // 세로선 기준 -45도면 \ 모양이 됨 (상단 고정, 하단이 우측으로)
+          strike.style.transform = `rotate(${randBetween(-30, -50)}deg)`; 
           
           const hue = randBetween(200, 300);
           strike.style.background = (Math.random() > 0.5) 
@@ -1038,9 +1052,10 @@
 
           playSound('clear');
 
-          // [최적화] JS 배열 순회하여 충돌 체크
+          // [최적화] JS 배열 순회하여 충돌 체크 (범위를 넓게 잡음)
           obstacles.forEach(o => {
-              if(Math.abs(o.x - randX) < 100 && !o.destroyed) {
+              // 번개가 대각선이라 X좌표만으로 정확히 판별어렵지만, 대략적으로 화면 전체 범위 공격 효과
+              if(o.x > randX - 100 && o.x < window.innerWidth && !o.destroyed) {
                   o.destroyed = true;
                   spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
                   spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
@@ -1048,7 +1063,7 @@
               }
           });
           enemies.forEach(e => {
-              if(!e.isDead && Math.abs(e.x - randX) < 100) {
+              if(!e.isDead && e.x > randX - 100 && e.x < window.innerWidth) {
                   e.isDead = true;
                   spawnExplosionEffect(e.x, e.y);
                   spawnFaithCoins(e.x, e.y, 5, false, true);
@@ -1092,7 +1107,7 @@
               c.el.remove();
           });
           yejunClones = [];
-      }, 15000); 
+      }, 15000); // 15초 지속
   }
 
   function triggerGanghuiGundam() {
@@ -1103,6 +1118,12 @@
       flash.style.background = "rgba(0, 100, 255, 0.5)";
       flash.style.opacity = '1';
       setTimeout(() => flash.style.opacity = '0', 300);
+
+      // 변신 시작 시 아우라 생성
+      gundamAura = document.createElement('div');
+      gundamAura.className = 'gundam-aura';
+      gameArea.appendChild(gundamAura);
+      setTimeout(() => { if(gundamAura) { gundamAura.remove(); gundamAura = null; } }, 1000);
 
       activeEffects.gundam = 15;
       
@@ -1193,7 +1214,14 @@
             }
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) endJihyeSkill();
             if(k === 'bobaTime' && activeEffects[k] <= 0) { bobas.forEach(b => b.remove()); bobas = []; activeEffects.invincible = 0; }
-            if(k === 'gundam' && activeEffects[k] <= 0) { player.style.backgroundImage = `url('skin_ganghui.png')`; }
+            if(k === 'gundam' && activeEffects[k] <= 0) { 
+                player.style.backgroundImage = `url('skin_ganghui.png')`; 
+                // 변신 해제 시 아우라 생성
+                gundamAura = document.createElement('div');
+                gundamAura.className = 'gundam-aura';
+                gameArea.appendChild(gundamAura);
+                setTimeout(() => { if(gundamAura) { gundamAura.remove(); gundamAura = null; } }, 1000);
+            }
             if(k === 'fly' && currentSkin === 'yejun' && activeEffects[k] <= 0) {
                 const w = player.querySelector('.yejun-wing');
                 if(w) w.remove();
@@ -1304,6 +1332,17 @@
         if(jihyeSphereActive && jihyeSphereEl) {
             jihyeSphereEl.style.left = (playerObj.x + 30) + 'px';
             jihyeSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+        }
+        // [수정: 지혜 변신 해제 추적]
+        if(jihyeEndSphereEl) {
+            jihyeEndSphereEl.style.left = (playerObj.x + 30) + 'px';
+            jihyeEndSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+        }
+
+        // [수정: 강희 아우라 추적]
+        if(gundamAura) {
+             gundamAura.style.left = (playerObj.x + 30) + 'px';
+             gundamAura.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
         }
 
         // [최적화] 어린 양 업데이트
@@ -1422,10 +1461,10 @@
             }
         }
         
-        // 예준 패시브 도플갱어 (60초마다)
+        // 예준 패시브 도플갱어 (50초마다)
         if(currentSkin === 'yejun' && running) {
             yejunCloneTimer += safeDelta;
-            if(yejunCloneTimer >= 60.0) {
+            if(yejunCloneTimer >= 50.0) {
                 triggerYejunClones();
                 yejunCloneTimer = 0;
             }
@@ -1479,7 +1518,7 @@
             });
         }
         
-        // 하휘 인피니티 스톤 AI
+        // 하휘 인피니티 스톤 AI (속도 감소 및 타겟 분배)
         if(infinityStones.length > 0) {
             const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             for(let i=infinityStones.length-1; i>=0; i--) {
@@ -1495,9 +1534,22 @@
                     sy += (ty-sy)*0.1;
 
                     let found = null;
-                    obstacles.forEach(o => { if(!o.destroyed && o.x < window.innerWidth) found = o; });
-                    if(!found) enemies.forEach(e => { if(!e.isDead) found = e; });
-                    if(found) { s.state = 'attack'; s.target = found; }
+                    // 장애물 먼저 확인
+                    for(let k=0; k<obstacles.length; k++){
+                        if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
+                            found = obstacles[k]; break;
+                        }
+                    }
+                    // 적 확인
+                    if(!found){
+                        for(let k=0; k<enemies.length; k++){
+                            if(!enemies[k].isDead && !enemies[k].isTargeted){
+                                found = enemies[k]; break;
+                            }
+                        }
+                    }
+
+                    if(found) { s.target = found; found.isTargeted = true; s.state = 'attack'; }
                 } 
                 else if(s.state === 'attack') {
                     if(!s.target || s.target.destroyed || s.target.isDead) { s.state = 'return'; }
@@ -1505,8 +1557,8 @@
                         const tx = s.target.x + 30;
                         const ty = s.target.y || (window.innerHeight - parseFloat(s.target.style.bottom || 0) - 50);
                         
-                        sx += (tx - sx) * 0.15;
-                        sy += (ty - sy) * 0.15;
+                        sx += (tx - sx) * 0.08; // 속도 반으로 줄임 (0.15 -> 0.08)
+                        sy += (ty - sy) * 0.08;
                         
                         if(Math.hypot(tx-sx, ty-sy) < 40) {
                             spawnExplosionEffect(tx, ty);
@@ -1526,7 +1578,7 @@
             }
         }
         
-        // 재국 버블 AI 로직
+        // 재국 버블 AI 로직 (속도 감소 및 타겟 분배)
         if(activeEffects.bobaTime > 0 && bobas.length > 0) {
             const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             
@@ -1542,9 +1594,21 @@
                     by += (ty-by)*0.1;
                     
                     let found = null;
-                    obstacles.forEach(o => { if(!o.destroyed && o.x < window.innerWidth) found = o; });
-                    if(!found) enemies.forEach(e => { if(!e.isDead) found = e; });
-                    if(found) { b.state = 'attack'; b.target = found; }
+                     // 장애물 확인
+                     for(let k=0; k<obstacles.length; k++){
+                        if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
+                            found = obstacles[k]; break;
+                        }
+                    }
+                    // 적 확인
+                    if(!found){
+                        for(let k=0; k<enemies.length; k++){
+                            if(!enemies[k].isDead && !enemies[k].isTargeted){
+                                found = enemies[k]; break;
+                            }
+                        }
+                    }
+                    if(found) { b.target = found; found.isTargeted = true; b.state = 'attack'; }
                 } 
                 else if(b.state === 'attack') {
                     if(!b.target || b.target.destroyed || b.target.isDead) { b.state = 'return'; }
@@ -1552,8 +1616,8 @@
                         const tx = b.target.x + 30;
                         const ty = b.target.y || (window.innerHeight - parseFloat(b.target.style.bottom || 0) - 50);
                         
-                        bx += (tx - bx) * 0.15;
-                        by += (ty - by) * 0.15;
+                        bx += (tx - bx) * 0.08; // 속도 반으로 줄임
+                        by += (ty - by) * 0.08;
                         
                         if(Math.hypot(tx-bx, ty-by) < 40) {
                             spawnExplosionEffect(tx, ty);
@@ -1597,9 +1661,9 @@
                 const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                 
                 if(!o.destroyed && isColliding(fRect, oRect)) {
-                     o.destroyed = true; o.remove(); obstacles.splice(i,1);
-                     spawnExplosionEffect(f.x, f.y);
-                     crashed = true;
+                      o.destroyed = true; o.remove(); obstacles.splice(i,1);
+                      spawnExplosionEffect(f.x, f.y);
+                      crashed = true;
                 }
             }
             if(!crashed) {
@@ -2230,10 +2294,28 @@
         mx += 600 * delta; 
         m.style.left = mx + "px";
         if (mx > window.innerWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
+        
+        const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
+        
+        // [수정] 예준 도플갱어 미사일이 장애물도 파괴하도록 추가
+        let hitObs = false;
+        for (let k = obstacles.length - 1; k >= 0; k--) {
+             let o = obstacles[k];
+             const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+             const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
+             if(!o.destroyed && isColliding(mRect, oRect)) {
+                 o.destroyed = true; 
+                 spawnExplosionEffect(o.x, oY);
+                 m.remove(); playerMissiles.splice(i, 1);
+                 o.remove(); obstacles.splice(k, 1);
+                 hitObs = true;
+                 break;
+             }
+        }
+        if(hitObs) continue;
 
         for (let j = enemies.length - 1; j >= 0; j--) {
             let e = enemies[j];
-            const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
             const eRect = {x: e.x, y: e.y, w: 60, h: 60};
             
             if (isColliding(mRect, eRect)) {
