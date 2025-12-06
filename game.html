@@ -2,148 +2,42 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Remastered Ver.</title>
+  <title>Disciple Run – Remastered Ver. 3.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
+    /* === [원본 디자인 시스템 유지] === */
     :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* 피버타임 시 배경 효과 */
+    /* 특수 효과 모드 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
-
-    /* 지진 효과 */
+    #gameArea.sandstorm-mode { filter: sepia(80%) contrast(120%) brightness(90%); } /* 하휘 전용 */
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
-    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
+    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-4px, 4px); } 50% { transform: translate(4px, -4px); } 75% { transform: translate(-4px, -4px); } 100% { transform: translate(0, 0); } }
 
-    /* 화면 반짝임 효과 */
-    #flashEffect {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: white; opacity: 0; pointer-events: none; z-index: 200;
-        transition: opacity 0.1s;
-    }
+    #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* === [수정 요청 1 반영] 하휘 스킨 포탈 비주얼 개선 === */
-    .hahwi-portal {
-        position: absolute; width: 300px; height: 300px;
-        /* 네모난 느낌 제거, 이글거리는 에너지체 느낌 */
-        background: radial-gradient(circle at center, rgba(213, 0, 249, 0.8) 0%, rgba(170, 0, 255, 0.4) 40%, transparent 70%);
-        border-radius: 50%;
-        box-shadow: 
-            0 0 60px rgba(213, 0, 249, 0.6),
-            inset 0 0 40px rgba(170, 0, 255, 0.8);
-        opacity: 0; transform: translate(-50%, -50%) scale(0);
-        z-index: 40; pointer-events: none; 
-        animation: portalOpen 0.5s ease-out forwards, portalPulse 2s infinite alternate;
-        /* 내부 요소 제거로 flex 필요 없음 */
-    }
-    .hahwi-portal::after {
-        content: ''; position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
-        border-radius: 50%;
-        background: conic-gradient(from 0deg, transparent, #e040fb, transparent 30%);
-        animation: spinLightning 1.5s linear infinite;
-        mix-blend-mode: screen; opacity: 0.7;
-    }
-
-    .hahwi-portal.closing { animation: portalClose 0.5s ease-in forwards; }
-    @keyframes portalOpen { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.95; } }
-    @keyframes portalClose { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.95; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
-    @keyframes portalPulse { 0% { filter: brightness(1); scale: 1; } 100% { filter: brightness(1.3); scale: 1.05; } }
-    @keyframes spinLightning { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* [수정 요청 2 반영] 하휘 검 스타일 변경 (직진형) */
-    .hahwi-sword {
-        position: absolute; height: 6px; /* 너비는 JS에서 랜덤 설정 */
-        background: #fff; border-radius: 3px;
-        box-shadow: 0 0 15px currentColor, 0 0 5px #fff;
-        z-index: 65; pointer-events: none;
-        opacity: 0.9;
-    }
-
-    /* 검 적중 시 포탈 폭발 이펙트 */
-    .portal-explosion {
-        position: absolute; width: 140px; height: 140px;
-        background: radial-gradient(circle, #fff 10%, #d500f9 40%, transparent 70%);
-        border-radius: 50%; mix-blend-mode: screen;
-        transform: translate(-50%, -50%); z-index: 86;
-        animation: portalExplode 0.3s ease-out forwards;
-    }
-    @keyframes portalExplode { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
-
-    /* === [수정 요청 3 관련] 지혜 스킨 구체 (JS에서 위치 추적함) === */
-    .jihye-transform-sphere {
-        position: absolute; width: 100px; height: 100px;
-        border-radius: 50%;
-        background: radial-gradient(circle at center, #fff 20%, #ffd700 80%);
-        box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff;
-        z-index: 52; transform: translate(-50%, -50%);
-        animation: sphereCharge 2s ease-in forwards;
-        mix-blend-mode: screen;
-    }
-    @keyframes sphereCharge { 
-        0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
-        20% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-        80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; filter: brightness(2); }
-        100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
-    }
-
-    .jihye-unit {
-        position: absolute; width: 50px; height: 50px;
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 55; 
-        transition: transform 0.2s;
-        filter: drop-shadow(0 0 10px cyan);
-    }
-    
-    .jihye-healer {
-        position: absolute; width: 70px; height: 70px;
-        background-image: url('Skill_JHA.png');
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 60; pointer-events: none;
-        transition: left 1.5s ease-out, top 1.5s ease-out;
-        filter: drop-shadow(0 0 15px gold);
-    }
-    .holy-light-pillar {
-        position: absolute; width: 60px; height: 100vh;
-        background: linear-gradient(to bottom, transparent, rgba(255, 215, 0, 0.4), transparent);
-        bottom: 0; left: 50%; transform: translateX(-50%);
-        z-index: 59; pointer-events: none;
-        animation: lightPillar 1.5s ease-out forwards;
-    }
-    @keyframes lightPillar { 0% { opacity: 0; width: 0; } 50% { opacity: 1; width: 80px; } 100% { opacity: 0; width: 0; } }
-
-    .jihye-missile {
-        position: absolute; width: 24px; height: 24px;
-        background: radial-gradient(circle, #fff, #00b0ff);
-        border-radius: 50%;
-        box-shadow: 0 0 10px #00b0ff; z-index: 66;
-    }
-
-    /* === [수정 요청 4 반영] 준 스킨 포탈 비주얼 개선 === */
+    /* === [준: 시공간 미니게임 UI] === */
     .time-portal {
-        position: absolute; width: 120px; height: 200px;
-        /* 기존 단순 테두리 제거, 복합적인 빛 효과 적용 */
-        background: transparent;
-        border-radius: 50%;
-        transform: translate(-50%, -50%); z-index: 45;
+        position: absolute; width: 140px; height: 220px;
+        background: transparent; border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0); z-index: 45; 
         display: flex; justify-content: center; align-items: center;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    /* 포탈 외곽의 회전하는 빛 */
+    .time-portal.active { transform: translate(-50%, -50%) scale(1); }
     .time-portal::before {
-        content: ''; position: absolute; width: 100%; height: 100%;
-        border-radius: 50%;
+        content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%;
         box-shadow: inset 0 0 30px #00ffff, 0 0 40px #00ffff;
         background: conic-gradient(from 0deg, transparent, #00ffff, rgba(0,0,255,0.5), transparent 50%);
-        animation: portalSpin 1.5s infinite linear;
-        mix-blend-mode: screen;
+        animation: portalSpin 1.5s infinite linear; mix-blend-mode: screen;
     }
-    /* 포탈 내부의 깊이감 */
     .time-portal::after {
-        content: ''; position: absolute; width: 80%; height: 80%;
-        border-radius: 50%;
+        content: ''; position: absolute; width: 80%; height: 80%; border-radius: 50%;
         background: radial-gradient(ellipse at center, #000 20%, #000033 60%, transparent 100%);
         box-shadow: inset 0 0 50px #000;
     }
@@ -151,30 +45,21 @@
 
     .time-tunnel-bg {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #000;
-        z-index: 100; pointer-events: none;
-        opacity: 0; transition: opacity 0.5s;
-        display: none;
+        background: #000; z-index: 100; pointer-events: auto; opacity: 0; transition: opacity 0.5s; display: none;
+        color: white; flex-direction: column; justify-content: center; align-items: center;
     }
-    .tunnel-star {
-        position: absolute; width: 100px; height: 2px; background: #fff;
-        box-shadow: 0 0 10px #fff;
-        animation: warpSpeed 0.5s linear infinite;
-    }
+    .tunnel-star { position: absolute; width: 100px; height: 2px; background: #fff; box-shadow: 0 0 10px #fff; animation: warpSpeed 0.5s linear infinite; pointer-events: none; }
     @keyframes warpSpeed { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
+    
+    #junMiniGameUI { text-align: center; z-index: 101; pointer-events: none; }
+    #junMiniGameMsg { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px cyan; }
+    #junDistanceDisplay { font-size: 60px; font-weight: 900; color: #ffe24f; text-shadow: 4px 4px 0 #3a2513; }
 
-    /* === [수정 요청 5 반영] 준 스킨 양(Lamb) 개선 === */
     .lamb-unit {
         position: absolute; width: 60px; height: 60px;
-        /* 요청하신 Lamb.png 사용 */
-        background: url('Lamb.png') no-repeat center/contain;
-        z-index: 51; 
-        filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3));
-        /* transition 제거 후 JS로 제어 */
+        background: url('Lam.png') no-repeat center/contain;
+        z-index: 51; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3));
     }
-    /* 기존 CSS 도형 양 제거 */
-    .lamb-unit::after { content: none; }
-    
     .lamb-msg {
         position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
         background: #fff; border: 3px solid #3a2513; padding: 6px 12px;
@@ -183,72 +68,209 @@
     }
     .lamb-msg::after {
         content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-        border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent;
-        display: block; width: 0;
+        border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent; display: block; width: 0;
     }
 
-    /* 재국 스킨 - 보바(타피오카 펄) 스타일 */
+    /* === [전찬: 리얼 번개 & 해머] === */
+    .hammer-unit {
+        position: absolute; width: 250px; height: 250px;
+        background: url('Hammer.png') no-repeat center/contain;
+        z-index: 95; filter: drop-shadow(-10px 10px 20px rgba(0,0,0,0.5));
+    }
+    .hammer-trail {
+        position: absolute; top: 50%; left: -100px; width: 200px; height: 100px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+        transform: translateY(-50%); z-index: 94; filter: blur(8px);
+    }
+    .jc-lightning {
+        position: absolute; width: 20px; height: 100vh;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.9), #fff, rgba(255,255,255,0));
+        z-index: 89; pointer-events: none; transform-origin: top center;
+        box-shadow: 0 0 30px #ffd700, 0 0 60px #ff8c00;
+        /* 리얼한 번개 모양 Clip-path */
+        clip-path: polygon(45% 0%, 55% 0%, 55% 15%, 70% 15%, 40% 40%, 60% 40%, 40% 100%, 30% 100%, 30% 60%, 10% 60%, 45% 25%, 35% 25%);
+        animation: lightningStrike 0.4s ease-out forwards;
+    }
+    @keyframes lightningStrike { 0% { opacity: 0; transform: scaleY(0); } 10% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; } }
+
+    /* === [하휘: 인피니티 스톤 & 모래폭풍] === */
+    .infinity-stone {
+        position: absolute; width: 20px; height: 20px; border-radius: 50%;
+        box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+        z-index: 60; transition: left 0.1s, top 0.1s;
+    }
+    .sand-particle {
+        position: absolute; width: 6px; height: 6px; background: #d2b48c;
+        border-radius: 50%; opacity: 0.8; z-index: 88; pointer-events: none;
+        animation: sandWind 1s linear infinite;
+    }
+    @keyframes sandWind { from { transform: translateX(0) translateY(0); } to { transform: translateX(-200px) translateY(50px); opacity: 0; } }
+    .dust-effect {
+        position: absolute; width: 100px; height: 100px;
+        background: radial-gradient(circle, #d2b48c 30%, transparent 80%);
+        opacity: 0.9; animation: dissolve 0.6s ease-out forwards; transform: translate(-50%, -50%); z-index: 85;
+    }
+    @keyframes dissolve { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; filter: blur(4px); } }
+
+    /* === [지혜: 발키리 & 치유] === */
+    .jihye-transform-sphere {
+        position: absolute; width: 120px; height: 120px; border-radius: 50%;
+        background: radial-gradient(circle at center, #fff 20%, #ffd700 80%);
+        box-shadow: 0 0 40px #ffd700, 0 0 80px #fff;
+        z-index: 52; transform: translate(-50%, -50%);
+        animation: sphereCharge 2s ease-in forwards; mix-blend-mode: screen;
+    }
+    @keyframes sphereCharge { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 20% { opacity: 0.8; } 80% { scale: 1.2; opacity: 1; } 100% { scale: 3; opacity: 0; } }
+    .jihye-unit {
+        position: absolute; width: 50px; height: 50px;
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 55; transition: transform 0.2s; filter: drop-shadow(0 0 10px cyan);
+    }
+    .jihye-healer {
+        position: absolute; width: 80px; height: 80px;
+        background-image: url('Skill_JHA.png'); background-size: contain; background-repeat: no-repeat;
+        z-index: 60; pointer-events: none;
+        transition: left 1.5s ease-out, top 1.5s ease-out;
+        filter: drop-shadow(0 0 20px gold);
+    }
+    .holy-light-pillar {
+        position: absolute; width: 120px; height: 100vh;
+        background: linear-gradient(to bottom, transparent, rgba(255, 215, 0, 0.6), transparent);
+        bottom: 0; transform: translateX(-50%);
+        z-index: 59; pointer-events: none;
+        animation: lightPillar 2.0s ease-out forwards;
+    }
+    @keyframes lightPillar { 0% { opacity: 0; height: 0; } 20% { opacity: 1; height: 100vh; } 80% { opacity: 1; } 100% { opacity: 0; } }
+    .jihye-missile {
+        position: absolute; width: 24px; height: 24px;
+        background: radial-gradient(circle, #fff, #00b0ff); border-radius: 50%;
+        box-shadow: 0 0 10px #00b0ff; z-index: 66;
+    }
+
+    /* === [지은: 멜로디 웨이브] === */
+    .jieun-note {
+        position: absolute; font-size: 40px; font-weight: bold;
+        z-index: 65; animation: noteFloat 1s infinite alternate;
+        text-shadow: 0 0 10px #fff;
+    }
+    @keyframes noteFloat { from { transform: translateY(0); } to { transform: translateY(-15px); } }
+    .melody-wave-bg {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(45deg, rgba(255,0,0,0.1), rgba(0,255,0,0.1), rgba(0,0,255,0.1), rgba(255,0,255,0.1));
+        background-size: 400% 400%; animation: rainbowWave 3s ease infinite; 
+        z-index: 4; pointer-events: none; display: none; mix-blend-mode: overlay;
+    }
+    @keyframes rainbowWave { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    /* 지은 패시브 쉴드 (노엘) */
+    .jieun-shield-unit {
+        position: absolute; width: 50px; height: 50px;
+        background-image: url('skin_noel.png'); background-size: contain; background-repeat: no-repeat;
+        z-index: 55; filter: drop-shadow(0 0 5px white);
+        animation: orbitShield 2s infinite linear;
+    }
+    @keyframes orbitShield { from { transform: rotate(0deg) translateX(50px) rotate(0deg); } to { transform: rotate(360deg) translateX(50px) rotate(-360deg); } }
+
+    /* === [노엘: 거대화 & 빔] === */
+    .noel-aura {
+        position: absolute; width: 140%; height: 140%; top: -20%; left: -20%;
+        background: radial-gradient(circle, rgba(255,215,0,0.4) 20%, transparent 70%);
+        border-radius: 50%; z-index: 49;
+        box-shadow: 0 0 40px gold; animation: auraPulse 0.5s infinite alternate;
+        display: none; pointer-events: none;
+    }
+    @keyframes auraPulse { from { transform: scale(1); opacity: 0.6; } to { transform: scale(1.1); opacity: 0.9; } }
+    .player-giant { transform: scale(2) !important; transition: transform 0.5s; }
+    
+    .noel-beam {
+        position: absolute; left: 170px; height: 120px; width: 0;
+        background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
+        z-index: 89; transform-origin: left center; pointer-events: none;
+        animation: beamFire 0.4s ease-out forwards; mix-blend-mode: screen;
+        box-shadow: 0 0 40px cyan, 0 0 20px white; border-radius: 60px 0 0 60px;
+    }
+    @keyframes beamFire { 0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 20% { width: 60vw; opacity: 1; transform: scaleY(1.2); } 100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } }
+
+    /* === [강희: 건담] === */
+    .funnel-unit {
+        position: absolute; width: 40px; height: 40px;
+        background: url('Panel.png') no-repeat center/contain;
+        z-index: 55; filter: drop-shadow(0 0 5px cyan);
+    }
+    .funnel-laser {
+        position: absolute; height: 4px; background: #00ffff;
+        box-shadow: 0 0 8px #00ffff; z-index: 56; transform-origin: left center; opacity: 0.8;
+    }
+    .gundam-mode-effect {
+        position: absolute; top: 50%; left: 50%; width: 120%; height: 120%;
+        transform: translate(-50%, -50%); border-radius: 50%;
+        background: rgba(0, 191, 255, 0.3); border: 2px solid #00bfff;
+        box-shadow: 0 0 20px #00bfff; z-index: 49; display: none;
+    }
+
+    /* === [스테파니: 케이크] === */
+    .cake-bg-layer {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('CakeBack.png') repeat-x center/cover;
+        z-index: 10; opacity: 0; transition: opacity 1s; display: none; mix-blend-mode: overlay;
+    }
+    .falling-cake {
+        position: absolute; width: 50px; height: 50px;
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 60; animation: cakeFall 2s linear infinite;
+    }
+    @keyframes cakeFall { from { transform: translateY(-50px) rotate(0deg); } to { transform: translateY(110vh) rotate(360deg); } }
+    .stephanie-heart {
+        position: absolute; font-size: 24px; color: #ff69b4; font-weight: bold;
+        animation: floatUpHeart 1.5s ease-out forwards; z-index: 95;
+    }
+    @keyframes floatUpHeart { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
+
+    /* === [예준: 도플갱어] === */
+    .yejun-clone {
+        position: absolute; width: 50px; height: 50px;
+        background-image: url('skin_yejun.png'); opacity: 0.7;
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 50; filter: grayscale(30%);
+    }
+    .yejun-wing {
+        position: absolute; top: -30px; left: -40px; width: 140px; height: 120px;
+        background: url('item_wings.png') no-repeat center/contain;
+        z-index: 49; opacity: 0.8; filter: drop-shadow(0 0 10px white);
+        animation: wingFlap 0.2s infinite alternate; display: none;
+    }
+    @keyframes wingFlap { from { transform: scaleX(1); } to { transform: scaleX(0.85); } }
+    .smoke-poof {
+        position: absolute; width: 100px; height: 100px;
+        background: radial-gradient(circle, #ddd 20%, transparent 70%);
+        animation: poofAnim 0.5s ease-out forwards; z-index: 80; transform: translate(-50%, -50%);
+    }
+    @keyframes poofAnim { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
+
+    /* 공통 & 기존 스타일 */
     .boba-unit {
-        position: absolute; width: 18px; height: 18px;
+        position: absolute; width: 20px; height: 20px;
         background: radial-gradient(circle at 30% 30%, #4e342e, #212121);
         border: 1px solid #000; border-radius: 50%;
-        box-shadow: 2px 2px 3px rgba(0,0,0,0.4);
-        z-index: 65; pointer-events: none;
+        box-shadow: 2px 2px 3px rgba(0,0,0,0.4); z-index: 65; pointer-events: none;
     }
-
-    /* 재국 스킨 - 부활 천사 날개 이펙트 */
     .angel-wing-effect {
         position: absolute; width: 150px; height: 150px;
         left: 50%; top: 50%; transform: translate(-50%, -50%);
         display: flex; justify-content: center; align-items: center;
-        font-size: 100px; z-index: 100;
-        text-shadow: 0 0 20px gold, 0 0 40px white;
-        animation: wingRise 2s ease-out forwards;
-        pointer-events: none;
+        font-size: 100px; z-index: 100; text-shadow: 0 0 20px gold, 0 0 40px white;
+        animation: wingRise 2s ease-out forwards; pointer-events: none;
     }
     .angel-wing-effect::after { content: '🪽'; }
-    @keyframes wingRise { 
-        0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 
-        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 
-        80% { opacity: 1; transform: translate(-50%, -80%) scale(1.3); }
-        100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } 
-    }
+    @keyframes wingRise { 0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } }
 
-    /* 지은 스킨 전용 보호막 */
-    .jieun-shield {
-        position: absolute;
-        width: 90px; height: 90px;
-        left: -15px; bottom: -15px;
-        border-right: 8px solid rgba(255, 255, 255, 0.8);
-        border-radius: 50%;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
-        background: linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.2) 100%);
-        pointer-events: none; z-index: 55;
-    }
-
-    /* 노엘 스킨 애니메이션 (공통) */
-    .flying-noel {
-        position: absolute; width: 50px; height: 50px;
-        background-image: url('skin_noel.png'); 
-        background-size: contain; background-repeat: no-repeat;
-        z-index: 60; pointer-events: none;
-    }
-    .flying-noel.fly-in { transition: left 0.8s linear, top 0.8s cubic-bezier(0.6, 0.04, 0.98, 0.335); }
-    .flying-noel.fly-out { transition: left 0.8s linear, top 0.8s cubic-bezier(0.5, 0, 0.5, 1); }
-
-    /* 하은 스킨 보호막 */
     .haeun-shield {
         position: absolute; width: 80px; height: 80px;
-        left: -10px; bottom: -10px;
-        border-right: 6px solid rgba(255, 255, 255, 0.9);
-        border-radius: 50%;
-        box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5);
-        pointer-events: none; z-index: 55;
-        animation: shieldBreath 2s infinite ease-in-out;
+        left: -10px; bottom: -10px; border-right: 6px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%; box-shadow: 15px 0 20px rgba(255, 255, 255, 0.5);
+        pointer-events: none; z-index: 55; animation: shieldBreath 2s infinite ease-in-out;
     }
     @keyframes shieldBreath { 0% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(1); } }
-
-    /* 힐링 이펙트 */
+    
     .heal-effect-visual {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: 100px; height: 100px;
@@ -258,54 +280,21 @@
     }
     @keyframes healExpand { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; } }
 
-    /* 노엘 에너지포 */
-    .noel-beam {
-        position: absolute; left: 170px; height: 140px; width: 0; 
-        background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
-        z-index: 89; transform-origin: left center; pointer-events: none;
-        animation: beamFire 0.4s ease-out forwards; mix-blend-mode: screen;
-        box-shadow: 0 0 40px cyan, 0 0 20px white; border-radius: 100px 0 0 100px;
-    }
-    .noel-beam::before {
-        content: ''; position: absolute; left: -20px; top: 50%; transform: translateY(-50%);
-        width: 80px; height: 80px;
-        background: radial-gradient(circle, #fff 20%, #00ffff 80%, transparent 100%);
-        border-radius: 50%; box-shadow: 0 0 50px #fff; opacity: 0.9;
-    }
-    @keyframes beamFire { 0% { width: 0; opacity: 0.5; transform: scaleY(0.1); } 20% { width: 50vw; opacity: 1; transform: scaleY(1.2); } 100% { width: 150vw; opacity: 0.8; transform: scaleY(1); } }
-
-    /* 전찬 번개 */
-    .jc-lightning {
-        position: absolute; height: 12px; background: #fff; transform-origin: left center;
-        z-index: 89; box-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00; pointer-events: none;
-        clip-path: polygon(0% 45%, 10% 25%, 20% 65%, 30% 20%, 40% 70%, 50% 30%, 60% 75%, 70% 20%, 80% 80%, 90% 30%, 100% 50%, 100% 60%, 90% 40%, 80% 90%, 70% 30%, 60% 85%, 50% 40%, 40% 80%, 30% 30%, 20% 75%, 10% 35%, 0% 55%);
-        animation: lightningFlash 0.2s ease-out forwards;
-    }
-    @keyframes lightningFlash { 0% { width: 0; opacity: 1; filter: brightness(2); } 40% { width: 130vw; opacity: 1; filter: brightness(1.5); } 100% { width: 130vw; opacity: 0; } }
-
-    /* 배경 */
     .bg-layer { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
     #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer3 { background-image: url("bg_forest.png"); z-index: 3; background-size: auto 60%; background-position: 0 bottom; }
-
     #ground { display: none; }
 
-    /* 플레이어 */
     #player { 
-        position: absolute; z-index: 50; 
-        left: 120px; bottom: 40px; 
-        width: 60px; height: 60px; 
-        background-image: url("disciple.png"); 
+        position: absolute; z-index: 50; left: 120px; bottom: 40px; 
+        width: 60px; height: 60px; background-image: url("disciple.png"); 
         background-position: center; background-size: contain; background-repeat: no-repeat; 
-        image-rendering: pixelated; 
-        transition: opacity 0.2s, transform 0.3s; /* left transition 제거 */
+        image-rendering: pixelated; transition: opacity 0.2s, transform 0.3s;
         filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); 
     }
-    
     #player.fever-active { transform: scale(1.3); filter: drop-shadow(0 0 20px gold); }
 
-    /* 장애물 */
     .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
     .obs-cap::after { content: ''; position: absolute; left: -10%; width: 120%; height: 24px; border-radius: 4px; }
     .obs-ground.obs-cap::after { top: -12px; } .obs-ceil.obs-cap::after { bottom: -12px; }
@@ -315,17 +304,13 @@
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
 
-    /* 장애물/적군 파괴 이펙트 */
     .obstacle-explosion {
         position: absolute; z-index: 85; width: 100px; height: 100px;
         background: radial-gradient(circle, #fff, orange, transparent);
-        border-radius: 50%;
-        animation: obsExplode 0.4s ease-out forwards;
-        transform: translate(-50%, -50%); 
+        border-radius: 50%; animation: obsExplode 0.4s ease-out forwards; transform: translate(-50%, -50%); 
     }
     @keyframes obsExplode { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
-    /* 신앙심 코인 */
     .faith-coin {
         position: absolute; z-index: 88; width: 24px; height: 24px;
         background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
@@ -336,28 +321,19 @@
     }
     .faith-coin::after { content: '✝'; }
 
-    /* 적군 */
     .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
-    
-    /* 아이템 */
     .item { position: absolute; z-index: 45; width: 48px; height: 48px; image-rendering: pixelated; background-position: center; background-repeat: no-repeat; background-size: contain; animation: itemFloat 1.5s ease-in-out infinite alternate; }
     @keyframes itemFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
-    /* 투사체 */
     .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; transition: opacity 0.2s; }
     .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
     .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
-    
-    /* 플레이어 미사일 */
     .player-missile { 
         position: absolute; width: 50px; height: 24px; 
         background: linear-gradient(90deg, #00ffff, #0099ff); 
-        border-radius: 12px; 
-        box-shadow: 0 0 15px cyan, 0 0 5px white; 
-        z-index: 65; 
-        border: 2px solid #fff;
+        border-radius: 12px; box-shadow: 0 0 15px cyan, 0 0 5px white; 
+        z-index: 65; border: 2px solid #fff;
     }
-    
     .explosion-area { position: absolute; border-radius: 50%; background: rgba(255, 69, 0, 0.5); border: 2px solid orange; animation: explode 0.5s forwards; z-index: 59; }
     @keyframes explode { 0% { transform: scale(0.1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
     .enemy-laser-warning { position: absolute; height: 2px; background: rgba(255,0,0,0.5); z-index: 49; }
@@ -369,60 +345,49 @@
     @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
     #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
-    
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
     #pauseBtn { 
-        position: fixed; z-index: 900; top: 15px; right: 15px; 
-        width: 50px; height: 50px; 
-        background: #fdfaf2; 
-        border: 4px solid #3a2513; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 0 #8b4f26; 
-        display: flex; justify-content: center; align-items: center; 
-        font-size: 24px; cursor: pointer; 
-        color: #3a2513;
-        transition: transform 0.1s, box-shadow 0.1s;
+        position: fixed; z-index: 900; top: 15px; right: 15px; width: 50px; height: 50px; 
+        background: #fdfaf2; border: 4px solid #3a2513; border-radius: 12px; 
+        box-shadow: 0 4px 0 #8b4f26; display: flex; justify-content: center; align-items: center; 
+        font-size: 24px; cursor: pointer; color: #3a2513; transition: transform 0.1s, box-shadow 0.1s;
     }
     #pauseBtn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b4f26; }
-
+    
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-
-    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
+    
+    /* SKILL 버튼 1 */
+    #abilityBtn { 
+        position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; 
+        background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; 
+        font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; 
+        cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); 
+    }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
 
     #subActionBtn { 
-        position: fixed; bottom: 150px; left: 20px; 
-        width: 100px; height: 100px; 
-        border-radius: 50%;
-        border: 4px solid #fff;
-        color: white;
-        font-weight: 900;
-        font-size: 20px;
-        text-align: center;
-        display: none; 
-        justify-content: center; align-items: center; 
-        cursor: pointer; z-index: 1000; 
-        box-shadow: 0 6px 12px rgba(0,0,0,0.6);
-        transition: transform 0.1s, background-color 0.2s;
+        position: fixed; bottom: 150px; left: 20px; width: 100px; height: 100px; border-radius: 50%;
+        border: 4px solid #fff; color: white; font-weight: 900; font-size: 20px; text-align: center;
+        display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; 
+        box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.1s, background-color 0.2s;
     }
     #subActionBtn:active { transform: scale(0.9); }
     #subActionBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
-    
     .btn-attack { background-color: #D32F2F !important; }
     .btn-defence { background-color: #1976D2 !important; }
 
     #dailyMissionBox { position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
     .mission-done { color: #4caf50; text-decoration: line-through; }
-
+    
     #bossContainer { position: absolute; right: -200px; top: 50%; width: 120px; height: 120px; z-index: 55; display: none; transition: right 1s ease-out; }
     #bossBody { width: 100%; height: 100%; background: url('boss.png') no-repeat center/contain; image-rendering: pixelated; filter: drop-shadow(0 0 10px red); animation: bossFloat 2s ease-in-out infinite; }
     .boss-charging { filter: drop-shadow(0 0 20px yellow) !important; transform: scale(1.1); }
     .boss-dashing { filter: drop-shadow(0 0 20px #ff0000) !important; }
     @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-    #bossHpBar { position: absolute; top: -20px; left: 0; width: 100%; height: 10px; background: #333; border: 2px solid #000; border-radius: 5px; overflow: hidden; }
+    #bossHpBar { position: absolute; top: -20px; left: 0; width: 100%; height: 100%; background: #333; border: 2px solid #000; border-radius: 5px; overflow: hidden; }
     #bossHpFill { width: 100%; height: 100%; background: #d32f2f; transition: width 0.2s; }
     #bossWarning { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000; display: none; z-index: 2000; animation: blink 0.5s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -450,15 +415,21 @@
 <div id="gameArea">
   <div id="startGuide" class="modal-bg" style="display:flex;">
     <div class="modal-box">
-      <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법</div>
+      <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법 (Remastered 3.0)</div>
       <div style="text-align:left; font-size:15px; line-height:1.6;">
         • <b>점프:</b> 화면 터치 / Space<br>
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
         [업데이트]<br>
-        ⚔️ <b>하휘:</b> 전방위 무한 검제 (직진 난사)<br>
-        🛡️ <b>지혜:</b> 자율 비행 발키리 & 변신<br>
-        ⏳ <b>준:</b> 시공간 초월 & 어린 양의 축복
+        🦍 <b>노엘:</b> 거대화 & 에너지파 (1버튼)<br>
+        ⚡ <b>전찬:</b> 해머 소환 & 리얼 번개<br>
+        ⚔️ <b>하휘:</b> 인피니티 스톤 & 모래폭풍<br>
+        ⏳ <b>준:</b> 시공간 미니게임 & 포탈<br>
+        🛡️ <b>지혜:</b> 발키리 & 정화 치유<br>
+        🤖 <b>강희:</b> 건담 변신 & 판넬<br>
+        🎂 <b>스테파니:</b> 케이크 월드 & 힐<br>
+        👻 <b>예준:</b> 도플갱어 & 비행<br>
+        🎵 <b>지은:</b> 멜로디 웨이브 & 수호
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -468,7 +439,22 @@
   <div id="bgLayer2" class="bg-layer"></div>
   <div id="bgLayer3" class="bg-layer"></div>
   <div id="speedLines"></div> 
-  <div id="timeTunnelBg" class="time-tunnel-bg"></div> <div id="ground"></div> <div id="player"></div>
+  <div id="cakeBgLayer" class="cake-bg-layer"></div>
+  <div id="melodyWaveBg" class="melody-wave-bg"></div>
+
+  <div id="timeTunnelBg" class="time-tunnel-bg">
+     <div id="junMiniGameUI">
+         <div id="junMiniGameMsg">TAP TO BOOST!</div>
+         <div id="junDistanceDisplay">0m</div>
+     </div>
+  </div> 
+  <div id="ground"></div> 
+  
+  <div id="player">
+    <div id="noelAura" class="noel-aura"></div>
+    <div id="gundamEffect" class="gundam-mode-effect"></div>
+    <div id="yejunWing" class="yejun-wing"></div>
+  </div>
 
   <div id="flashEffect"></div>
 
@@ -533,14 +519,10 @@
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
 
 <script>
-  // [보안] F12 및 개발자 도구 단축키 차단
+  // [보안] F12 및 개발자 도구 차단
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || 
-       (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-       (e.ctrlKey && e.shiftKey && e.key === 'J') || 
-       (e.ctrlKey && e.key === 'U')) {
-      e.preventDefault();
-      alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
+    if (e.key === 'F12' || (e.ctrlKey && (e.shiftKey && (e.key === 'I' || e.key === 'J') || e.key === 'U'))) {
+      e.preventDefault(); alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
     }
   });
 
@@ -549,18 +531,9 @@
   const sounds = {};
   ['bgm', 'jump', 'hit', 'item', 'parry', 'clear'].forEach(name => {
     sounds[name] = new Audio(`${name}.mp3`);
-    if(name==='bgm') {
-        sounds[name].loop = true;
-        sounds[name].volume = 0.5; 
-    }
+    if(name==='bgm') { sounds[name].loop = true; sounds[name].volume = 0.5; }
   });
-
-  function playSound(name) {
-    if(sounds[name]) {
-        sounds[name].currentTime = 0;
-        sounds[name].play().catch(()=>{});
-    }
-  }
+  function playSound(name) { if(sounds[name]) { sounds[name].currentTime = 0; sounds[name].play().catch(()=>{}); } }
 
   let id = localStorage.getItem("run_id") || "test_user";
   let name = localStorage.getItem("run_name") || "Tester";
@@ -571,7 +544,6 @@
     if(!saveData.ownedSkins) return false;
     return hiddenSkins.every(skin => saveData.ownedSkins.includes(skin));
   }
-  
   const collectionBuff = hasFullCollection();
 
   let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
@@ -582,24 +554,30 @@
 
   let life = 10 + (saveData.extraLife || 0);
   let maxLife = 10 + (saveData.extraLife || 0);
-
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // 스킨 데이터
+  // 스킨 데이터 설정 (3.0 리마스터 기준)
   const SKIN_DATA = {
-    default: { type: "none" }, noel: { type: "Active", cd: 60 }, jeonchan: { type: "Passive" },
-    haeun: { type: "Passive", cd: 30 }, jaeguk: { type: "Active", cd: 70 }, 
-    hahwi: { type: "Active", cd: 65 }, 
-    jihye: { type: "Active", cd: 60 }, 
-    jun: { type: "Active", cd: 90 },
-    stephanie: { type: "Passive" },
-    yejun: { type: "Active", cd: 180 }, ganghui: { type: "Passive", cd: 20 }, jieun: { type: "Active", cd: 120 }
+    default: { type: "none" }, 
+    noel: { type: "Hybrid", cd: 60 },      // Active:에너지파, Passive:거대화
+    jeonchan: { type: "Active", cd: 60 },  // Active:해머, Passive:번개
+    haeun: { type: "Passive", cd: 30 },    // Passive:쉴드/힐
+    jaeguk: { type: "Active", cd: 70 },    // Active:보바, Passive:부활
+    hahwi: { type: "Active", cd: 60 },     // Active:모래폭풍, Passive:스톤
+    jihye: { type: "Active", cd: 60 },     // Active:발키리, Passive:힐
+    jun: { type: "Active", cd: 90 },       // Active:포탈게임, Passive:양
+    stephanie: { type: "Active", cd: 70 }, // Active:케이크, Passive:하트
+    yejun: { type: "Active", cd: 60 },     // Active:비행, Passive:도플갱어
+    ganghui: { type: "Active", cd: 60 },   // Active:건담, Passive:판넬
+    jieun: { type: "Active", cd: 60 }      // Active:음계, Passive:쉴드(노엘소환)
   };
 
   const abilityBtn = document.getElementById('abilityBtn');
-  if(SKIN_DATA[currentSkin].type === "Active") abilityBtn.style.display = 'flex';
+  if(SKIN_DATA[currentSkin] && (SKIN_DATA[currentSkin].type === "Active" || SKIN_DATA[currentSkin].type === "Hybrid")) {
+      abilityBtn.style.display = 'flex';
+  }
 
   document.getElementById("lifeText").innerText = life;
   document.getElementById("faithText").innerText = faith;
@@ -612,79 +590,62 @@
   else player.style.backgroundImage = `url('disciple.png')`;
 
   let buffArea = document.getElementById("buffArea");
-  
-  if(collectionBuff) {
-    buffArea.innerHTML += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스 (Faith +10%)</div>`;
-  }
+  if(collectionBuff) buffArea.innerHTML += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스</div>`;
 
   let speedLines = document.getElementById("speedLines");
   let timeTunnelBg = document.getElementById("timeTunnelBg");
 
-  function createEl(tag, id, parent, before) {
-    let el = document.createElement(tag); el.id = id;
-    if(before) parent.insertBefore(el, before); else parent.appendChild(el);
-    return el;
-  }
-
   let playerY = 40; let velocity = 0; 
   let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
-    
-  let targetY = 0;
-  let distance = 0;
-  let obstacles = []; let projectiles = []; 
-  let enemies = []; let playerMissiles = []; 
-  let faithCoins = [];
+  let targetY = 0; let distance = 0;
+  let obstacles = []; let projectiles = []; let enemies = []; let playerMissiles = []; let faithCoins = [];
+  let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
   let running = false; let invincible = false;
 
   const BASE_SPEED = 170; let gameSpeed = BASE_SPEED;
   let lastTime = performance.now();
   let nextQuizDistance = 35; 
-    
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let enemySpawnTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
-  let abilityCD = 0;
+  let abilityCD = 0; 
   let missionUpdateTimer = 0;
-  
-  // 상태 변수들
-  let jeonchanTimer = 0;
-  let haeunLifeTimer = 0;
-  let haeunShieldTimer = 0;
-  let haeunShieldActive = false;
-  let jaegukRevivedOnce = false; 
-  let bobas = []; 
-  let hahwiSwords = []; 
-  let hahwiFireInterval = null; 
-  let jihyeUnits = []; 
-  let jihyeMissiles = []; 
-  let jihyePassiveTimer = 0; 
-  let jihyeSphereTracker = null; // [수정 요청 3 관련] 구체 추적 인터벌
-  let junLambTimer = 0;
-  let isJunTimeTravel = false;
+
+  // === 각 스킨별 상태 변수 ===
+  let jeonchanTimer = 0; let jeonchanLightningTimer = 0; 
+  let haeunLifeTimer = 0; let haeunShieldTimer = 0; let haeunShieldActive = false;
+  let jaegukRevivedOnce = false; let bobas = [];
+  let hahwiStones = []; let hahwiOrbitAngle = 0; 
+  let jihyeUnits = []; let jihyeMissiles = []; let jihyePassiveTimer = 0; let jihyeSphereTracker = null;
+  let junLambTimer = 0; let isJunTimeTravel = false; let junMiniGameClicks = 0; let junMiniGameDist = 0;
+  let ganghuiFunnels = []; let ganghuiLaserTimer = 0; let ganghuiPassiveTimer = 0;
+  let stephanieCakes = []; let stephanieBgActive = false; let stephaniePassiveTimer = 0;
+  let yejunClones = []; let yejunPassiveTimer = 0;
+  let jieunNotes = []; let jieunPassiveTimer = 0; // 노엘 수호
+  let noelPassiveTimer = 0; // 노엘 거대화(패시브)
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
 
-  let items = []; let combo = 0; let obstacleSurviveCount = 0; let rankingSaved = false;
-  let activeEffects = { turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, summon: 0, magnet: 0, noelLaser: 0, bobaTime: 0, hahwiMode: 0, jihyeSquad: 0, junTravel: 0 };
+  let activeEffects = { 
+      turbo: 0, invincible: 0, slow: 0, fly: 0, revive: 0, 
+      summon: 0, magnet: 0, noelLaser: 0, noelGiant: 0,
+      bobaTime: 0, hahwiMode: 0, jihyeSquad: 0, 
+      ganghuiMode: 0, stephanieWorld: 0, jieunWave: 0 
+  };
 
-  let feverGauge = 0;
-  const MAX_FEVER = 100;
-  let isFeverTime = false;
-
-  let isBossBattle = false;
-  let nextBossTrigger = 200; 
-  let bossLevel = 0;
+  let feverGauge = 0; const MAX_FEVER = 100; let isFeverTime = false;
+  let isBossBattle = false; let nextBossTrigger = 200; let bossLevel = 0;
   let boss = { hp: 6, maxHp: 6, x: 0, y: 50, vy: 0.5, state: 'idle', shootTimer: 0, actionTimer: 0 }; 
   let bossContainer = document.getElementById('bossContainer');
   let bossBody = document.getElementById('bossBody');
   let bossHpFill = document.getElementById('bossHpFill');
-  
   let subActionBtn = document.getElementById('subActionBtn');
   let shieldCooldown = 0;
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
+  // === 이펙트 및 유틸 ===
   function spawnParticles(x, y, type) {
     const colors = type==='item' ? ['#ffd700','#fff'] : type==='spark' ? ['#ff4500','#ff8c00'] : ['#8b4513','#a0522d'];
     for(let i=0; i<8; i++) {
@@ -694,31 +655,23 @@
         p.style.width = (Math.random()*6+4)+'px'; p.style.height = p.style.width;
         p.style.left = x + 'px'; p.style.top = y + 'px';
         gameArea.appendChild(p);
-        const tx = (Math.random()-0.5) * 100;
-        const ty = (Math.random()-0.5) * 100;
+        const tx = (Math.random()-0.5) * 100; const ty = (Math.random()-0.5) * 100;
         p.animate([ { transform: `translate(0,0)` }, { transform: `translate(${tx}px, ${ty}px)` } ], { duration: 600, fill: 'forwards' }).onfinish = () => p.remove();
     }
   }
-
   function spawnExplosionEffect(x, y) {
-      const ex = document.createElement('div');
-      ex.classList.add('obstacle-explosion');
-      ex.style.left = x + 'px';
-      ex.style.top = y + 'px';
-      gameArea.appendChild(ex);
-      setTimeout(() => ex.remove(), 400);
+      const ex = document.createElement('div'); ex.classList.add('obstacle-explosion');
+      ex.style.left = x + 'px'; ex.style.top = y + 'px';
+      gameArea.appendChild(ex); setTimeout(() => ex.remove(), 400);
       playSound('hit');
   }
-
+  // [수정] 스킬로 인한 코인은 자동 획득 X (autoCollect 인자 활용)
   function spawnFaithCoins(x, y, count, manualCollection = false, autoCollect = false) {
       for(let i=0; i<count; i++) {
           const coin = document.createElement('div');
           coin.classList.add('faith-coin');
-          coin.isManual = manualCollection; 
-          coin.isAutoCollect = autoCollect; 
-          
+          coin.isManual = manualCollection; coin.isAutoCollect = autoCollect; 
           const spreadMult = (!manualCollection && !autoCollect) ? 5 : 1;
-
           const spreadX = (Math.random() - 0.5) * 100 * spreadMult;
           const spreadY = (Math.random() - 0.5) * 100 * spreadMult;
           coin.style.left = x + 'px'; coin.style.top = y + 'px';
@@ -726,1030 +679,470 @@
           gameArea.appendChild(coin); faithCoins.push(coin);
       }
   }
-
-  function createHaeunShield() {
-      const shield = document.createElement('div');
-      shield.id = 'haeunShield';
-      shield.className = 'haeun-shield';
-      player.appendChild(shield);
+  function showFloatText(text) { 
+      const r=player.getBoundingClientRect(); const e=document.createElement("div"); 
+      e.classList.add("float-text"); e.innerText=text; 
+      e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; 
+      document.body.appendChild(e); setTimeout(()=>e.remove(),1000); 
   }
-
-  function removeHaeunShield() {
-      const shield = document.getElementById('haeunShield');
-      if(shield) shield.remove();
-  }
-
   function showHealEffect() {
-      const heal = document.createElement('div');
-      heal.className = 'heal-effect-visual';
-      heal.style.left = '50%';
-      heal.style.top = '50%';
-      player.appendChild(heal); 
+      const heal = document.createElement('div'); heal.className = 'heal-effect-visual';
+      heal.style.left = '50%'; heal.style.top = '50%'; player.appendChild(heal); 
       setTimeout(()=>heal.remove(), 600);
   }
 
-  function triggerJieunSkill() {
-      const noel = document.createElement('div');
-      noel.classList.add('flying-noel', 'fly-in');
-      const startX = window.innerWidth + 50;
-      const startY = -50;
-      noel.style.left = startX + 'px';
-      noel.style.top = startY + 'px';
-      gameArea.appendChild(noel);
+  // === 스킬 로직 (Active/Passive) ===
 
-      requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-             const pRect = player.getBoundingClientRect();
-             noel.style.left = (pRect.left + 5) + 'px';
-             noel.style.top = (pRect.top + 5) + 'px';
-          });
-      });
+  // 1. 전찬 (해머, 번개)
+  function triggerJeonchanSkill() {
+      showFloatText("🔨 심판의 망치!");
+      const hammer = document.createElement('div');
+      hammer.className = 'hammer-unit';
+      hammer.style.left = '-200px'; hammer.style.top = '20%';
+      const trail = document.createElement('div'); trail.className = 'hammer-trail';
+      hammer.appendChild(trail); gameArea.appendChild(hammer);
+      
+      // 20초간 횡단
+      hammer.animate([
+          { left: '-200px', transform: 'rotate(0deg)' },
+          { left: '120vw', transform: 'rotate(360deg)' }
+      ], { duration: 20000, easing: 'linear' }).onfinish = () => { hammer.remove(); gameArea.classList.remove('shake-screen'); };
+      
+      gameArea.classList.add('shake-screen');
+      // 해머 충돌은 gameLoop에서 처리
+      // 해머 객체 관리를 위해 전역 배열 X, DOM 요소 조회로 처리하거나 dataset 활용
+      hammer.id = 'activeHammer';
+  }
 
+  // 2. 하휘 (모래폭풍, 스톤)
+  function triggerHahwiSkill() {
+      showFloatText("🏜️ 사막의 폭풍!");
+      activeEffects.hahwiMode = 15;
+      activeEffects.invincible = 15; // 무적 추가
+      gameArea.classList.add('sandstorm-mode');
+      playSound('clear');
+  }
+
+  // 3. 지혜 (발키리) - 원본 유지
+  function triggerJihyeSkill() {
+      showFloatText("✨ 발키리 강림!");
+      const sphere = document.createElement('div'); sphere.className = 'jihye-transform-sphere';
+      gameArea.appendChild(sphere);
+      if(jihyeSphereTracker) clearInterval(jihyeSphereTracker);
+      jihyeSphereTracker = setInterval(() => {
+           const pRect = player.getBoundingClientRect();
+           sphere.style.left = (pRect.left + 30) + 'px'; sphere.style.top = (pRect.top + 30) + 'px';
+      }, 16);
+      activeEffects.invincible = 2.5; 
       setTimeout(() => {
-          noel.remove();
-          activateJieunBuff();
-      }, 800);
+          clearInterval(jihyeSphereTracker); sphere.remove();
+          player.style.backgroundImage = `url('Skill_JH.png')`;
+          activeEffects.jihyeSquad = 20; 
+          for(let i=1; i<=5; i++) {
+              const unit = document.createElement('div'); unit.className = 'jihye-unit';
+              unit.style.backgroundImage = `url('Skill_JH${i}.png')`; 
+              unit.style.left = '-100px'; unit.style.top = randBetween(50, window.innerHeight/2) + 'px';
+              unit.tx = (window.innerWidth/2) + randBetween(-100, 100);
+              unit.ty = (window.innerHeight/2) + randBetween(-200, 0);
+              unit.moveTimer = 0; unit.fireTimer = 0;
+              gameArea.appendChild(unit); jihyeUnits.push(unit);
+          }
+      }, 2000);
   }
-
-  function activateJieunBuff() {
-      const flash = document.getElementById('flashEffect');
-      flash.style.opacity = '0.8';
-      setTimeout(() => flash.style.opacity = '0', 100);
-      playSound('item'); 
-
-      player.style.backgroundImage = `url('Skill_NJ.png')`;
-      
-      const shield = document.createElement('div');
-      shield.id = 'jieunShield';
-      shield.className = 'jieun-shield';
-      player.appendChild(shield);
-
-      activeEffects.summon = 20; 
-      showFloatText("🛡️ 노엘 소환!");
-  }
-
-  function deactivateJieunBuff() {
-      const flash = document.getElementById('flashEffect');
-      flash.style.opacity = '0.8';
-      setTimeout(() => flash.style.opacity = '0', 100);
-
-      player.style.backgroundImage = `url('skin_jieun.png')`;
-
-      const shield = document.getElementById('jieunShield');
-      if(shield) shield.remove();
-
-      const noel = document.createElement('div');
-      noel.classList.add('flying-noel', 'fly-out'); 
-      
+  function triggerJihyeHeal() {
+      const healer = document.createElement('div'); healer.className = 'jihye-healer';
       const pRect = player.getBoundingClientRect();
-      noel.style.left = pRect.left + 'px';
-      noel.style.top = pRect.top + 'px';
-      gameArea.appendChild(noel);
-
-      requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-              noel.style.left = (window.innerWidth + 200) + 'px';
-              noel.style.top = '-200px';
-          });
-      });
-      
-      setTimeout(() => noel.remove(), 800);
+      healer.style.left = pRect.left + 'px'; healer.style.top = '-100px';
+      gameArea.appendChild(healer);
+      const pillar = document.createElement('div'); pillar.className = 'holy-light-pillar';
+      pillar.style.left = (pRect.left + 30) + 'px'; // 중앙 정렬
+      gameArea.appendChild(pillar);
+      requestAnimationFrame(() => { healer.style.top = (pRect.top - 80) + 'px'; });
+      setTimeout(() => {
+          if(life < maxLife + 5) { life = Math.min(life + 2, maxLife + 5); document.getElementById("lifeText").innerText = life; showHealEffect(); showFloatText("💖 성녀의 치유"); }
+          healer.style.top = '-200px';
+          setTimeout(() => { healer.remove(); pillar.remove(); }, 1500);
+      }, 2000); // 2배 머무름
   }
 
-  function jump() {
-    if (!running) return;
-    if (activeEffects.turbo > 0 || activeEffects.fly > 0) return;
-    velocity = jumpPower;
-    playSound('jump');
-  }
-
-  document.addEventListener("touchstart", (e) => {
-      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn')) return;
-      if (!running) return;
-      e.preventDefault(); jump();
-  }, {passive: false});
-
-  document.addEventListener("mousedown", (e) => {
-       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn')) return;
-       if (!running) return;
-       jump();
-  });
-  
-  document.addEventListener("keydown", e => {
-    if (e.code === "Space") { e.preventDefault(); if(!e.repeat) jump(); }
-    if (e.code === "ArrowUp") { e.preventDefault(); jump(); }
-    if (e.code === "KeyA") useAbility();
-    if (e.code === "KeyS") handleSubAction(); 
-  });
-    
-  window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
-  window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
-
-  function togglePause() {
-      if(!running) return; 
-      running = false;
-      document.getElementById('pauseModal').style.display = 'flex';
-  }
-
-  function resumeGame() {
-      document.getElementById('pauseModal').style.display = 'none';
-      running = true;
-      lastTime = performance.now(); 
-      requestAnimationFrame(gameLoop);
-  }
-
-  function exitToMenu() {
-      window.location.href = "/TrapGame/menu.html";
-  }
-
-  function handleSubAction(e) {
-      if(e) { e.stopPropagation(); e.preventDefault(); }
-      if (!running) return;
-      if (isBossBattle) useShield();
-      else if (distance >= 200) playerShoot();
-  }
-
-  function useShield() {
-    if (shieldCooldown > 0) return;
-    shieldCooldown = 0.5;
-    subActionBtn.classList.add('cooldown');
-    let reflected = false;
-    projectiles.forEach(p => {
-        if (p.isBossMissile && !p.isReflected) {
-            const pRect = p.getBoundingClientRect();
-            const plRect = player.getBoundingClientRect();
-            const dist = Math.hypot((pRect.left) - (plRect.left), (pRect.top) - (plRect.top));
-            if (dist < 150) {
-                p.isReflected = true;
-                p.classList.remove('boss-missile');
-                p.classList.add('reflected-missile');
-                p.vx = Math.abs(p.vx) * 1.5; p.vy = -p.vy * 0.5; 
-                reflected = true;
-                spawnParticles(pRect.left, pRect.top, 'spark');
-            }
-        }
-    });
-    if (reflected) { showFloatText("⚔️ 반사 성공!"); playSound('parry'); }
-    else showFloatText("🛡️ 방어!");
-  }
-
-  function playerShoot() {
-      const m = document.createElement("div"); m.classList.add("player-missile");
+  // 4. 준 (포탈 미니게임)
+  function triggerJunSkill() {
+      if(isJunTimeTravel) return;
+      isJunTimeTravel = true; junMiniGameClicks = 0; junMiniGameDist = 0;
+      showFloatText("⏳ 타임 워프 개시!");
+      const portal = document.createElement('div'); portal.className = 'time-portal';
       const pRect = player.getBoundingClientRect();
-      const startX = pRect.right - 10;
-      const startY = pRect.top + (pRect.height / 2) - 12;
-      m.style.left = startX + "px"; m.style.top = startY + "px"; 
-      gameArea.appendChild(m); playerMissiles.push(m);
+      portal.style.left = (pRect.left + 30) + 'px'; portal.style.top = (pRect.top + 30) + 'px';
+      gameArea.appendChild(portal);
+      requestAnimationFrame(() => portal.classList.add('active'));
+      setTimeout(() => {
+          timeTunnelBg.style.display = 'flex';
+          document.getElementById('junMiniGameUI').style.display = 'block';
+          setTimeout(() => { timeTunnelBg.style.opacity = '1'; }, 50);
+          player.style.opacity = '0';
+          let timeLeft = 10;
+          let timerInterval = setInterval(() => {
+              timeLeft -= 0.1;
+              document.querySelectorAll('.tunnel-star').forEach(s => s.style.animationDuration = Math.max(0.1, 0.5 - (junMiniGameClicks * 0.01)) + 's');
+              if(timeLeft <= 0) { clearInterval(timerInterval); finishJunMiniGame(portal); }
+          }, 100);
+      }, 1000);
+  }
+  function finishJunMiniGame(portal) {
+      let finalBonus = Math.floor(Math.min(junMiniGameDist, 50)); // Max 50m
+      distance += finalBonus; showFloatText(`⏩ +${finalBonus}m 워프 성공!`);
+      timeTunnelBg.style.opacity = '0';
+      setTimeout(() => {
+          timeTunnelBg.style.display = 'none'; player.style.opacity = '1';
+          isJunTimeTravel = false; portal.classList.remove('active');
+          setTimeout(()=>portal.remove(), 500);
+      }, 500);
+  }
+  // 준 미니게임 입력
+  timeTunnelBg.addEventListener('touchstart', handleJunTap);
+  timeTunnelBg.addEventListener('mousedown', handleJunTap);
+  document.addEventListener('keydown', (e) => { if(isJunTimeTravel && e.code === 'Space') handleJunTap(e); });
+  function handleJunTap(e) {
+      if(!isJunTimeTravel) return;
+      if(e.type !== 'keydown') { e.preventDefault(); e.stopPropagation(); }
+      junMiniGameClicks++;
+      let boost = 1; // 1터치 1m
+      junMiniGameDist += boost;
+      document.getElementById('junDistanceDisplay').innerText = Math.floor(junMiniGameDist) + "m";
       playSound('jump');
+      const msg = document.getElementById('junMiniGameMsg');
+      msg.style.transform = "scale(1.2)"; setTimeout(()=>msg.style.transform="scale(1)", 100);
   }
 
+  // 5. 강희 (건담)
+  function triggerGanghuiSkill() {
+      showFloatText("🤖 모빌슈트 전개!");
+      activeEffects.ganghuiMode = 15; activeEffects.invincible = 15;
+      document.getElementById('gundamEffect').style.display = 'block';
+      // 판넬 6개 즉시 소환
+      for(let i=0; i<6; i++) {
+          const f = document.createElement('div'); f.className = 'funnel-unit';
+          f.angle = i * (Math.PI/3);
+          gameArea.appendChild(f); ganghuiFunnels.push(f);
+      }
+      playSound('clear');
+  }
+
+  // 6. 스테파니 (케이크)
+  function triggerStephanieSkill() {
+      showFloatText("🎂 달콤한 초대!");
+      activeEffects.stephanieWorld = 20;
+      stephanieBgActive = true;
+      document.getElementById('cakeBgLayer').style.display = 'block';
+      setTimeout(() => document.getElementById('cakeBgLayer').style.opacity = '1', 100);
+  }
+
+  // 7. 예준 (비행)
+  function triggerYejunSkill() {
+      showFloatText("👻 팬텀 플라이트!");
+      activeEffects.fly = 20;
+      document.getElementById('yejunWing').style.display = 'block';
+  }
+
+  // 8. 지은 (멜로디 웨이브)
+  function triggerJieunSkill() {
+      showFloatText("🎵 힐링 멜로디!");
+      activeEffects.jieunWave = 10;
+      document.getElementById('melodyWaveBg').style.display = 'block';
+      let waveInt = setInterval(() => {
+          if(activeEffects.jieunWave <= 0) { clearInterval(waveInt); return; }
+          spawnJieunNote();
+      }, 300);
+  }
+  function spawnJieunNote() {
+      const note = document.createElement('div'); note.className = 'jieun-note';
+      note.innerText = ['♪', '♬', '♩'][Math.floor(Math.random()*3)];
+      const pRect = player.getBoundingClientRect();
+      note.style.left = (pRect.left + 30) + 'px'; note.style.top = (pRect.top) + 'px';
+      note.style.color = `hsl(${Math.random()*360}, 100%, 70%)`;
+      note.vx = 400; note.vy = randBetween(-100, 100);
+      gameArea.appendChild(note); jieunNotes.push(note);
+  }
+
+  // 9. 재국 (보바)
   function triggerJaegukBobas() {
       showFloatText("🧋 버블티 파워!");
       activeEffects.bobaTime = 20; 
       for(let i=0; i<5; i++) {
-          const b = document.createElement('div');
-          b.className = 'boba-unit';
-          b.angle = (i / 5) * Math.PI * 2; 
-          b.radius = 60;
-          b.targetObs = null; 
-          gameArea.appendChild(b);
-          bobas.push(b);
+          const b = document.createElement('div'); b.className = 'boba-unit';
+          b.angle = (i / 5) * Math.PI * 2; b.radius = 60; 
+          gameArea.appendChild(b); bobas.push(b);
       }
       playSound('item');
   }
 
-  // === [수정 요청 1, 2 반영] 하휘 스킨 스킬 구현 (직진형 난사) ===
-  function triggerHahwiSkill() {
-    showFloatText("⚔️ 무한의 검제 (Overdrive)!");
-    activeEffects.hahwiMode = 25; 
-    
-    const portal = document.createElement('div');
-    portal.id = 'hahwiPortal';
-    portal.className = 'hahwi-portal';
-    // [수정 요청 1 반영] 내부 lightning 요소 제거
-
-    gameArea.appendChild(portal);
-
-    // [수정 요청 2 반영] 매우 빠른 속도로 다량의 검 발사
-    if(hahwiFireInterval) clearInterval(hahwiFireInterval);
-    hahwiFireInterval = setInterval(() => {
-        if(activeEffects.hahwiMode <= 0 || !running) {
-            clearInterval(hahwiFireInterval);
-            return;
-        }
-        fireHahwiSword();
-    }, 50); // 0.05초마다 발사 (매우 빠름)
-    
-    playSound('clear');
-  }
-
-  function fireHahwiSword() {
-      const portal = document.getElementById('hahwiPortal');
-      if(!portal) return;
-      const pRect = portal.getBoundingClientRect();
-
-      // [수정 요청 2 반영] 한 번에 여러 개의 검을 발사 (50개는 너무 많아 렉 유발 가능, 5개로 조정하여 빈도를 높임)
-      for(let i=0; i<5; i++) {
-          const s = document.createElement('div');
-          s.className = 'hahwi-sword';
-          
-          const hue = Math.floor(Math.random() * 360);
-          s.style.color = `hsl(${hue}, 100%, 70%)`; 
-          s.style.background = `linear-gradient(90deg, #fff, hsl(${hue}, 100%, 80%))`;
-          s.style.width = randBetween(40, 80) + 'px'; // 길이 랜덤
-
-          // 포탈 높이 내에서 랜덤한 수직 위치
-          const startY = pRect.top + randBetween(0, pRect.height);
-          // 포탈의 오른쪽 끝에서 시작
-          const startX = pRect.right - 20;
-          
-          s.style.left = startX + 'px';
-          s.style.top = startY + 'px';
-          
-          // [수정 요청 2 반영] 왼쪽으로 직진
-          s.vx = -1500; // 매우 빠른 속도
-          s.vy = 0;
-
-          gameArea.appendChild(s);
-          hahwiSwords.push(s);
-      }
-  }
-
-  // === [수정 요청 3 반영] 지혜 스킨 스킬 구현 (구체 추적 추가) ===
-  function triggerJihyeSkill() {
-      showFloatText("✨ 발키리 변신!");
-      
-      // 1. 변신 이펙트 (빛의 구체)
-      const sphere = document.createElement('div');
-      sphere.className = 'jihye-transform-sphere';
-      gameArea.appendChild(sphere);
-
-      // [수정 요청 3 반영] 구체가 플레이어를 따라다니도록 인터벌 설정
-      if(jihyeSphereTracker) clearInterval(jihyeSphereTracker);
-      jihyeSphereTracker = setInterval(() => {
-           const currentPRect = player.getBoundingClientRect();
-           sphere.style.left = (currentPRect.left + 30) + 'px';
-           sphere.style.top = (currentPRect.top + 30) + 'px';
-      }, 16); // 약 60fps로 추적
-
-      // 2초간 변신 대기 (무적 처리)
-      activeEffects.invincible = 2.5;
-      
-      setTimeout(() => {
-          clearInterval(jihyeSphereTracker); // 추적 종료
-          sphere.remove();
-          // 변신 완료
-          player.style.backgroundImage = `url('Skill_JH.png')`;
-          
-          // 화면 반짝임
-          const flash = document.getElementById('flashEffect');
-          flash.style.opacity = '1';
-          setTimeout(() => flash.style.opacity = '0', 300);
-          playSound('clear');
-
-          activeEffects.jihyeSquad = 20; 
-
-          // 부대 소환
-          for(let i=1; i<=5; i++) {
-              const unit = document.createElement('div');
-              unit.className = 'jihye-unit';
-              unit.style.backgroundImage = `url('Skill_JH${i}.png')`;
-              unit.style.left = '-100px';
-              unit.style.top = randBetween(50, window.innerHeight/2) + 'px';
-              unit.tx = (window.innerWidth / 2) + randBetween(-100, 100);
-              unit.ty = (window.innerHeight / 2) + randBetween(-200, 0);
-              unit.moveTimer = 0;
-              unit.fireTimer = 0;
-              gameArea.appendChild(unit);
-              jihyeUnits.push(unit);
-          }
-      }, 2000);
-  }
-
-  function endJihyeSkill() {
-      player.style.backgroundImage = `url('skin_jihye.png')`;
-      jihyeUnits.forEach(u => {
-          u.style.transition = "left 1s ease-in, top 1s ease-in";
-          u.style.left = '-200px'; 
-          setTimeout(() => u.remove(), 1000);
-      });
-      jihyeUnits = [];
-  }
-
-  // 지혜 패시브 힐 이펙트
-  function triggerJihyeHeal() {
-      const healer = document.createElement('div');
-      healer.className = 'jihye-healer';
-      const pRect = player.getBoundingClientRect();
-      healer.style.left = '-100px';
-      healer.style.top = '-100px';
-      gameArea.appendChild(healer);
-      
-      const pillar = document.createElement('div');
-      pillar.className = 'holy-light-pillar';
-      gameArea.appendChild(pillar);
-
-      requestAnimationFrame(() => {
-         healer.style.left = (pRect.left + 10) + 'px';
-         healer.style.top = (pRect.top - 80) + 'px';
-      });
-
-      setTimeout(() => {
-          life = Math.min(life + 2, maxLife + 5); 
-          document.getElementById("lifeText").innerText = life;
-          showFloatText("💖 천사의 치유 (+2)");
-          playSound('item');
-          
-          healer.style.left = (window.innerWidth + 100) + 'px';
-          healer.style.top = '-200px';
-          setTimeout(() => {
-              healer.remove(); 
-              pillar.remove();
-          }, 1500);
-      }, 1000);
-  }
-
-  // === [수정 요청 4 반영] 준 스킨 스킬 구현 (포탈 비주얼 및 등장 연출 개선) ===
-  function triggerJunSkill() {
-      if(isJunTimeTravel) return;
-      isJunTimeTravel = true;
-      showFloatText("⏳ 시공간 도약!");
-
-      // 1. 개선된 포탈 생성
-      const portal = document.createElement('div');
-      portal.className = 'time-portal';
-      const pRect = player.getBoundingClientRect();
-      portal.style.left = (pRect.left + 150) + 'px';
-      portal.style.top = (pRect.top + 30) + 'px';
-      gameArea.appendChild(portal);
-
-      // 2. 플레이어 포탈로 빨려들어감
-      player.style.transition = "left 0.5s, top 0.5s, transform 0.5s ease-in";
-      player.style.left = (pRect.left + 150) + 'px';
-      player.style.top = (pRect.top + 30) + 'px';
-      player.style.transform = "scale(0) rotate(360deg)";
-      
-      setTimeout(() => {
-          // 3. 화면 하얗게 & 시공간 배경
-          const flash = document.getElementById('flashEffect');
-          flash.style.opacity = '1';
-          flash.style.transition = "opacity 2s";
-          
-          timeTunnelBg.style.display = 'block';
-          
-          for(let i=0; i<50; i++) {
-              let star = document.createElement('div');
-              star.className = 'tunnel-star';
-              star.style.top = Math.random()*100 + '%';
-              star.style.animationDuration = (0.2 + Math.random()*0.5) + 's';
-              timeTunnelBg.appendChild(star);
-          }
-
-          setTimeout(() => {
-              flash.style.opacity = '0';
-              timeTunnelBg.style.opacity = '1';
-              distance += 70;
-              
-              setTimeout(() => {
-                  // 5. 탈출 연출 (포탈에서 나옴)
-                  timeTunnelBg.style.opacity = '0';
-                  // 포탈 재배치
-                  portal.style.left = '150px'; 
-                  portal.style.top = '50%';
-
-                  // 플레이어 포탈 중앙에 배치 및 스케일 0
-                  player.style.transition = 'none';
-                  player.style.left = '150px';
-                  player.style.top = '50%';
-                  player.style.transform = 'scale(0)';
-                  
-                  requestAnimationFrame(()=>{
-                      // 플레이어 등장 애니메이션
-                      player.style.transition = "transform 0.5s ease-out, left 0.5s, top 0.5s";
-                      player.style.transform = 'scale(1)';
-                      player.style.left = '120px'; // 원래 위치로 복귀
-                      // top은 메인 루프의 중력에 의해 자연스럽게 맞춰짐
-                  });
-                  
-                  setTimeout(() => {
-                      timeTunnelBg.style.display = 'none';
-                      timeTunnelBg.innerHTML = '';
-                      portal.remove();
-                      isJunTimeTravel = false;
-                      showFloatText("📍 +70m 이동 완료!");
-                  }, 1000);
-              }, 3000); 
-          }, 1000);
-      }, 500);
-  }
-
-  // === [수정 요청 5 반영] 준 스킨 - 어린 양 소환 개선 ===
-  function spawnLamb() {
-      const lamb = document.createElement('div');
-      lamb.className = 'lamb-unit';
-      // [수정 요청 5 반영] 왼쪽 하늘에서 시작
-      lamb.style.left = '-100px';
-      lamb.style.top = '50px'; 
-      gameArea.appendChild(lamb);
-      
-      let state = 'approach';
-      let waitTimer = 0;
-      // 랜덤 메시지 목록
-      const messages = ["화이팅!", "힘내세요!", "주님이 함께해요!", "기쁨이 가득하길!", "평안하세요!"];
-      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-
-      const lambLoop = setInterval(() => {
-          if(!running && !isJunTimeTravel) return; 
-          
-          if(state === 'approach') {
-              const pRect = player.getBoundingClientRect();
-              const targetX = pRect.left - 50;
-              const targetY = pRect.top - 50;
-              
-              let lx = parseFloat(lamb.style.left);
-              let ly = parseFloat(lamb.style.top);
-
-              // 플레이어에게 날아감
-              lx += (targetX - lx) * 0.05;
-              ly += (targetY - ly) * 0.05;
-
-              lamb.style.left = lx + 'px';
-              lamb.style.top = ly + 'px';
-              
-              if(Math.abs(lx - targetX) < 20 && Math.abs(ly - targetY) < 20) {
-                  state = 'talk';
-                  // 말풍선
-                  const msg = document.createElement('div');
-                  msg.className = 'lamb-msg';
-                  msg.innerText = randomMsg; // [수정 요청 5 반영] 랜덤 메시지
-                  lamb.appendChild(msg);
-                  
-                  // 힐
-                  if(life < maxLife + 5) {
-                      life++;
-                      document.getElementById("lifeText").innerText = life;
-                      showHealEffect();
-                  }
-              }
-          } else if(state === 'talk') {
-              waitTimer += 0.05;
-              if(waitTimer > 1.5) { // 대기 시간 단축
-                  state = 'leave';
-                  const msg = lamb.querySelector('.lamb-msg');
-                  if(msg) msg.remove();
-              }
-          } else if(state === 'leave') {
-              // [수정 요청 5 반영] 오른쪽으로 사라짐
-              let lx = parseFloat(lamb.style.left);
-              lx += 8; // 빠르게 퇴장
-              lamb.style.left = lx + 'px';
-              if(lx > window.innerWidth) {
-                  clearInterval(lambLoop);
-                  lamb.remove();
-              }
-          }
-      }, 30); // 부드러운 움직임을 위해 간격 단축
-  }
-
-  function useAbility(e) {
+  // === 버튼 입력 처리 ===
+  function useAbility(e) { 
     if(e) e.stopPropagation();
     if(!running || abilityCD > 0) return;
     const s = SKIN_DATA[currentSkin];
+
+    // [수정] 노엘 버튼 클릭 시 -> 에너지파 발사 (Active)
     if(currentSkin === 'noel') {
-      showFloatText("🌊 에너지 파!");
-      activeEffects.noelLaser = 10; 
-      
-      const beam = document.createElement('div');
-      beam.id = 'noelBeam';
-      beam.className = 'noel-beam';
-      gameArea.appendChild(beam);
-      
-      gameArea.classList.add('shake-screen');
-      playSound('clear'); 
+        showFloatText("🌊 에너지 파!");
+        activeEffects.noelLaser = 10; // 10초 지속
+        const beam = document.createElement('div'); beam.id = 'noelBeam'; beam.className = 'noel-beam';
+        let offset = activeEffects.noelGiant > 0 ? 50 : 20;
+        const pRect = player.getBoundingClientRect();
+        beam.style.bottom = (window.innerHeight - pRect.bottom + offset) + "px";
+        gameArea.appendChild(beam);
+        playSound('jump'); // 빔 효과음
+        abilityCD = 60; // 쿨타임 60초
     } 
-    else if(currentSkin === 'jaeguk') { 
-        triggerJaegukBobas();
+    else {
+        if(currentSkin === 'jaeguk') triggerJaegukBobas();
+        else if(currentSkin === 'hahwi') triggerHahwiSkill();
+        else if(currentSkin === 'jihye') triggerJihyeSkill();
+        else if(currentSkin === 'jun') triggerJunSkill();
+        else if(currentSkin === 'yejun') triggerYejunSkill();
+        else if(currentSkin === 'stephanie') triggerStephanieSkill();
+        else if(currentSkin === 'ganghui') triggerGanghuiSkill();
+        else if(currentSkin === 'jieun') triggerJieunSkill();
+        else if(currentSkin === 'jeonchan') triggerJeonchanSkill();
+        abilityCD = s.cd;
     }
-    else if(currentSkin === 'hahwi') {
-        triggerHahwiSkill();
-    }
-    else if(currentSkin === 'jihye') {
-        triggerJihyeSkill();
-    }
-    else if(currentSkin === 'jun') {
-        triggerJunSkill();
-    }
-    else if(currentSkin === 'yejun') { activeEffects.fly = 30; showFloatText("✈️ 자유 비행"); } 
-    else if(currentSkin === 'jieun') { 
-        triggerJieunSkill(); 
-    }
-    abilityCD = s.cd;
   }
 
-  function triggerJeonchanSkill() {
-      showFloatText("⚡ 심판의 번개!");
-      playSound('clear'); 
-
-      const pRect = player.getBoundingClientRect();
-      const px = pRect.left + pRect.width/2;
-      const py = pRect.top + pRect.height/2;
-
-      for(let i=0; i<7; i++){
-          const angle = (i * (360/7)); 
-          const beam = document.createElement('div');
-          beam.className = 'jc-lightning'; 
-          beam.style.left = px + 'px';
-          beam.style.top = py + 'px';
-          beam.style.transform = `rotate(${angle}deg)`;
-          gameArea.appendChild(beam);
-          setTimeout(()=>beam.remove(), 300);
-      }
-
-      for(let i = obstacles.length - 1; i >= 0; i--) {
-          let o = obstacles[i];
-          let left = parseFloat(o.style.left);
-          
-          if(left > -50 && left < window.innerWidth && !o.destroyed) {
-              if(Math.random() < 0.5) {
-                  spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                  let coins = Math.floor(Math.random() * 5) + 1;
-                  spawnFaithCoins(left + 30, window.innerHeight - 150, coins, true);
-                  o.remove(); 
-                  obstacles.splice(i, 1); 
-              }
-          }
-      }
-  }
-
-  function updateBuffUI(delta) {
-    const buffContainer = document.getElementById("buffArea"); 
-    let html = "";
-    if(collectionBuff) html += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스</div>`;
-
-    if (!isFeverTime) {
-        document.getElementById("feverFill").style.width = feverGauge + "%";
-        if(feverGauge >= MAX_FEVER) startFeverTime();
-    } else {
-        feverGauge -= (delta * 20);
-        document.getElementById("feverFill").style.width = feverGauge + "%";
-        if(feverGauge <= 0) endFeverTime();
-    }
-    for(let k in activeEffects) {
-        if(activeEffects[k] > 0) {
-            activeEffects[k] -= delta;
-            
-            if(k === 'summon' && currentSkin === 'jieun') {
-                if(activeEffects[k] <= 0) {
-                    deactivateJieunBuff();
-                }
-            }
-
-            if(k === 'noelLaser') {
-                if(activeEffects[k] <= 0) {
-                    const beam = document.getElementById('noelBeam');
-                    if(beam) beam.remove();
-                    gameArea.classList.remove('shake-screen');
-                }
-            }
-            
-            // 하휘 스킬 업데이트 (포탈 위치 추적)
-            if(k === 'hahwiMode') {
-                const portal = document.getElementById('hahwiPortal');
-                if(portal) {
-                     const pRect = player.getBoundingClientRect();
-                     // [수정 요청 2 반영] 플레이어 앞에 포탈 배치
-                     portal.style.left = (pRect.left - 20) + 'px'; 
-                     portal.style.top = (pRect.top + pRect.height/2) + 'px';
-                }
-                if(activeEffects[k] <= 0) {
-                    if(portal) {
-                        portal.classList.add('closing');
-                        setTimeout(() => portal.remove(), 500);
-                    }
-                    if(hahwiFireInterval) clearInterval(hahwiFireInterval);
-                }
-            }
-
-            // 지혜 스킬 종료
-            if(k === 'jihyeSquad' && activeEffects[k] <= 0) {
-                endJihyeSkill();
-            }
-
-            if(k === 'bobaTime' && activeEffects[k] <= 0) {
-                bobas.forEach(b => b.remove());
-                bobas = [];
-            }
-
-            if(activeEffects[k] > 0) {
-                let color = "#fff"; let icon = ""; let label = k;
-                if(k === 'invincible') { color = "#ffd700"; icon = "🛡️"; label = "무적"; }
-                else if(k === 'turbo') { color = "#00e5ff"; icon = "🚀"; label = "터보"; }
-                else if(k === 'slow') { color = "#90ee90"; icon = "🍃"; label = "감속"; }
-                else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
-                else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
-                else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
-                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "소환"; }
-                else if(k === 'bobaTime') { color = "#795548"; icon = "🧋"; label = "보바 타임"; }
-                else if(k === 'hahwiMode') { color = "#d500f9"; icon = "⚔️"; label = "무한검제"; }
-                else if(k === 'jihyeSquad') { color = "#ff9100"; icon = "⚔️"; label = "발키리"; }
-                if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
-            }
-        } else { activeEffects[k] = 0; }
-    }
-    buffContainer.innerHTML = html;
-
-    if(shieldCooldown > 0) { shieldCooldown -= delta; if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown'); }
-    updateAbilityBtn(delta); updateSubActionButtonUI();
-  }
-
-  function startFeverTime() {
-      isFeverTime = true; feverGauge = 100;
-      activeEffects.invincible = 5; activeEffects.turbo = 5; activeEffects.magnet = 5;
-      gameArea.classList.add("fever-mode"); player.classList.add("fever-active");
-      showFloatText("🔥 성령 충만! (FEVER)"); playSound('clear');
-  }
-
-  function endFeverTime() {
-      isFeverTime = false; feverGauge = 0;
-      activeEffects.invincible = 0; activeEffects.turbo = 0; activeEffects.magnet = 0;
-      gameArea.classList.remove("fever-mode"); player.classList.remove("fever-active");
-  }
-
-  function updateSubActionButtonUI() {
-      if (isBossBattle) {
-          subActionBtn.style.display = 'flex'; subActionBtn.className = 'btn-defence'; subActionBtn.innerText = "Defence"; 
-      } else if (distance >= 200) {
-          subActionBtn.style.display = 'flex'; subActionBtn.className = 'btn-attack'; subActionBtn.innerText = "Attack";
-      } else { subActionBtn.style.display = 'none'; }
-  }
-
-  function updateAbilityBtn(dt) {
-    if(abilityCD > 0) { abilityCD -= dt; abilityBtn.classList.add('cooldown'); abilityBtn.innerHTML = Math.ceil(abilityCD); } 
-    else { abilityBtn.classList.remove('cooldown'); abilityBtn.innerHTML = "SKILL"; }
-  }
-
-  let lastMissionHTML = "";
-  function updateDailyMissionUI() {
-    const box = document.getElementById('dailyMissionBox');
-    if (daily.completed || isBossBattle) { box.style.display = 'none'; return; }
-    box.style.display = 'block';
-    const m1 = daily.run200 ? 'mission-done' : ''; const m2 = daily.quiz3 >= 3 ? 'mission-done' : ''; const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
-    const newHTML = `
-      <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
-      <div class="mission-item ${m1}">🏃 200m 달리기</div>
-      <div class="mission-item ${m2}">🧠 퀴즈 3회 (${daily.quiz3}/3)</div>
-      <div class="mission-item ${m3}">✝ Faith 20 (${Math.min(daily.faith20, 20)}/20)</div>
-    `;
-    if(newHTML !== lastMissionHTML) { box.innerHTML = newHTML; lastMissionHTML = newHTML; }
-  }
-
-  function checkMissions() {
-    if (daily.completed) return;
-    if(distance < 5) return; 
-    let changed = false;
-    if (!daily.run200 && distance >= 200) { daily.run200 = true; changed = true; }
-    if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
-        daily.completed = true; faith += 200;
-        saveData.faith = faith; document.getElementById("faithText").innerText = faith;
-        showFloatText("🎉 일일 미션 완료! (+200 Faith)"); playSound('clear');
-        saveProgress(); changed = true; updateDailyMissionUI();
-    }
-    if(changed) { localStorage.setItem("dailyMission", JSON.stringify(daily)); updateDailyMissionUI(); }
-  }
-
+  // === 메인 루프 ===
   function gameLoop(now) {
     if (!running) return;
     const delta = (now - lastTime) / 1000; lastTime = now;
     const safeDelta = Math.min(delta, 0.05);
 
     try {
-        updateBuffUI(safeDelta);
-        checkMissions();
-        
+        updateBuffUI(safeDelta); checkMissions();
         missionUpdateTimer += safeDelta;
         if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
 
-        if(currentSkin === 'jeonchan' && running && !isBossBattle) {
-            jeonchanTimer += safeDelta;
-            if(jeonchanTimer >= 15.0) {
-                triggerJeonchanSkill();
-                jeonchanTimer = 0;
-            }
-        }
-
-        if(currentSkin === 'haeun' && running && !isBossBattle) {
-            if(!haeunShieldActive) {
-                haeunShieldTimer += safeDelta;
-                if(haeunShieldTimer >= 10.0) {
-                    haeunShieldActive = true;
-                    haeunShieldTimer = 0;
-                    createHaeunShield();
-                    showFloatText("🛡️ 보호막 생성");
+        // --- 패시브 스킬 로직 ---
+        if(running && !isBossBattle) {
+            // 전찬 (리얼 번개)
+            if(currentSkin === 'jeonchan') {
+                jeonchanLightningTimer += safeDelta;
+                if(jeonchanLightningTimer > 15.0) {
+                    jeonchanLightningTimer = 0;
+                    const flash = document.createElement('div'); flash.className = 'jc-lightning';
+                    flash.style.left = randBetween(50, window.innerWidth-50) + 'px';
+                    gameArea.appendChild(flash); setTimeout(()=>flash.remove(), 300);
+                    // 번개 충돌은 화면 전체 판정 대신 랜덤 위치 주변 파괴로 구현 가능하나 시각효과 위주
                 }
             }
-            haeunLifeTimer += safeDelta;
-            if(haeunLifeTimer >= 25.0) {
-                haeunLifeTimer = 0;
-                if(life < maxLife) {
-                    life++;
-                    document.getElementById("lifeText").innerText = life;
-                    showHealEffect();
-                    showFloatText("💖 생명력 회복");
-                }
-            }
-        }
-
-        // 지혜 패시브 힐 (25초마다)
-        if(currentSkin === 'jihye' && running) {
-            jihyePassiveTimer += safeDelta;
-            if(jihyePassiveTimer >= 25.0) {
-                triggerJihyeHeal();
-                jihyePassiveTimer = 0;
-            }
-        }
-
-        // 준 패시브 (어린 양) - 30초마다
-        if(currentSkin === 'jun' && running) {
-            junLambTimer += safeDelta;
-            if(junLambTimer >= 30.0) {
-                spawnLamb();
-                junLambTimer = 0;
-            }
-        }
-        
-        if(activeEffects.noelLaser > 0) {
-            const beam = document.getElementById('noelBeam');
-            if(beam) {
-                beam.style.bottom = (playerY - 20) + "px";
-            }
-        }
-
-        // [수정 요청 1 반영] 하휘 스킨 포탈 충돌 로직 제거 (검만 충돌)
-
-        // [수정 요청 2 반영] 하휘 검 로직 (직진형)
-        if(hahwiSwords.length > 0) {
-            for(let i=hahwiSwords.length-1; i>=0; i--) {
-                const s = hahwiSwords[i];
-                let sx = parseFloat(s.style.left);
-                let sy = parseFloat(s.style.top);
-                sx += s.vx * safeDelta; // 왼쪽으로 직진
-                // sy += s.vy * safeDelta; // 수직 이동 없음
-                s.style.left = sx + 'px';
-                s.style.top = sy + 'px';
-                
-                if(sx < -100) { // 화면 왼쪽 밖으로 나가면 제거
-                    s.remove();
-                    hahwiSwords.splice(i, 1);
-                    continue;
-                }
-                
-                let hit = false;
-                // 장애물 충돌
-                for(let j=obstacles.length-1; j>=0; j--) {
-                    const o = obstacles[j];
-                    const oRect = o.getBoundingClientRect();
-                    const sRect = s.getBoundingClientRect();
-                    
-                    if(oRect.left > 0 && oRect.left < window.innerWidth && !o.destroyed) {
-                         if (sRect.right > oRect.left && sRect.left < oRect.right && 
-                             sRect.bottom > oRect.top && sRect.top < oRect.bottom) {
-                             
-                             // 폭발 이펙트
-                             const ex = document.createElement('div');
-                             ex.className = 'portal-explosion';
-                             ex.style.left = sx + 'px';
-                             ex.style.top = sy + 'px';
-                             gameArea.appendChild(ex);
-                             setTimeout(() => ex.remove(), 400);
-
-                             o.destroyed = true;
-                             spawnFaithCoins(oRect.left, oRect.top, 1, false, true);
-                             o.remove();
-                             obstacles.splice(j, 1); 
-                             
-                             hit = true;
-                             break;
-                         }
+            // 하은 (쉴드/힐)
+            if(currentSkin === 'haeun') {
+                if(!haeunShieldActive) {
+                    haeunShieldTimer += safeDelta;
+                    if(haeunShieldTimer >= 10.0) {
+                        haeunShieldActive = true; haeunShieldTimer = 0;
+                        createHaeunShield(); showFloatText("🛡️ 보호막 생성");
                     }
                 }
-                
-                // 적군 충돌
-                if(!hit) {
-                     for(let k=enemies.length-1; k>=0; k--) {
-                         const e = enemies[k];
-                         const eRect = e.getBoundingClientRect();
-                         const sRect = s.getBoundingClientRect();
-                         
-                         if(eRect.left > 0 && eRect.left < window.innerWidth && !e.isDead) {
-                             if (sRect.right > eRect.left && sRect.left < eRect.right && 
-                                 sRect.bottom > eRect.top && sRect.top < eRect.bottom) {
-                                 
-                                 // 폭발
-                                 const ex = document.createElement('div');
-                                 ex.className = 'portal-explosion';
-                                 ex.style.left = sx + 'px';
-                                 ex.style.top = sy + 'px';
-                                 gameArea.appendChild(ex);
-                                 setTimeout(() => ex.remove(), 400);
-
-                                 e.isDead = true;
-                                 if(e.laserWarning) e.laserWarning.remove();
-                                 if(e.laserBeam) e.laserBeam.remove();
-                                 spawnFaithCoins(eRect.left, eRect.top, 5, true, false);
-                                 e.remove();
-                                 enemies.splice(k, 1);
-                                 hit = true;
-                                 break;
-                             }
-                         }
-                     }
-                }
-
-                if(hit) {
-                    s.remove();
-                    hahwiSwords.splice(i, 1);
+                haeunLifeTimer += safeDelta;
+                if(haeunLifeTimer >= 25.0) {
+                    haeunLifeTimer = 0;
+                    if(life < maxLife) { life++; document.getElementById("lifeText").innerText = life; showHealEffect(); }
                 }
             }
-        }
-
-        // 지혜 스킨 유닛 - 자율 비행 로직
-        if(activeEffects.jihyeSquad > 0) {
-            const pRect = player.getBoundingClientRect();
-            
-            jihyeUnits.forEach(u => {
-                u.moveTimer += safeDelta;
-                if(u.moveTimer > 1.0) {
-                    u.tx = (window.innerWidth / 2) + randBetween(-200, 200);
-                    u.ty = (window.innerHeight / 2) + randBetween(-200, 200);
-                    u.moveTimer = 0;
-                }
-                
-                const cx = parseFloat(u.style.left);
-                const cy = parseFloat(u.style.top);
-                u.style.left = (cx + (u.tx - cx) * 0.05) + 'px';
-                u.style.top = (cy + (u.ty - cy) * 0.05) + 'px';
-                
-                u.fireTimer += safeDelta;
-                if(u.fireTimer > 0.6) { 
-                    let target = null;
-                    let minDist = 600;
-                    
-                    obstacles.forEach(o => {
-                        const dist = Math.hypot(o.getBoundingClientRect().left - cx, o.getBoundingClientRect().top - cy);
-                        if(dist < minDist && !o.destroyed) {
-                            minDist = dist;
-                            target = o;
+            // 지혜 (힐)
+            if(currentSkin === 'jihye') {
+                jihyePassiveTimer += safeDelta;
+                if(jihyePassiveTimer >= 25.0) { triggerJihyeHeal(); jihyePassiveTimer = 0; }
+            }
+            // 준 (양)
+            if(currentSkin === 'jun' && !isJunTimeTravel) {
+                junLambTimer += safeDelta;
+                if(junLambTimer >= 30.0) {
+                    const lamb = document.createElement('div'); lamb.className = 'lamb-unit';
+                    lamb.style.left = (window.innerWidth + 50) + 'px'; lamb.style.top = '50px'; // 오른쪽에서
+                    gameArea.appendChild(lamb);
+                    // 양 이동 로직 (간소화)
+                    let lTimer = setInterval(()=>{
+                        let lx = parseFloat(lamb.style.left); lx -= 2; lamb.style.left = lx+'px';
+                        if(lx < 150) { // 플레이어 근처
+                            clearInterval(lTimer); lamb.remove();
+                            if(life<maxLife) { life++; document.getElementById("lifeText").innerText=life; showHealEffect(); }
                         }
+                    }, 20);
+                    junLambTimer = 0;
+                }
+            }
+            // 하휘 (인피니티 스톤) - 30초마다 생성
+            if(currentSkin === 'hahwi') {
+                if(activeEffects.hahwiMode <= 0 && hahwiStones.length === 0) { // 액티브 아닐때만
+                    // 패시브 타이머 로직 생략 (복잡도 감소), 액티브와 공유하거나 별도 타이머 필요
+                    // 여기선 액티브 우선 구현
+                }
+                // 스톤 회전 및 충돌 (액티브/패시브 공통)
+                if(hahwiStones.length > 0) {
+                    hahwiOrbitAngle += 3 * safeDelta;
+                    const pRect = player.getBoundingClientRect();
+                    const cx = pRect.left + pRect.width/2; const cy = pRect.top + pRect.height/2;
+                    hahwiStones.forEach(s => {
+                        const r = 70;
+                        s.style.left = (cx + Math.cos(hahwiOrbitAngle + s.angleOffset) * r - 12) + 'px';
+                        s.style.top = (cy + Math.sin(hahwiOrbitAngle + s.angleOffset) * r - 12) + 'px';
                     });
-                    
-                    if(!target) {
-                        enemies.forEach(e => {
-                            const dist = Math.hypot(e.getBoundingClientRect().left - cx, e.getBoundingClientRect().top - cy);
-                            if(dist < minDist && !e.isDead) {
-                                minDist = dist;
-                                target = e;
-                            }
-                        });
+                    checkSkillCollisions(hahwiStones, 30, false); // 보스 공격 X
+                }
+            }
+            // 강희 (판넬 증식)
+            if(currentSkin === 'ganghui') {
+                ganghuiPassiveTimer += safeDelta;
+                if(ganghuiPassiveTimer >= 15.0 && ganghuiFunnels.length < 8) {
+                    ganghuiPassiveTimer = 0;
+                    const f = document.createElement('div'); f.className = 'funnel-unit';
+                    f.angle = 0; gameArea.appendChild(f); ganghuiFunnels.push(f);
+                }
+                // 판넬 회전
+                const pRect = player.getBoundingClientRect();
+                const cx = pRect.left + pRect.width/2; const cy = pRect.top + pRect.height/2;
+                ganghuiFunnels.forEach((f, idx) => {
+                    f.angle = (Date.now()/1000) + (idx * (Math.PI*2/ganghuiFunnels.length));
+                    f.style.left = (cx + Math.cos(f.angle)*90 - 20) + 'px';
+                    f.style.top = (cy + Math.sin(f.angle)*90 - 20) + 'px';
+                });
+                // 레이저 발사 (4초마다)
+                ganghuiLaserTimer += safeDelta;
+                if(ganghuiLaserTimer > 4.0 && ganghuiFunnels.length > 0) {
+                    ganghuiLaserTimer = 0;
+                    // 타겟팅: 장애물/적군 (보스 제외)
+                    let target = obstacles[0] || enemies[0];
+                    if(target && !target.destroyed && !target.isDead) {
+                        const f = ganghuiFunnels[Math.floor(Math.random()*ganghuiFunnels.length)];
+                        const laser = document.createElement('div'); laser.className = 'funnel-laser';
+                        const fRect = f.getBoundingClientRect(); const tRect = target.getBoundingClientRect();
+                        const dx = (tRect.left+30)-(fRect.left+20); const dy = (tRect.top+30)-(fRect.top+20);
+                        const dist = Math.hypot(dx,dy); const angle = Math.atan2(dy,dx);
+                        laser.style.width = dist+'px'; laser.style.left=(fRect.left+20)+'px'; laser.style.top=(fRect.top+20)+'px';
+                        laser.style.transform = `rotate(${angle}rad)`;
+                        gameArea.appendChild(laser); setTimeout(()=>laser.remove(), 100);
+                        
+                        if(target.classList.contains('obstacle')) {
+                            target.destroyed = true; spawnExplosionEffect(tRect.left, tRect.top);
+                            spawnFaithCoins(tRect.left, tRect.top, 2, false, false); // 수동
+                            target.remove(); obstacles.shift();
+                        } else {
+                            target.isDead = true; spawnExplosionEffect(target.x, target.y);
+                            spawnFaithCoins(target.x, target.y, 3, false, false);
+                            target.remove(); enemies.shift();
+                        }
                     }
-                    
-                    const m = document.createElement('div');
-                    m.className = 'jihye-missile';
-                    m.style.left = (cx + 25) + 'px';
-                    m.style.top = (cy + 25) + 'px';
-                    
-                    if(target) {
-                        const tRect = target.getBoundingClientRect();
-                        const angle = Math.atan2((tRect.top+30) - (cy+25), (tRect.left+30) - (cx+25));
-                        m.vx = Math.cos(angle) * 700;
-                        m.vy = Math.sin(angle) * 700;
-                    } else {
-                        m.vx = 700; 
-                        m.vy = 0;
+                }
+            }
+            // 예준 (도플갱어)
+            if(currentSkin === 'yejun') {
+                yejunPassiveTimer += safeDelta;
+                if(yejunPassiveTimer >= 60.0) {
+                    yejunPassiveTimer = 0;
+                    const poof = document.createElement('div'); poof.className = 'smoke-poof';
+                    const pRect = player.getBoundingClientRect();
+                    poof.style.left = pRect.left+'px'; poof.style.top = pRect.top+'px';
+                    gameArea.appendChild(poof); setTimeout(()=>poof.remove(), 500);
+                    // 도플갱어 로직 (간소화: 미사일 발사 효과)
+                    for(let i=0; i<5; i++) {
+                        const m = document.createElement("div"); m.classList.add("player-missile");
+                        m.style.left = (pRect.right) + "px"; m.style.top = (pRect.top + randBetween(-50,50)) + "px"; 
+                        gameArea.appendChild(m); playerMissiles.push(m);
                     }
-                    
-                    gameArea.appendChild(m);
-                    jihyeMissiles.push(m);
-                    u.fireTimer = 0;
+                }
+            }
+            // 스테파니 (하트 힐)
+            if(currentSkin === 'stephanie') {
+                stephaniePassiveTimer += safeDelta;
+                if(stephaniePassiveTimer >= 30.0) {
+                    stephaniePassiveTimer = 0;
+                    if(life < maxLife) { life++; document.getElementById("lifeText").innerText = life; showHealEffect(); }
+                }
+            }
+            // 지은 (노엘 수호 - 패시브화)
+            if(currentSkin === 'jieun') {
+                jieunPassiveTimer += safeDelta;
+                if(jieunPassiveTimer >= 45.0) {
+                    jieunPassiveTimer = 0;
+                    // 노엘 쉴드 생성 애니메이션
+                    const shield = document.createElement('div'); shield.className = 'jieun-shield-unit';
+                    player.appendChild(shield); setTimeout(()=>shield.remove(), 5000); // 5초 지속
+                    activeEffects.summon = 5; 
+                }
+            }
+            // 노엘 (거대화 - 패시브화)
+            if(currentSkin === 'noel') {
+                noelPassiveTimer += safeDelta;
+                if(noelPassiveTimer >= 30.0) {
+                    noelPassiveTimer = 0;
+                    activeEffects.noelGiant = 10; activeEffects.invincible = 10;
+                    player.classList.add('player-giant'); document.getElementById('noelAura').style.display='block';
+                    showFloatText("🦍 거대화 발동!");
+                }
+            }
+        } // End Passives
+
+        // --- 액티브 스킬 로직 (Active Logic) ---
+        // 전찬 해머 충돌
+        const hammer = document.getElementById('activeHammer');
+        if(hammer) {
+            const hRect = hammer.getBoundingClientRect();
+            // 장애물/적군 전체 파괴 (보스 제외)
+            obstacles.forEach(o => {
+                if(!o.destroyed && o.getBoundingClientRect().left < hRect.right) {
+                    o.destroyed = true; spawnExplosionEffect(parseFloat(o.style.left), window.innerHeight-100);
+                    spawnFaithCoins(parseFloat(o.style.left), window.innerHeight-150, 3, false, false);
+                    o.remove();
+                }
+            });
+            enemies.forEach(e => {
+                if(!e.isDead && e.getBoundingClientRect().left < hRect.right) {
+                    e.isDead = true; spawnExplosionEffect(e.x, e.y);
+                    spawnFaithCoins(e.x, e.y, 5, true, false); e.remove();
                 }
             });
         }
-        
-        // 지혜 미사일 로직
-        if(jihyeMissiles.length > 0) {
-            for(let i=jihyeMissiles.length-1; i>=0; i--) {
-                const m = jihyeMissiles[i];
-                let mx = parseFloat(m.style.left);
-                let my = parseFloat(m.style.top);
-                mx += m.vx * safeDelta;
-                my += m.vy * safeDelta;
-                m.style.left = mx + 'px';
-                m.style.top = my + 'px';
-                
-                if(mx > window.innerWidth || mx < -50 || my < -50 || my > window.innerHeight + 50) {
-                    m.remove();
-                    jihyeMissiles.splice(i, 1);
-                    continue;
-                }
-                
-                let hit = false;
-                const mRect = m.getBoundingClientRect();
-                
-                for(let j=obstacles.length-1; j>=0; j--) {
-                    const o = obstacles[j];
-                    const oRect = o.getBoundingClientRect();
-                    
-                    if(oRect.left > 0 && !o.destroyed) {
-                        if (mRect.right > oRect.left && mRect.left < oRect.right && 
-                            mRect.bottom > oRect.top && mRect.top < oRect.bottom) {
-                            o.destroyed = true;
-                            spawnExplosionEffect(oRect.left+30, oRect.top+30);
-                            spawnFaithCoins(oRect.left, oRect.top, 5, false, true);
-                            o.remove(); obstacles.splice(j, 1);
-                            hit = true;
-                            break;
-                        }
-                    }
-                }
-                if(hit) { m.remove(); jihyeMissiles.splice(i, 1); }
+
+        // 지은 음표 충돌
+        checkSkillCollisions(jieunNotes, 30, false);
+
+        // 스테파니 케이크 충돌
+        if(activeEffects.stephanieWorld > 0) {
+            if(Math.random() < 0.08) { // 케이크 생성
+                const cake = document.createElement('div'); cake.className = 'falling-cake';
+                cake.style.backgroundImage = `url('item_cake${Math.floor(Math.random()*3)+1}.png')`;
+                cake.style.left = randBetween(50, window.innerWidth-50) + 'px'; cake.style.top = '-50px';
+                gameArea.appendChild(cake); stephanieCakes.push(cake);
+            }
+            checkSkillCollisions(stephanieCakes, 40, false);
+        }
+
+        // 노엘 빔 위치
+        if(activeEffects.noelLaser > 0) {
+            const beam = document.getElementById('noelBeam');
+            if(beam) {
+                let offset = activeEffects.noelGiant > 0 ? 50 : 20;
+                beam.style.bottom = (playerY + offset) + "px";
+                // 빔 충돌은 updateEnemies/updatePhysics에서 처리됨 (보스 제외됨)
             }
         }
 
-        if(activeEffects.bobaTime > 0 && bobas.length > 0) {
-            const pRect = player.getBoundingClientRect();
-            const px = pRect.left + pRect.width/2;
-            const py = pRect.top + pRect.height/2;
-
-            for(let i=0; i<bobas.length; i++) {
-                let b = bobas[i];
-                if(b.targetObs && b.targetObs.isConnected && !b.targetObs.destroyed) {
-                   const tRect = b.targetObs.getBoundingClientRect();
-                   const tx = tRect.left + tRect.width/2; 
-                   const ty = tRect.top + tRect.height/2;
-                   const bx = parseFloat(b.style.left) + 9; 
-                   const by = parseFloat(b.style.top) + 9;
-                   const angle = Math.atan2(ty - by, tx - bx);
-                   
-                   const speed = 600 * safeDelta; 
-                   const nextX = bx + Math.cos(angle) * speed;
-                   const nextY = by + Math.sin(angle) * speed;
-                   b.style.left = (nextX - 9) + "px";
-                   b.style.top = (nextY - 9) + "px";
-                   
-                   if(Math.hypot(tx-nextX, ty-nextY) < 30) {
-                        b.targetObs.destroyed = true;
-                        spawnExplosionEffect(parseFloat(b.targetObs.style.left), parseFloat(b.targetObs.style.top || (window.innerHeight - parseFloat(b.targetObs.style.bottom) - 50)));
-                        let coinCount = Math.floor(Math.random() * 5) + 1; 
-                        spawnFaithCoins(nextX, nextY, coinCount, false, true); 
-                        b.targetObs.remove();
-                        b.targetObs = null;
-                        b.style.left = (px - 9) + "px"; b.style.top = (py - 9) + "px";
-                   }
-                } else {
-                   b.targetObs = null; 
-                   b.angle += 2 * safeDelta;
-                   const bx = px + Math.cos(b.angle) * b.radius;
-                   const by = py + Math.sin(b.angle) * b.radius;
-                   b.style.left = (bx - 9) + "px";
-                   b.style.top = (by - 9) + "px";
-                   
-                   let minDist = 300; 
-                   let candidate = null;
-                   obstacles.forEach(o => {
-                       if(!o.destroyed && parseFloat(o.style.left) > 0 && parseFloat(o.style.left) < window.innerWidth) {
-                           const oRect = o.getBoundingClientRect();
-                           const dist = Math.hypot((oRect.left+30) - bx, (oRect.top+30) - by);
-                           if(dist < minDist) {
-                               minDist = dist;
-                               candidate = o;
-                           }
-                       }
-                   });
-                   if(candidate) b.targetObs = candidate;
-                }
-            }
-        }
-
-        // [준 스킨 시공간 여행 중이면 게임 진행 멈춤]
+        // 게임 진행
         if (!isBossBattle && !isJunTimeTravel) { 
             let distMultiplier = (activeEffects.turbo > 0) ? 4 : 1;
             distance += safeDelta * 1 * distMultiplier;
             document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
             let progress = Math.min(distance / 3000, 1);
-            let speedMultiplier = 1 + (progress * 14);
-            let currentSpeed = BASE_SPEED * speedMultiplier;
-            if (activeEffects.slow > 0) currentSpeed *= 0.5;
-            if (activeEffects.turbo > 0) currentSpeed *= 2.0; 
-            gameSpeed = currentSpeed;
-        } else if (isJunTimeTravel) {
-            // 시공간 여행 중에는 배경만 매우 빠르게
-            gameSpeed = BASE_SPEED * 10;
-        } else { gameSpeed = BASE_SPEED * 0.5; }
+            gameSpeed = BASE_SPEED * (1 + progress * 14);
+            if (activeEffects.slow > 0) gameSpeed *= 0.5;
+            if (activeEffects.turbo > 0) gameSpeed *= 2.0; 
+        } else if (isJunTimeTravel) { gameSpeed = 0; } 
+        else { gameSpeed = BASE_SPEED * 0.5; }
 
         if (!isBossBattle && distance >= nextBossTrigger) { startBossBattle(); }
         if (!isBossBattle && distance >= nextQuizDistance) { nextQuizDistance += 35; pauseForQuiz(); return; }
 
         if (isBossBattle) { updateBoss(safeDelta); }
-        else if (!isJunTimeTravel) { // 준 스킨 시공간 여행 중 장애물/적군 스폰 정지
+        else if (!isJunTimeTravel) { 
             obstacleTimer += safeDelta;
             if (obstacleTimer >= nextObstacleTime && (nextQuizDistance - distance > 2)) {
                 spawnObstacle(); obstacleTimer = 0; 
@@ -1761,24 +1154,18 @@
             if(enemySpawnTimer > 2.5 && !isBossBattle) { spawnEnemyLogic(); enemySpawnTimer = 0; }
         }
 
-        updateEnemies(safeDelta); 
-        updatePhysics(safeDelta);
-        updateFaithCoinsLogic(safeDelta);
-        
+        updateEnemies(safeDelta); updatePhysics(safeDelta); updateFaithCoinsLogic(safeDelta);
         itemTimer += safeDelta;
         if (itemTimer >= nextItemTime && !isJunTimeTravel) { spawnItem(); itemTimer = 0; nextItemTime = 8 + Math.random() * 4; }
 
+        // 아이템 로직
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
             if (activeEffects.magnet > 0) {
                 const pRect = player.getBoundingClientRect(); const iRect = it.getBoundingClientRect();
-                const px = pRect.left + pRect.width/2; const py = pRect.top + pRect.height/2;
-                const ix = iRect.left + iRect.width/2; const iy = iRect.top + iRect.height/2;
-                const dx = px - ix; const dy = py - iy; const dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist < 400) {
-                    it.style.left = (parseFloat(it.style.left) + (dx/dist)*12) + "px";
-                    it.style.top = (parseFloat(it.style.top) + (dy/dist)*12) + "px";
-                }
+                const dx = (pRect.left+30) - (iRect.left+24); const dy = (pRect.top+30) - (iRect.top+24);
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 400) { it.style.left = (parseFloat(it.style.left) + (dx/dist)*12) + "px"; it.style.top = (parseFloat(it.style.top) + (dy/dist)*12) + "px"; }
             }
             let left = parseFloat(it.style.left) || window.innerWidth;
             left -= gameSpeed * safeDelta;
@@ -1794,201 +1181,167 @@
         }
         
         let speedMult = (gameSpeed / BASE_SPEED); 
-        bg1X -= BG1_SPEED * speedMult * safeDelta;
-        bg2X -= BG2_SPEED * speedMult * safeDelta;
-        bg3X -= BG3_SPEED * speedMult * safeDelta;
-        bg1.style.backgroundPosition = `${bg1X}px 0`;
-        bg2.style.backgroundPosition = `${bg2X}px bottom`;
-        bg3.style.backgroundPosition = `${bg3X}px bottom`;
+        bg1X -= BG1_SPEED * speedMult * safeDelta; bg2X -= BG2_SPEED * speedMult * safeDelta; bg3X -= BG3_SPEED * speedMult * safeDelta;
+        bg1.style.backgroundPosition = `${bg1X}px 0`; bg2.style.backgroundPosition = `${bg2X}px bottom`; bg3.style.backgroundPosition = `${bg3X}px bottom`;
     } catch(e) { console.error(e); }
     requestAnimationFrame(gameLoop);
+  }
+
+  // === 충돌 체크 헬퍼 (보스 제외, 코인 수동) ===
+  function checkSkillCollisions(skillObjects, radius, hitsBoss) {
+      for(let i=skillObjects.length-1; i>=0; i--) {
+          const obj = skillObjects[i];
+          const oRect = obj.getBoundingClientRect();
+          if(oRect.top > window.innerHeight || oRect.left < -100) { obj.remove(); skillObjects.splice(i,1); continue; }
+
+          for(let j=obstacles.length-1; j>=0; j--) {
+              const obs = obstacles[j];
+              if(!obs.destroyed) {
+                  const obsRect = obs.getBoundingClientRect();
+                  if (oRect.right > obsRect.left && oRect.left < obsRect.right && oRect.bottom > obsRect.top && oRect.top < obsRect.bottom) {
+                      obs.destroyed = true; spawnExplosionEffect(obsRect.left, obsRect.top);
+                      spawnFaithCoins(obsRect.left, obsRect.top, randBetween(1,6), false, false);
+                      obs.remove(); obstacles.splice(j,1); 
+                  }
+              }
+          }
+          for(let k=enemies.length-1; k>=0; k--) {
+              const en = enemies[k];
+              if(!en.isDead) {
+                  const enRect = en.getBoundingClientRect();
+                  if (oRect.right > enRect.left && oRect.left < enRect.right && oRect.bottom > enRect.top && oRect.top < enRect.bottom) {
+                      en.isDead = true; 
+                      if(en.laserWarning) en.laserWarning.remove(); if(en.laserBeam) en.laserBeam.remove();
+                      spawnExplosionEffect(en.x, en.y);
+                      spawnFaithCoins(en.x, en.y, randBetween(1,6), true, false);
+                      en.remove(); enemies.splice(k,1);
+                  }
+              }
+          }
+          if(hitsBoss && isBossBattle && boss.hp > 0) {
+              const bRect = bossContainer.getBoundingClientRect();
+              if (oRect.right > bRect.left && oRect.left < bRect.right && oRect.bottom > bRect.top && oRect.top < bRect.bottom) {
+                  damageBoss(); 
+              }
+          }
+      }
   }
 
   function updateFaithCoinsLogic(dt) {
       for(let i = faithCoins.length - 1; i >= 0; i--) {
           const coin = faithCoins[i]; coin.timer += dt;
           let cx = parseFloat(coin.style.left); let cy = parseFloat(coin.style.top);
-          
-          if (coin.timer < 0.3) { 
-              cx += coin.vx * dt * 2; 
-              cy += coin.vy * dt * 2; 
-          } 
+          if (coin.timer < 0.3) { cx += coin.vx * dt * 2; cy += coin.vy * dt * 2; } 
           else {
               const pRect = player.getBoundingClientRect();
-              const targetX = pRect.left + pRect.width/2; const targetY = pRect.top + pRect.height/2;
-              const dx = targetX - cx; const dy = targetY - cy;
-
-              if (coin.isAutoCollect || !coin.isManual) {
-                  cx += dx * 8 * dt; 
-                  cy += dy * 8 * dt;
-              } else {
-                  cx -= gameSpeed * dt;
-              }
-              
+              const dx = (pRect.left+30) - cx; const dy = (pRect.top+30) - cy;
+              if (coin.isAutoCollect) { cx += dx * 8 * dt; cy += dy * 8 * dt; } 
+              else { cx -= gameSpeed * dt; } 
               if (Math.abs(dx) < 40 && Math.abs(dy) < 40) { 
-                  let gain = 1;
-                  if(collectionBuff && Math.random() < 0.1) gain = 2;
-
+                  let gain = 1; if(collectionBuff && Math.random() < 0.1) gain = 2;
                   faith += gain; daily.faith20 += gain; 
-                  document.getElementById("faithText").innerText = faith;
-                  playSound('item'); 
-                  
-                  if(coin.isManual) {
-                      showFloatText("+1 신앙심");
-                  }
-
+                  document.getElementById("faithText").innerText = faith; playSound('item'); 
+                  if(coin.isManual) showFloatText("+1 신앙심");
                   coin.remove(); faithCoins.splice(i, 1); continue;
               }
           }
-          
-          if(cx < -50) {
-              coin.remove(); faithCoins.splice(i, 1); continue;
-          }
-
+          if(cx < -50) { coin.remove(); faithCoins.splice(i, 1); continue; }
           coin.style.left = cx + "px"; coin.style.top = cy + "px";
       }
   }
 
+  // === 적군 및 물리 업데이트 (기존 로직 유지) ===
   function spawnEnemyLogic() {
       let type = 0;
       if (distance >= 500) type = 5; else if (distance >= 450) type = 4;
-      else if (distance >= 400) type = 3; else if (distance >= 300) type = 2;
-      else if (distance >= 200) type = 1;
+      else if (distance >= 400) type = 3; else if (distance >= 300) type = 2; else if (distance >= 200) type = 1;
       if (type > 0 && Math.random() < 0.6) spawnEnemy(type);
   }
-
   function spawnEnemy(type) {
       const e = document.createElement("div"); e.classList.add("enemy");
-      e.style.backgroundImage = `url('enemy${type}.png')`; 
-      e.style.backgroundColor = 'transparent'; 
+      e.style.backgroundImage = `url('enemy${type}.png')`; e.style.backgroundColor = 'transparent'; 
       e.type = type; e.hp = 1; e.timer = 0; e.state = 'enter'; 
       e.x = window.innerWidth + 50; e.y = randBetween(50, window.innerHeight - 150);
       e.style.left = e.x + "px"; e.style.top = e.y + "px";
       gameArea.appendChild(e); enemies.push(e);
   }
-
   function updateEnemies(dt) {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i]; e.timer += dt;
+        if(e.laserWarning) { e.laserWarning.style.width = e.x + "px"; e.laserWarning.style.top = (e.y + 30) + "px"; }
+        if(e.laserBeam) { e.laserBeam.style.width = e.x + "px"; e.laserBeam.style.top = (e.y + 15) + "px"; }
 
-        if(e.laserWarning) {
-            e.laserWarning.style.width = e.x + "px";
-            e.laserWarning.style.top = (e.y + 30) + "px";
+        if (activeEffects.noelGiant > 0 && e.x < window.innerWidth) {
+             const pRect = player.getBoundingClientRect(); const eRect = e.getBoundingClientRect();
+             if(pRect.right > eRect.left && pRect.left < eRect.right && pRect.bottom > eRect.top && pRect.top < eRect.bottom) {
+                 e.isDead = true; 
+                 spawnExplosionEffect(e.x, e.y); spawnFaithCoins(e.x, e.y, 5, true, false); 
+                 showFloatText("🦍 압도적 힘!");
+                 e.remove(); enemies.splice(i,1); continue;
+             }
         }
-        if(e.laserBeam) {
-            e.laserBeam.style.width = e.x + "px";
-            e.laserBeam.style.top = (e.y + 15) + "px";
-        }
-
         if (activeEffects.noelLaser > 0 && e.x < window.innerWidth) {
-            spawnExplosionEffect(e.x + 30, e.y + 30);
-            let count = 4 + e.type; 
-            spawnFaithCoins(e.x + 30, e.y + 30, count, true, false); 
-            
-            showFloatText("💥 레이저 분쇄!");
-            e.isDead = true;
-            if(e.laserWarning) e.laserWarning.remove();
-            if(e.laserBeam) e.laserBeam.remove();
-            e.remove(); enemies.splice(i, 1);
-            continue;
+            const beam = document.getElementById('noelBeam');
+            if(beam) {
+                const bRect = beam.getBoundingClientRect(); const eRect = e.getBoundingClientRect();
+                if(bRect.right > eRect.left && bRect.top < eRect.bottom && bRect.bottom > eRect.top) {
+                    spawnExplosionEffect(e.x + 30, e.y + 30); spawnFaithCoins(e.x + 30, e.y + 30, 4 + e.type, true, false); 
+                    showFloatText("💥 레이저 분쇄!");
+                    e.isDead = true; e.remove(); enemies.splice(i, 1); continue;
+                }
+            }
         }
-
-        if (isFeverTime) {
-           if (!e.feverTimer) e.feverTimer = 0;
-           if (e.x < window.innerWidth) e.feverTimer += dt;
+        if (isFeverTime && e.x < window.innerWidth) {
+           if (!e.feverTimer) e.feverTimer = 0; e.feverTimer += dt;
            if (e.feverTimer > 1.0) {
-               spawnExplosionEffect(e.x + 30, e.y + 30);
-               let count = 4 + e.type; 
-               spawnFaithCoins(e.x + 30, e.y + 30, count, true, false);
+               spawnExplosionEffect(e.x + 30, e.y + 30); spawnFaithCoins(e.x + 30, e.y + 30, 4 + e.type, true, false);
                showFloatText("💥 적군 섬멸!");
-               e.isDead = true;
-               if(e.laserWarning) e.laserWarning.remove();
-               if(e.laserBeam) e.laserBeam.remove();
-               e.remove(); enemies.splice(i, 1);
-               continue;
+               e.isDead = true; e.remove(); enemies.splice(i, 1); continue;
            }
         }
-
-        if(e.state === 'enter') {
-            e.x -= 100 * dt;
-            if (e.x < window.innerWidth - 150) { 
-                e.state = 'attack'; 
-                e.timer = 1.1; 
-            }
-        } else if (e.state === 'attack') {
-            if (e.type === 1) { 
-                if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; 
-                else e.x -= 300 * dt; 
-            }
-            else if (e.type >= 2 && e.type <= 5) {
-                e.y += Math.sin(Date.now() / 400) * 1.5;
-            }
-
+        if(e.state === 'enter') { e.x -= 100 * dt; if (e.x < window.innerWidth - 150) { e.state = 'attack'; e.timer = 1.1; } } 
+        else if (e.state === 'attack') {
+            if (e.type === 1) { if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; else e.x -= 300 * dt; }
+            else if (e.type >= 2 && e.type <= 5) { e.y += Math.sin(Date.now() / 400) * 1.5; }
             if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
             else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
             else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
             else if (e.type === 5 && e.timer > 1.0 && !e.isFiring) { fireEnemyLaser(e); } 
-            
         }
         e.style.left = e.x + "px"; e.style.top = e.y + "px";
-        
-        if (e.x < -100) { 
-            e.isDead = true; 
-            if(e.laserWarning) e.laserWarning.remove();
-            if(e.laserBeam) e.laserBeam.remove();
-            e.remove(); enemies.splice(i, 1); 
-        }
+        if (e.x < -100) { e.isDead = true; e.remove(); enemies.splice(i, 1); }
     }
   }
-
   function spawnEnemyProjectile(x, y, pattern, ownerEnemy) {
       if(pattern === 'single') createProj(x, y, -200, 0, ownerEnemy); 
       else if (pattern === 'fan') { createProj(x, y, -300, 0, ownerEnemy); createProj(x, y, -280, 100, ownerEnemy); createProj(x, y, -280, -100, ownerEnemy); }
       else if (pattern === 'explode') { let p = createProj(x, y, -250, 0, ownerEnemy); p.isExplosive = true; }
   }
-
   function createProj(x, y, vx, vy, owner) {
       const p = document.createElement("div"); p.classList.add("projectile", "enemy-missile");
       p.style.left = x + "px"; p.style.top = y + "px"; p.x = x; p.y = y; p.vx = vx; p.vy = vy;
       if(owner) p.owner = owner; 
       gameArea.appendChild(p); projectiles.push(p); return p;
   }
-
   function fireEnemyLaser(e) {
       e.isFiring = true; 
       const warning = document.createElement("div"); warning.className = "enemy-laser-warning";
       warning.style.left = "0px"; warning.style.width = e.x + "px"; warning.style.top = (e.y + 30) + "px";
-      gameArea.appendChild(warning);
-      e.laserWarning = warning; 
-
+      gameArea.appendChild(warning); e.laserWarning = warning; 
       setTimeout(() => {
-          if(e.isDead) { warning.remove(); return; } 
-          warning.remove(); e.laserWarning = null;
+          if(e.isDead) { warning.remove(); return; } warning.remove(); e.laserWarning = null;
           const laser = document.createElement("div"); laser.className = "enemy-laser-beam";
           laser.style.left = "0px"; laser.style.width = e.x + "px"; laser.style.top = (e.y + 15) + "px";
-          gameArea.appendChild(laser);
-          e.laserBeam = laser; 
-          
+          gameArea.appendChild(laser); e.laserBeam = laser; 
           let duration = 0;
           let check = setInterval(() => {
               if(e.isDead) { clearInterval(check); laser.remove(); return; }
-
               duration += 0.1; let laserY = parseFloat(laser.style.top);
               if(Math.abs(playerY - (window.innerHeight - laserY)) < 30 && !invincible) damageLife();
-              if(duration > 5.0) { 
-                  clearInterval(check); 
-                  laser.remove(); 
-                  e.laserBeam = null;
-                  
-                  setTimeout(() => {
-                      e.isFiring = false; 
-                      e.timer = 0;
-                  }, 2000); 
-              }
+              if(duration > 5.0) { clearInterval(check); laser.remove(); e.laserBeam = null; setTimeout(() => { e.isFiring = false; e.timer = 0; }, 2000); }
           }, 100);
       }, 1000); 
   }
-
   function spawnItem() {
     const types = ['invincible', 'turbo', 'slow', 'faith'];
     const images = { 'invincible': 'url("item_cross.png")', 'turbo': 'url("item_wings.png")', 'slow': 'url("item_wind.png")', 'faith': 'url("item_bible.png")' };
@@ -1997,27 +1350,20 @@
     item.x = window.innerWidth + 50; item.style.left = item.x + "px"; item.style.top = randBetween(100, window.innerHeight - 150) + "px";
     document.getElementById("gameArea").appendChild(item); items.push(item);
   }
-
   function activateItem(type) {
     if(type === 'invincible') { activeEffects.invincible = 10; showFloatText("🛡️ 무적!"); }
     else if(type === 'turbo') { activeEffects.turbo = 5; showFloatText("🚀 터보!"); }
     else if(type === 'slow') { activeEffects.slow = 10; showFloatText("🍃 감속"); }
     else if(type === 'faith') { 
-        let gain = 10;
-        if(collectionBuff) gain = 11;
-        faith += gain; daily.faith20 += gain; 
-        updateDailyMissionUI(); showFloatText(`📘 Faith +${gain}`); 
+        let gain = 10; if(collectionBuff) gain = 11;
+        faith += gain; daily.faith20 += gain; updateDailyMissionUI(); showFloatText(`📘 Faith +${gain}`); 
     }
     document.getElementById("faithText").innerText = faith;
   }
-
   function startBossBattle() {
     isBossBattle = true; bossLevel++; boss.maxHp = 6 + (bossLevel-1)*4; boss.hp = boss.maxHp; 
-    invincible = false;
-    if(isFeverTime) endFeverTime();
-    
+    invincible = false; if(isFeverTime) endFeverTime();
     player.style.left = "50px"; 
-
     showFloatText(`⚠️ BOSS LV.${bossLevel} WARNING!`);
     const warning = document.getElementById('bossWarning'); warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block'; setTimeout(() => warning.style.display = 'none', 3000);
@@ -2025,7 +1371,6 @@
     bossContainer.style.display = 'block'; setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
     document.getElementById('dailyMissionBox').style.display = 'none'; saveProgress();
   }
-
   function updateBoss(delta) {
     if (boss.hp <= 0) return;
     boss.actionTimer += delta;
@@ -2035,28 +1380,15 @@
     boss.shootTimer += delta;
     if (boss.state === 'idle' && boss.shootTimer > 2.0) { bossShoot(bossLevel, (1.0 + (bossLevel*0.2)) * 0.4); boss.shootTimer = 0; }
   }
-
   function startBossDash() {
     boss.state = 'dash'; bossBody.classList.add('boss-charging'); showFloatText("💢 돌진 준비!");
     setTimeout(() => {
         bossBody.classList.remove('boss-charging'); bossBody.classList.add('boss-dashing');
-        bossContainer.style.transition = "right 0.4s ease-in"; 
-        
-        bossContainer.style.right = (window.innerWidth - 100) + "px"; 
-        
-        setTimeout(() => { 
-            if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) {
-                damageLife(); 
-            }
-        }, 200);
-
-        setTimeout(() => { 
-            bossContainer.style.transition = "right 0.8s ease-out"; 
-            bossContainer.style.right = "20px"; bossBody.classList.remove('boss-dashing'); boss.state = 'idle'; boss.actionTimer = 0; 
-        }, 800);
+        bossContainer.style.transition = "right 0.4s ease-in"; bossContainer.style.right = (window.innerWidth - 100) + "px"; 
+        setTimeout(() => { if(playerY > (100-boss.y)/100 * window.innerHeight - 100 && playerY < (100-boss.y)/100 * window.innerHeight + 50) damageLife(); }, 200);
+        setTimeout(() => { bossContainer.style.transition = "right 0.8s ease-out"; bossContainer.style.right = "20px"; bossBody.classList.remove('boss-dashing'); boss.state = 'idle'; boss.actionTimer = 0; }, 800);
     }, 1000);
   }
-
   function startBossLaser() {
     boss.state = 'laser'; showFloatText("⚡ 레이저 충전!");
     setTimeout(() => {
@@ -2065,7 +1397,6 @@
         setTimeout(() => { clearInterval(checkLaser); laser.remove(); boss.state = 'idle'; boss.actionTimer = 0; }, 1000);
     }, 1500);
   }
-
   function bossShoot(count, speedMult) {
     for(let i=0; i<count; i++) {
         setTimeout(() => {
@@ -2082,7 +1413,6 @@
         }, i * 300); 
     }
   }
-
   function damageBoss() {
     boss.hp--; bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + "%"; showFloatText("💥 보스 타격!");
     if (boss.hp <= 0) {
@@ -2097,134 +1427,86 @@
         }, 1000);
     }
   }
-
   function updatePhysics(delta) {
-    // [준 스킨 시공간 여행 중이면 물리 업데이트 일부 스킵]
     if(isJunTimeTravel) return;
-
-    if (activeEffects.fly > 0) { playerY += (targetY - playerY) * 0.1; velocity = 0; if(speedLines) speedLines.style.display = "none"; } 
-    else if (activeEffects.turbo > 0) { velocity = 0; if(speedLines)
-    speedLines.style.display = "block"; } 
-    else { velocity += gravity; playerY += velocity; if(speedLines) speedLines.style.display = "none"; }
-
+    if (activeEffects.fly > 0) { playerY += (targetY - playerY) * 0.1; velocity = 0; speedLines.style.display = "none"; } 
+    else if (activeEffects.turbo > 0) { velocity = 0; speedLines.style.display = "block"; } 
+    else { velocity += gravity; playerY += velocity; speedLines.style.display = "none"; }
     if (playerY < 0) playerY = 0;
     if (playerY > window.innerHeight - 110) playerY = window.innerHeight - 110;
     player.style.bottom = playerY + "px";
-
     const safeActive = (val) => (val && val > 0);
 
-    // 플레이어 미사일 업데이트
     for (let i = playerMissiles.length - 1; i >= 0; i--) {
         let m = playerMissiles[i];
-        let mx = parseFloat(m.style.left);
-        mx += 600 * delta; 
-        m.style.left = mx + "px";
+        let mx = parseFloat(m.style.left); mx += 600 * delta; m.style.left = mx + "px";
         if (mx > window.innerWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
-
         for (let j = enemies.length - 1; j >= 0; j--) {
             let e = enemies[j];
-            let rM = m.getBoundingClientRect();
-            let rE = e.getBoundingClientRect();
-            
+            let rM = m.getBoundingClientRect(); let rE = e.getBoundingClientRect();
             if (rM.right > rE.left && rM.left < rE.right && rM.bottom > rE.top && rM.top < rE.bottom) {
                 e.hp--; m.remove(); playerMissiles.splice(i, 1);
-                
                 const ex = document.createElement('div'); ex.className = 'explosion-area';
                 ex.style.left = rE.left + 'px'; ex.style.top = rE.top + 'px'; ex.style.width='60px'; ex.style.height='60px';
                 gameArea.appendChild(ex); setTimeout(()=>ex.remove(), 500);
-
                 if (e.hp <= 0) { 
-                    e.isDead = true;
-                    if(e.laserWarning) e.laserWarning.remove();
-                    if(e.laserBeam) e.laserBeam.remove();
-                    
+                    e.isDead = true; if(e.laserWarning) e.laserWarning.remove(); if(e.laserBeam) e.laserBeam.remove();
                     e.remove(); enemies.splice(j, 1); 
-                    
-                    let count = 4 + e.type; 
-                    spawnFaithCoins(e.x + 30, e.y + 30, count, true, false); 
-                    
-                    showFloatText("💥 적군 격파! (+5)"); 
-                    if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER); 
+                    spawnFaithCoins(e.x + 30, e.y + 30, 4 + e.type, true, false); // 수동
+                    showFloatText("💥 적군 격파! (+5)"); if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER); 
                 }
                 break; 
             }
         }
     }
-
-    // 적/보스 투사체 업데이트
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
-        
         if (p.owner && p.owner.isDead) {
-            p.style.opacity = (parseFloat(p.style.opacity) || 1) - 0.05; 
-            p.isFading = true; 
-            if (p.style.opacity <= 0) {
-                p.remove(); projectiles.splice(i, 1); continue;
-            }
+            p.style.opacity = (parseFloat(p.style.opacity) || 1) - 0.05; p.isFading = true; 
+            if (p.style.opacity <= 0) { p.remove(); projectiles.splice(i, 1); continue; }
         }
-
         let cx = parseFloat(p.style.left) || p.x; let cy = parseFloat(p.style.top) || p.y;
         cx += p.vx * delta; cy += p.vy * delta;
         p.style.left = cx + "px"; p.style.top = cy + "px";
         if (cx < -100 || cx > window.innerWidth + 100 || cy < -100 || cy > window.innerHeight + 100) { p.remove(); projectiles.splice(i, 1); continue; }
-        
         if (p.isExplosive && !p.exploded && cx <= 120) { 
              p.exploded = true;
              const boom = document.createElement("div"); boom.className = "explosion-area";
-             boom.style.width = "260px"; boom.style.height = "260px"; 
-             boom.style.left = (cx - 100) + "px"; boom.style.top = (cy - 100) + "px";
+             boom.style.width = "260px"; boom.style.height = "260px"; boom.style.left = (cx - 100) + "px"; boom.style.top = (cy - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
-             
              const pRect = player.getBoundingClientRect(); const bRect = boom.getBoundingClientRect();
              if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) {
                  if(!invincible && !safeActive(activeEffects.invincible)) damageLife();
              }
              p.remove(); projectiles.splice(i, 1); continue;
         }
-
         if (!p.isReflected && !p.isFading) {
             const rP = player.getBoundingClientRect(); const rM = p.getBoundingClientRect();
             if (rP.right > rM.left && rP.left < rM.right && rP.bottom > rM.top && rP.top < rM.bottom) {
-                if (isFeverTime) { 
-                    p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; 
-                } 
-                else if (!invincible && !safeActive(activeEffects.invincible) && !safeActive(activeEffects.summon)) {
-                      damageLife(); p.remove(); projectiles.splice(i, 1); continue; 
-                }
+                if (isFeverTime) { p.remove(); projectiles.splice(i, 1); faith += 5; showFloatText("💥 돌파!"); continue; } 
+                else if (!invincible && !safeActive(activeEffects.invincible) && !safeActive(activeEffects.summon)) { damageLife(); p.remove(); projectiles.splice(i, 1); continue; }
             }
         }
-
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect(); const pRect = p.getBoundingClientRect();
             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) { damageBoss(); p.remove(); projectiles.splice(i, 1); continue; }
         }
     }
-
-    // 적군 본체 충돌 체크
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         if (!safeActive(activeEffects.invincible) && !invincible) {
             const rP = player.getBoundingClientRect(); const rE = e.getBoundingClientRect();
             if (rP.right > rE.left && rP.left < rE.right && rP.bottom > rE.top && rP.top < rE.bottom) {
                 if (isFeverTime) { 
-                    e.isDead = true;
-                    if(e.laserWarning) e.laserWarning.remove();
-                    if(e.laserBeam) e.laserBeam.remove();
-                    
+                    e.isDead = true; if(e.laserWarning) e.laserWarning.remove(); if(e.laserBeam) e.laserBeam.remove();
                     e.remove(); enemies.splice(i, 1); 
-                    
-                    let count = 4 + e.type; 
-                    spawnFaithCoins(e.x + 30, e.y + 30, count, true, false); 
-                    
-                    showFloatText("💥 적군 분쇄! (+5)"); 
-                    spawnExplosionEffect(rE.left, rE.top); continue; 
+                    spawnFaithCoins(e.x + 30, e.y + 30, 4 + e.type, true, false); 
+                    showFloatText("💥 적군 분쇄! (+5)"); spawnExplosionEffect(rE.left, rE.top); continue; 
                 } 
                 else { damageLife(); e.remove(); enemies.splice(i, 1); continue; }
             }
         }
     }
-
-    // 장애물 이동 및 충돌 체크
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
         let left = parseFloat(o.style.left) || window.innerWidth;
@@ -2232,36 +1514,33 @@
         o.style.left = left + "px";
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
 
-        // 노엘 스킨: 에너지파 충돌
+        // 노엘 빔 충돌 (장애물)
         if (activeEffects.noelLaser > 0 && !o.destroyed) {
             const beam = document.getElementById('noelBeam');
             if (beam) {
-                const rB = beam.getBoundingClientRect();
-                const rO = o.getBoundingClientRect();
-                if (rB.right > rO.left && rB.left < rO.right && 
-                    rB.bottom > rO.top && rB.top < rO.bottom) {
-                    
-                    o.destroyed = true;
-                    spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                    spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
-                    o.remove(); obstacles.splice(i, 1);
-                    showFloatText("💰 대박!");
-                    continue;
+                const rB = beam.getBoundingClientRect(); const rO = o.getBoundingClientRect();
+                if (rB.right > rO.left && rB.bottom > rO.top && rB.top < rO.bottom) {
+                    o.destroyed = true; spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - 50)));
+                    spawnFaithCoins(left, window.innerHeight - 150, randBetween(2,5), false, false); // 수동
+                    o.remove(); obstacles.splice(i, 1); showFloatText("💥 파괴!"); continue;
                 }
             }
         }
-
-        // 피버타임 충돌
-        if (isFeverTime && left < 180 && !o.destroyed) {
-            o.destroyed = true; 
-            spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
-            o.remove(); obstacles.splice(i, 1);
-            showFloatText("💰 격파!");
-            continue;
+        // 노엘 거대화 (장애물)
+        if (activeEffects.noelGiant > 0 && !o.destroyed) {
+             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
+             if(rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
+                 o.destroyed = true; spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - 50)));
+                 spawnFaithCoins(left, window.innerHeight - 150, 3, false, false); // 수동
+                 o.remove(); obstacles.splice(i, 1); showFloatText("🦍 파괴!"); continue;
+             }
         }
 
-        // 화면 밖으로 나감 (회피 성공)
+        if (isFeverTime && left < 180 && !o.destroyed) {
+            o.destroyed = true; spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - 50)));
+            spawnFaithCoins(left, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
+            o.remove(); obstacles.splice(i, 1); showFloatText("💰 격파!"); continue;
+        }
         if (left + rw < 0) {
             o.remove(); obstacles.splice(i, 1); obstacleSurviveCount++;
             if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
@@ -2272,91 +1551,50 @@
             }
             continue;
         }
-        
-        // 지은 스킨: 소환 상태 충돌 (보호막 범위)
-        if (currentSkin === 'jieun' && activeEffects.summon > 0 && !o.destroyed) {
-            const rP = player.getBoundingClientRect();
-            const rO = o.getBoundingClientRect();
-            
-            if (rP.right + 20 > rO.left && rP.left - 20 < rO.right && 
-                rP.bottom + 20 > rO.top && rP.top - 20 < rO.bottom) {
-                
-                o.destroyed = true;
-                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                spawnFaithCoins(left, window.innerHeight - 150, 3, false, true);
-                o.remove(); obstacles.splice(i, 1);
-                showFloatText("💥 파괴!");
-                continue;
+        if (activeEffects.summon > 0 && !o.destroyed) {
+             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
+             if (rP.right + 20 > rO.left && rP.left - 20 < rO.right && rP.bottom + 20 > rO.top && rP.top - 20 < rO.bottom) {
+                o.destroyed = true; spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - 50)));
+                spawnFaithCoins(left, window.innerHeight - 150, 3, false, true); // 소환은 자동
+                o.remove(); obstacles.splice(i, 1); showFloatText("💥 파괴!"); continue;
             }
         }
-
-        // 하은 스킨: 보호막 충돌
         if (currentSkin === 'haeun' && haeunShieldActive && !o.destroyed) {
-            const rP = player.getBoundingClientRect();
-            const rO = o.getBoundingClientRect();
-            
-            if (rP.right + 20 > rO.left && rP.left - 10 < rO.right && 
-                rP.bottom + 10 > rO.top && rP.top - 10 < rO.bottom) {
-                
-                o.destroyed = true;
-                haeunShieldActive = false; // 보호막 해제
-                removeHaeunShield();
-                
-                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - parseFloat(o.style.bottom) - 50)));
-                
-                let coins = Math.floor(randBetween(5, 11));
-                spawnFaithCoins(left, window.innerHeight - 150, coins, false, true);
-                
-                o.remove(); obstacles.splice(i, 1);
-                showFloatText("🛡️ 방어 & 파괴!");
-                playSound('clear');
-                continue;
+            const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
+            if (rP.right + 20 > rO.left && rP.left - 10 < rO.right && rP.bottom + 10 > rO.top && rP.top - 10 < rO.bottom) {
+                o.destroyed = true; haeunShieldActive = false; removeHaeunShield();
+                spawnExplosionEffect(left + 30, parseFloat(o.style.top || (window.innerHeight - 50)));
+                spawnFaithCoins(left, window.innerHeight - 150, randBetween(5, 11), false, true); // 자동
+                o.remove(); obstacles.splice(i, 1); showFloatText("🛡️ 방어 & 파괴!"); playSound('clear'); continue;
             }
         }
-
-        // 일반 충돌 (피버X, 무적X, 소환X, 하은쉴드X)
         if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
             const rP = player.getBoundingClientRect(); const rO = o.getBoundingClientRect();
-            if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) {
-                damageLife(); break;
-            }
+            if (rP.right > rO.left && rP.left < rO.right && rP.bottom > rO.top && rP.top < rO.bottom) { damageLife(); break; }
         }
-        if(currentSkin === 'stephanie' && left < 50 && !o.passed) { faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true; }
     }
   }
-
   function spawnObstacle() { 
     if(!running) return;
     if(activeEffects.turbo > 0 && !isFeverTime) return;
-
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
-
     if (distance < 50) {
-        const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
-        const sx = window.innerWidth + 80;
-        const b = document.createElement("div");
-        b.classList.add("obstacle", "obs-cap", "obs-ground", type);
-        b.style.height = randi(130, 360) + "px"; 
-        b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
-        gameArea.appendChild(b);
-        obstacles.push(b);
-        return; 
+        const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock'; const sx = window.innerWidth + 80;
+        const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
+        b.style.height = randi(130, 360) + "px"; b.x = sx; b.style.left = sx + "px"; b.style.bottom = "0";
+        gameArea.appendChild(b); obstacles.push(b); return; 
     }
-
     if(distance > 50 && Math.random() < 0.65) {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
             const b = document.createElement("div"); b.classList.add("obstacle", "obs-long");
-            b.x = window.innerWidth+80; b.style.left = b.x+"px";
-            let sh = window.innerHeight;
+            b.x = window.innerWidth+80; b.style.left = b.x+"px"; let sh = window.innerHeight;
             if(cnt===2) { if(k===0) b.style.bottom=randBetween(30, sh*0.35)+"px"; else b.style.bottom=randBetween(sh*0.55, sh*0.85)+"px"; }
             else { let r=Math.random(); if(r<0.2) b.style.bottom="0px"; else if(r<0.4) b.style.top="0px"; else b.style.bottom=randBetween(50, sh-120)+"px"; }
             gameArea.appendChild(b); obstacles.push(b);
-        }
-        return;
+        } return;
     }
-    const type = (Math.random()<0.5)?'obs-log':'obs-rock';
-    const sx = window.innerWidth+80;
+    const type = (Math.random()<0.5)?'obs-log':'obs-rock'; const sx = window.innerWidth+80;
     if(Math.random()<0.5) {
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=randi(90,220)+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
@@ -2370,134 +1608,65 @@
         gameArea.appendChild(t); obstacles.push(b); gameArea.appendChild(b); obstacles.push(b);
     }
   }
-
   function damageLife() {
-    // 재국 스킨 - 1회용 즉시 부활 (최대 체력)
     if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
-        jaegukRevivedOnce = true;
-        life = maxLife;
-        document.getElementById("lifeText").innerText = life;
-        
-        const wing = document.createElement('div');
-        wing.className = 'angel-wing-effect';
-        gameArea.appendChild(wing);
-        setTimeout(() => wing.remove(), 2000);
-        
-        showFloatText("🪽 부활!");
-        playSound('item');
-        activeEffects.invincible = 3; 
-        return;
+        jaegukRevivedOnce = true; life = maxLife; document.getElementById("lifeText").innerText = life;
+        const wing = document.createElement('div'); wing.className = 'angel-wing-effect';
+        gameArea.appendChild(wing); setTimeout(() => wing.remove(), 2000);
+        showFloatText("🪽 부활!"); playSound('item'); activeEffects.invincible = 3; return;
     }
-
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
-    
-    // 하은 스킨 보호막 파괴
     if(currentSkin === 'haeun' && haeunShieldActive) {
-        haeunShieldActive = false;
-        removeHaeunShield();
-        showFloatText("🛡️ 방어 성공!");
-        playSound('parry');
-        return;
+        haeunShieldActive = false; removeHaeunShield(); showFloatText("🛡️ 방어 성공!"); playSound('parry'); return;
     }
-
     life--; document.getElementById("lifeText").innerText=life;
     invincible=true; player.style.opacity="0.4"; setTimeout(()=>{invincible=false; player.style.opacity="1";},800);
-    playSound('hit');
-    if(life<=0) gameOver();
+    playSound('hit'); if(life<=0) gameOver();
   }
-
-  function showFloatText(text) { const r=player.getBoundingClientRect(); const e=document.createElement("div"); e.classList.add("float-text"); e.innerText=text; e.style.left=(r.left+10)+"px"; e.style.top=(r.top-20)+"px"; document.body.appendChild(e); setTimeout(()=>e.remove(),1000); }
   function startGameNow() { 
       document.getElementById("startGuide").style.display="none"; 
-      running=true; 
-      lastTime=performance.now(); 
+      document.getElementById('abilityBtn2').style.display = 'none'; 
+      running=true; lastTime=performance.now(); 
       if(sounds['bgm']) sounds['bgm'].play().catch(e=>console.log("BGM Error:", e));
-      requestAnimationFrame(gameLoop); 
-      updateDailyMissionUI(); 
+      requestAnimationFrame(gameLoop); updateDailyMissionUI(); 
   }
-    
   async function saveProgress() { 
-    saveData.faith = faith; 
-    try{
-        await fetch(API_URL,{
-            method:"POST",
-            headers: { "Content-Type": "text/plain" },
-            redirect: 'follow',
-            body:JSON.stringify({type:"save",id,saveData})
-        });
-    }catch(e){} 
+    saveData.faith = faith; try{ await fetch(API_URL,{ method:"POST", headers: { "Content-Type": "text/plain" }, redirect: 'follow', body:JSON.stringify({type:"save",id,saveData}) }); }catch(e){} 
     localStorage.setItem("run_save",JSON.stringify(saveData)); 
   }
-
   async function gameOver() { 
-      if(rankingSaved)return; 
-      running=false; invincible=true; player.style.opacity="0.4"; 
-      document.getElementById("finalDist").innerText=Math.floor(distance); 
-      document.getElementById("gameOverModal").style.display="flex"; 
-      try{
-          await fetch(API_URL,{
-              method:"POST",
-              headers: { "Content-Type": "text/plain" },
-              redirect: 'follow',
-              body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""})
-          });
-      }catch(e){} 
+      if(rankingSaved)return; running=false; invincible=true; player.style.opacity="0.4"; 
+      document.getElementById("finalDist").innerText=Math.floor(distance); document.getElementById("gameOverModal").style.display="flex"; 
+      try{ await fetch(API_URL,{ method:"POST", headers: { "Content-Type": "text/plain" }, redirect: 'follow', body:JSON.stringify({type:"updateRanking",id,name,distance:Math.floor(distance),message:""}) }); }catch(e){} 
       rankingSaved=true; 
   }
-
   async function confirmRanking() { 
       const msg=document.getElementById("rankMsg").value.trim(); 
-      try{
-          await fetch(API_URL,{
-              method:"POST",
-              headers: { "Content-Type": "text/plain" },
-              redirect: 'follow',
-              body:JSON.stringify({type:"updateComment",id,message:msg})
-          }); 
-          alert("등록완료"); window.location.href="/TrapGame/menu.html";
-      }catch(e){
-          alert("오류"); window.location.href="/TrapGame/menu.html";
-      } 
+      try{ await fetch(API_URL,{ method:"POST", headers: { "Content-Type": "text/plain" }, redirect: 'follow', body:JSON.stringify({type:"updateComment",id,message:msg}) }); alert("등록완료"); window.location.href="/TrapGame/menu.html"; }catch(e){ alert("오류"); window.location.href="/TrapGame/menu.html"; } 
   }
-    
   async function pauseForQuiz() {
-    if (!running) return;
-    running = false; document.getElementById("loadingQuiz").style.display = "flex";
+    if (!running) return; running = false; document.getElementById("loadingQuiz").style.display = "flex";
     try {
-      const res = await fetch(API_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain" },
-          redirect: 'follow',
-          body: JSON.stringify({ type: "getQuiz" }) 
-      });
-      const txt = await res.text();
-      document.getElementById("loadingQuiz").style.display = "none";
+      const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, redirect: 'follow', body: JSON.stringify({ type: "getQuiz" }) });
+      const txt = await res.text(); document.getElementById("loadingQuiz").style.display = "none";
       if (txt === "noquiz") { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); return; }
       const quiz = JSON.parse(txt);
       document.getElementById("quizQuestion").innerText = quiz.question;
-      document.getElementById("btnA").innerText = "A) " + quiz.A;
-      document.getElementById("btnB").innerText = "B) " + quiz.B;
-      document.getElementById("btnC").innerText = "C) " + quiz.C;
-      window.correctAnswer = quiz.answer;
-      document.getElementById("quizModal").style.display = "flex";
-    } catch (err) {
-      alert("퀴즈 로딩 실패. 인터넷 연결을 확인하세요.");
-    }
+      document.getElementById("btnA").innerText = "A) " + quiz.A; document.getElementById("btnB").innerText = "B) " + quiz.B; document.getElementById("btnC").innerText = "C) " + quiz.C;
+      window.correctAnswer = quiz.answer; document.getElementById("quizModal").style.display = "flex";
+    } catch (err) { alert("퀴즈 로딩 실패."); running=true; requestAnimationFrame(gameLoop); }
   }
-
   function answerQuiz(sel) {
     document.getElementById("quizModal").style.display = "none";
     if (sel === window.correctAnswer) {
-      const ef = document.getElementById("correctEffect");
-      ef.style.display = "block"; setTimeout(() => (ef.style.display = "none"), 800);
+      const ef = document.getElementById("correctEffect"); ef.style.display = "block"; setTimeout(() => (ef.style.display = "none"), 800);
       faith += 5; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
       daily.quiz3++; localStorage.setItem("dailyMission", JSON.stringify(daily)); saveProgress();
     } else { damageLife(); }
     if (life > 0) { running = true; lastTime = performance.now(); requestAnimationFrame(gameLoop); }
   }
-    
   let lastT=0; document.addEventListener("touchend",e=>{const n=Date.now();if(n-lastT<300)e.preventDefault();lastT=n;},{passive:false});
 </script>
 </body>
