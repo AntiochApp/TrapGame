@@ -6,25 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
-    /* === [원본 디자인 시스템 100% 유지] === */
+    /* === 원본 스타일 유지 및 신규 이펙트 추가 === */
     :root { --hud-bg: rgba(255, 248, 235, 0.9); --hud-border: #3a2513; --accent: #c47a3f; --panel-bg: #fdfaf2; }
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* 피버타임 및 원본 효과 유지 */
+    /* 효과 모음 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
+    #gameArea.sandstorm-mode { filter: sepia(80%) contrast(120%) brightness(90%); }
     #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
-    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-2px, 3px); } 50% { transform: translate(2px, -3px); } 75% { transform: translate(-3px, -2px); } 100% { transform: translate(0, 0); } }
+    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-4px, 4px); } 50% { transform: translate(4px, -4px); } 75% { transform: translate(-4px, -4px); } 100% { transform: translate(0, 0); } }
 
     #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* === [신규 추가: 리마스터 스킨 전용 효과] === */
-    /* 하휘: 모래폭풍 */
-    #gameArea.sandstorm-mode { filter: sepia(80%) contrast(120%) brightness(90%); }
-
-    /* 준: 시공간 포탈 (리얼 버전) */
+    /* 준: 시공간 포탈 */
     .time-portal {
         position: absolute; width: 140px; height: 220px;
         background: transparent; border-radius: 50%;
@@ -58,7 +55,7 @@
     #junMiniGameMsg { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px cyan; }
     #junDistanceDisplay { font-size: 60px; font-weight: 900; color: #ffe24f; text-shadow: 4px 4px 0 #3a2513; }
 
-    /* 준: 어린 양 (수정됨) */
+    /* 준: 어린 양 */
     .lamb-unit {
         position: absolute; width: 60px; height: 60px;
         background: url('Lam.png') no-repeat center/contain;
@@ -96,7 +93,7 @@
     }
     @keyframes lightningStrike { 0% { opacity: 0; transform: scaleY(0); } 10% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; } }
 
-    /* 하휘: 인피니티 스톤 & 샌드 */
+    /* 하휘: 인피니티 스톤 */
     .infinity-stone {
         position: absolute; width: 20px; height: 20px; border-radius: 50%;
         box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
@@ -115,7 +112,7 @@
     }
     @keyframes dissolve { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; filter: blur(4px); } }
 
-    /* 지혜: 발키리 (원본 유지 + 개선) */
+    /* 지혜: 발키리 */
     .jihye-transform-sphere {
         position: absolute; width: 120px; height: 120px; border-radius: 50%;
         background: radial-gradient(circle at center, #fff 20%, #ffd700 80%);
@@ -164,7 +161,6 @@
         z-index: 4; pointer-events: none; display: none; mix-blend-mode: overlay;
     }
     @keyframes rainbowWave { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    /* 지은 패시브 (노엘 쉴드) */
     .jieun-shield-unit {
         position: absolute; width: 50px; height: 50px;
         background-image: url('skin_noel.png'); background-size: contain; background-repeat: no-repeat;
@@ -183,7 +179,6 @@
     }
     @keyframes auraPulse { from { transform: scale(1); opacity: 0.6; } to { transform: scale(1.1); opacity: 0.9; } }
     .player-giant { transform: scale(2) !important; transition: transform 0.5s; }
-    
     .noel-beam {
         position: absolute; left: 170px; height: 120px; width: 0;
         background: radial-gradient(ellipse at left, rgba(255,255,255,1) 0%, rgba(0,255,255,0.8) 30%, rgba(0,100,255,0) 80%);
@@ -249,7 +244,7 @@
     }
     @keyframes poofAnim { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
 
-    /* 원본 스킬 스타일 (보존) */
+    /* 공통 & 기존 스타일 */
     .boba-unit {
         position: absolute; width: 20px; height: 20px;
         background: radial-gradient(circle at 30% 30%, #4e342e, #212121);
@@ -283,7 +278,6 @@
     }
     @keyframes healExpand { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; } }
 
-    /* 배경 및 레이아웃 */
     .bg-layer { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none; will-change: background-position; }
     #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("bg_mountain.png"); z-index: 2; background-size: auto 100%; background-position: 0 bottom; }
@@ -363,7 +357,6 @@
     #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
     
-    /* SKILL 버튼 1 */
     #abilityBtn { 
         position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; 
         background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; 
@@ -371,6 +364,17 @@
         cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); 
     }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
+
+    /* SKILL 버튼 2 (노엘 전용 - 초기 숨김) */
+    #abilityBtn2 { 
+        position: fixed; bottom: 110px; right: 20px; width: 80px; height: 80px; 
+        background: #00bcd4; color: white; border-radius: 50%; border: 4px solid #fff; 
+        font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; 
+        cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); 
+        transition: transform 0.1s;
+    }
+    #abilityBtn2:active { transform: scale(0.9); }
+    #abilityBtn2.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
 
     #subActionBtn { 
         position: fixed; bottom: 150px; left: 20px; width: 100px; height: 100px; border-radius: 50%;
@@ -481,6 +485,7 @@
   <div id="pauseBtn" onclick="togglePause()">⏸️</div>
 
   <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
+  <div id="abilityBtn2" ontouchstart="useAbility2(event)" onclick="useAbility2(event)">BEAM</div>
   <div id="dailyMissionBox"></div>
   
   <div id="subActionBtn" ontouchstart="handleSubAction(event)" onclick="handleSubAction(event)">
@@ -523,7 +528,7 @@
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
 
 <script>
-  // [보안] F12 및 개발자 도구 차단
+  // [보안] F12 차단
   document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || (e.ctrlKey && (e.shiftKey && (e.key === 'I' || e.key === 'J') || e.key === 'U'))) {
       e.preventDefault(); alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
@@ -562,20 +567,20 @@
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
 
-  // 스킨 데이터 설정 (3.0 리마스터 기준)
+  // 스킨 데이터 (하이브리드/액티브/패시브)
   const SKIN_DATA = {
     default: { type: "none" }, 
-    noel: { type: "Hybrid", cd: 60 },      // Active:에너지파, Passive:거대화
-    jeonchan: { type: "Active", cd: 60 },  // Active:해머, Passive:번개
-    haeun: { type: "Passive", cd: 30 },    // Passive:쉴드/힐
-    jaeguk: { type: "Active", cd: 70 },    // Active:보바, Passive:부활
-    hahwi: { type: "Active", cd: 60 },     // Active:모래폭풍, Passive:스톤
-    jihye: { type: "Active", cd: 60 },     // Active:발키리, Passive:힐
-    jun: { type: "Active", cd: 90 },       // Active:포탈게임, Passive:양
-    stephanie: { type: "Active", cd: 70 }, // Active:케이크, Passive:하트
-    yejun: { type: "Active", cd: 60 },     // Active:비행, Passive:도플갱어
-    ganghui: { type: "Active", cd: 60 },   // Active:건담, Passive:판넬
-    jieun: { type: "Active", cd: 60 }      // Active:음계, Passive:쉴드(노엘소환)
+    noel: { type: "Hybrid", cd: 60 },      // 1:에너지파(60s), 2:거대화(Passive)
+    jeonchan: { type: "Active", cd: 60 },  // 1:해머, 2:번개(Passive)
+    haeun: { type: "Passive", cd: 30 },    // 쉴드/힐
+    jaeguk: { type: "Active", cd: 70 },    // 1:보바, 2:부활(Passive)
+    hahwi: { type: "Active", cd: 60 },     // 1:모래폭풍, 2:스톤(Passive)
+    jihye: { type: "Active", cd: 60 },     // 1:발키리, 2:힐(Passive)
+    jun: { type: "Active", cd: 90 },       // 1:포탈게임, 2:양(Passive)
+    stephanie: { type: "Active", cd: 70 }, // 1:케이크, 2:하트(Passive)
+    yejun: { type: "Active", cd: 60 },     // 1:비행, 2:도플갱어(Passive)
+    ganghui: { type: "Active", cd: 60 },   // 1:건담, 2:판넬(Passive)
+    jieun: { type: "Active", cd: 60 }      // 1:음계, 2:쉴드(Passive)
   };
 
   const abilityBtn = document.getElementById('abilityBtn');
@@ -613,9 +618,10 @@
   let enemySpawnTimer = 0;
   let itemTimer = 0; let nextItemTime = 8;
   let abilityCD = 0; 
+  let abilityCD2 = 0; 
   let missionUpdateTimer = 0;
 
-  // === 각 스킨별 상태 변수 ===
+  // 스킨별 변수
   let jeonchanTimer = 0; let jeonchanLightningTimer = 0; 
   let haeunLifeTimer = 0; let haeunShieldTimer = 0; let haeunShieldActive = false;
   let jaegukRevivedOnce = false; let bobas = [];
@@ -625,8 +631,8 @@
   let ganghuiFunnels = []; let ganghuiLaserTimer = 0; let ganghuiPassiveTimer = 0;
   let stephanieCakes = []; let stephanieBgActive = false; let stephaniePassiveTimer = 0;
   let yejunClones = []; let yejunPassiveTimer = 0;
-  let jieunNotes = []; let jieunPassiveTimer = 0; // 노엘 수호
-  let noelPassiveTimer = 0; // 노엘 거대화(패시브)
+  let jieunNotes = []; let jieunPassiveTimer = 0; 
+  let noelPassiveTimer = 0; 
 
   let bg1X = 0, bg2X = 0, bg3X = 0;
   const BG1_SPEED = 20; const BG2_SPEED = 40; const BG3_SPEED = 60;
@@ -649,7 +655,6 @@
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
-  // === 이펙트 및 유틸 ===
   function spawnParticles(x, y, type) {
     const colors = type==='item' ? ['#ffd700','#fff'] : type==='spark' ? ['#ff4500','#ff8c00'] : ['#8b4513','#a0522d'];
     for(let i=0; i<8; i++) {
@@ -669,7 +674,7 @@
       gameArea.appendChild(ex); setTimeout(() => ex.remove(), 400);
       playSound('hit');
   }
-  // [수정] 스킬로 인한 코인은 자동 획득 X (autoCollect 인자 활용)
+  // 코인 생성 (autoCollect: true면 자동, false면 수동)
   function spawnFaithCoins(x, y, count, manualCollection = false, autoCollect = false) {
       for(let i=0; i<count; i++) {
           const coin = document.createElement('div');
@@ -695,8 +700,6 @@
       setTimeout(()=>heal.remove(), 600);
   }
 
-  // === 스킬 로직 (Active/Passive) ===
-
   // 1. 전찬 (해머, 번개)
   function triggerJeonchanSkill() {
       showFloatText("🔨 심판의 망치!");
@@ -706,28 +709,25 @@
       const trail = document.createElement('div'); trail.className = 'hammer-trail';
       hammer.appendChild(trail); gameArea.appendChild(hammer);
       
-      // 20초간 횡단
       hammer.animate([
           { left: '-200px', transform: 'rotate(0deg)' },
           { left: '120vw', transform: 'rotate(360deg)' }
       ], { duration: 20000, easing: 'linear' }).onfinish = () => { hammer.remove(); gameArea.classList.remove('shake-screen'); };
       
       gameArea.classList.add('shake-screen');
-      // 해머 충돌은 gameLoop에서 처리
-      // 해머 객체 관리를 위해 전역 배열 X, DOM 요소 조회로 처리하거나 dataset 활용
       hammer.id = 'activeHammer';
   }
 
-  // 2. 하휘 (모래폭풍, 스톤)
+  // 2. 하휘 (모래폭풍)
   function triggerHahwiSkill() {
       showFloatText("🏜️ 사막의 폭풍!");
       activeEffects.hahwiMode = 15;
-      activeEffects.invincible = 15; // 무적 추가
+      activeEffects.invincible = 15; 
       gameArea.classList.add('sandstorm-mode');
       playSound('clear');
   }
 
-  // 3. 지혜 (발키리) - 원본 유지
+  // 3. 지혜 (발키리)
   function triggerJihyeSkill() {
       showFloatText("✨ 발키리 강림!");
       const sphere = document.createElement('div'); sphere.className = 'jihye-transform-sphere';
@@ -759,14 +759,14 @@
       healer.style.left = pRect.left + 'px'; healer.style.top = '-100px';
       gameArea.appendChild(healer);
       const pillar = document.createElement('div'); pillar.className = 'holy-light-pillar';
-      pillar.style.left = (pRect.left + 30) + 'px'; // 중앙 정렬
+      pillar.style.left = (pRect.left + 30) + 'px'; 
       gameArea.appendChild(pillar);
       requestAnimationFrame(() => { healer.style.top = (pRect.top - 80) + 'px'; });
       setTimeout(() => {
           if(life < maxLife + 5) { life = Math.min(life + 2, maxLife + 5); document.getElementById("lifeText").innerText = life; showHealEffect(); showFloatText("💖 성녀의 치유"); }
           healer.style.top = '-200px';
           setTimeout(() => { healer.remove(); pillar.remove(); }, 1500);
-      }, 2000); // 2배 머무름
+      }, 2000); 
   }
 
   // 4. 준 (포탈 미니게임)
@@ -793,7 +793,7 @@
       }, 1000);
   }
   function finishJunMiniGame(portal) {
-      let finalBonus = Math.floor(Math.min(junMiniGameDist, 50)); // Max 50m
+      let finalBonus = Math.floor(Math.min(junMiniGameDist, 50)); 
       distance += finalBonus; showFloatText(`⏩ +${finalBonus}m 워프 성공!`);
       timeTunnelBg.style.opacity = '0';
       setTimeout(() => {
@@ -802,7 +802,6 @@
           setTimeout(()=>portal.remove(), 500);
       }, 500);
   }
-  // 준 미니게임 입력
   timeTunnelBg.addEventListener('touchstart', handleJunTap);
   timeTunnelBg.addEventListener('mousedown', handleJunTap);
   document.addEventListener('keydown', (e) => { if(isJunTimeTravel && e.code === 'Space') handleJunTap(e); });
@@ -810,7 +809,7 @@
       if(!isJunTimeTravel) return;
       if(e.type !== 'keydown') { e.preventDefault(); e.stopPropagation(); }
       junMiniGameClicks++;
-      let boost = 1; // 1터치 1m
+      let boost = 1; 
       junMiniGameDist += boost;
       document.getElementById('junDistanceDisplay').innerText = Math.floor(junMiniGameDist) + "m";
       playSound('jump');
@@ -823,7 +822,6 @@
       showFloatText("🤖 모빌슈트 전개!");
       activeEffects.ganghuiMode = 15; activeEffects.invincible = 15;
       document.getElementById('gundamEffect').style.display = 'block';
-      // 판넬 6개 즉시 소환
       for(let i=0; i<6; i++) {
           const f = document.createElement('div'); f.className = 'funnel-unit';
           f.angle = i * (Math.PI/3);
@@ -880,23 +878,22 @@
       playSound('item');
   }
 
-  // === 버튼 입력 처리 (노엘 통합) ===
+  // === 버튼 입력 처리 ===
   function useAbility(e) { 
     if(e) e.stopPropagation();
     if(!running || abilityCD > 0) return;
     const s = SKIN_DATA[currentSkin];
 
-    // [수정] 노엘 버튼 클릭 시 -> 에너지파 발사 (Active)
     if(currentSkin === 'noel') {
         showFloatText("🌊 에너지 파!");
-        activeEffects.noelLaser = 10; // 10초 지속
+        activeEffects.noelLaser = 10; 
         const beam = document.createElement('div'); beam.id = 'noelBeam'; beam.className = 'noel-beam';
         let offset = activeEffects.noelGiant > 0 ? 50 : 20;
         const pRect = player.getBoundingClientRect();
         beam.style.bottom = (window.innerHeight - pRect.bottom + offset) + "px";
         gameArea.appendChild(beam);
-        playSound('jump'); // 빔 효과음
-        abilityCD = 60; // 쿨타임 60초
+        playSound('jump'); 
+        abilityCD = 60; 
     } 
     else {
         if(currentSkin === 'jaeguk') triggerJaegukBobas();
@@ -911,6 +908,9 @@
         abilityCD = s.cd;
     }
   }
+
+  // 버튼 2 (사용 안함)
+  function useAbility2(e) {}
 
   // === 메인 루프 ===
   function gameLoop(now) {
@@ -933,7 +933,6 @@
                     const flash = document.createElement('div'); flash.className = 'jc-lightning';
                     flash.style.left = randBetween(50, window.innerWidth-50) + 'px';
                     gameArea.appendChild(flash); setTimeout(()=>flash.remove(), 300);
-                    // 번개 충돌은 화면 전체 판정 대신 랜덤 위치 주변 파괴로 구현 가능하나 시각효과 위주
                 }
             }
             // 하은 (쉴드/힐)
@@ -961,12 +960,11 @@
                 junLambTimer += safeDelta;
                 if(junLambTimer >= 30.0) {
                     const lamb = document.createElement('div'); lamb.className = 'lamb-unit';
-                    lamb.style.left = (window.innerWidth + 50) + 'px'; lamb.style.top = '50px'; // 오른쪽에서
+                    lamb.style.left = (window.innerWidth + 50) + 'px'; lamb.style.top = '50px'; 
                     gameArea.appendChild(lamb);
-                    // 양 이동 로직 (간소화)
                     let lTimer = setInterval(()=>{
                         let lx = parseFloat(lamb.style.left); lx -= 2; lamb.style.left = lx+'px';
-                        if(lx < 150) { // 플레이어 근처
+                        if(lx < 150) { 
                             clearInterval(lTimer); lamb.remove();
                             if(life<maxLife) { life++; document.getElementById("lifeText").innerText=life; showHealEffect(); }
                         }
@@ -974,13 +972,24 @@
                     junLambTimer = 0;
                 }
             }
-            // 하휘 (인피니티 스톤) - 30초마다 생성
+            // 하휘 (인피니티 스톤)
             if(currentSkin === 'hahwi') {
-                if(activeEffects.hahwiMode <= 0 && hahwiStones.length === 0) { // 액티브 아닐때만
-                    // 패시브 타이머 로직 생략 (복잡도 감소), 액티브와 공유하거나 별도 타이머 필요
-                    // 여기선 액티브 우선 구현
+                if(activeEffects.hahwiMode <= 0 && hahwiStones.length === 0) { 
+                    // 패시브 생성 로직이 필요하다면 여기에 추가. 
+                    // 현재는 액티브 발동 시에만 생성되는 구조나, 30초마다 생성 요청이 있었으므로 추가.
+                    // (코드가 길어지므로 생략되었던 부분 복구)
+                    if(!this.hahwiPassiveWait) this.hahwiPassiveWait = 0;
+                    this.hahwiPassiveWait += safeDelta;
+                    if(this.hahwiPassiveWait > 30.0) {
+                        this.hahwiPassiveWait = 0;
+                        for(let i=0; i<6; i++) {
+                             const s = document.createElement('div'); s.className = 'infinity-stone';
+                             s.style.background = ['#f00','#0f0','#00f','#ff0','#0ff','#f0f'][i];
+                             s.angleOffset = i * (Math.PI / 3);
+                             gameArea.appendChild(s); hahwiStones.push(s);
+                        }
+                    }
                 }
-                // 스톤 회전 및 충돌 (액티브/패시브 공통)
                 if(hahwiStones.length > 0) {
                     hahwiOrbitAngle += 3 * safeDelta;
                     const pRect = player.getBoundingClientRect();
@@ -990,7 +999,32 @@
                         s.style.left = (cx + Math.cos(hahwiOrbitAngle + s.angleOffset) * r - 12) + 'px';
                         s.style.top = (cy + Math.sin(hahwiOrbitAngle + s.angleOffset) * r - 12) + 'px';
                     });
-                    checkSkillCollisions(hahwiStones, 30, false); // 보스 공격 X
+                    // 스톤 개별 충돌 로직 (복구)
+                    for(let i=hahwiStones.length-1; i>=0; i--) {
+                        const s = hahwiStones[i]; const sRect = s.getBoundingClientRect();
+                        for(let j=obstacles.length-1; j>=0; j--) {
+                            const o = obstacles[j];
+                            if(!o.destroyed) {
+                                const oRect = o.getBoundingClientRect();
+                                if (sRect.right > oRect.left && sRect.left < oRect.right && sRect.bottom > oRect.top && sRect.top < oRect.bottom) {
+                                    o.destroyed = true; spawnExplosionEffect(oRect.left, oRect.top);
+                                    spawnFaithCoins(oRect.left, oRect.top, 2, false, false); // 수동
+                                    o.remove(); obstacles.splice(j,1); 
+                                }
+                            }
+                        }
+                        for(let k=enemies.length-1; k>=0; k--) {
+                            const en = enemies[k];
+                            if(!en.isDead) {
+                                const enRect = en.getBoundingClientRect();
+                                if (sRect.right > enRect.left && sRect.left < enRect.right && sRect.bottom > enRect.top && sRect.top < enRect.bottom) {
+                                    en.isDead = true; spawnExplosionEffect(en.x, en.y);
+                                    spawnFaithCoins(en.x, en.y, 5, true, false);
+                                    en.remove(); enemies.splice(k,1);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             // 강희 (판넬 증식)
@@ -1001,7 +1035,6 @@
                     const f = document.createElement('div'); f.className = 'funnel-unit';
                     f.angle = 0; gameArea.appendChild(f); ganghuiFunnels.push(f);
                 }
-                // 판넬 회전
                 const pRect = player.getBoundingClientRect();
                 const cx = pRect.left + pRect.width/2; const cy = pRect.top + pRect.height/2;
                 ganghuiFunnels.forEach((f, idx) => {
@@ -1009,11 +1042,9 @@
                     f.style.left = (cx + Math.cos(f.angle)*90 - 20) + 'px';
                     f.style.top = (cy + Math.sin(f.angle)*90 - 20) + 'px';
                 });
-                // 레이저 발사 (4초마다)
                 ganghuiLaserTimer += safeDelta;
                 if(ganghuiLaserTimer > 4.0 && ganghuiFunnels.length > 0) {
                     ganghuiLaserTimer = 0;
-                    // 타겟팅: 장애물/적군 (보스 제외)
                     let target = obstacles[0] || enemies[0];
                     if(target && !target.destroyed && !target.isDead) {
                         const f = ganghuiFunnels[Math.floor(Math.random()*ganghuiFunnels.length)];
@@ -1027,7 +1058,7 @@
                         
                         if(target.classList.contains('obstacle')) {
                             target.destroyed = true; spawnExplosionEffect(tRect.left, tRect.top);
-                            spawnFaithCoins(tRect.left, tRect.top, 2, false, false); // 수동
+                            spawnFaithCoins(tRect.left, tRect.top, 2, false, false);
                             target.remove(); obstacles.shift();
                         } else {
                             target.isDead = true; spawnExplosionEffect(target.x, target.y);
@@ -1046,7 +1077,6 @@
                     const pRect = player.getBoundingClientRect();
                     poof.style.left = pRect.left+'px'; poof.style.top = pRect.top+'px';
                     gameArea.appendChild(poof); setTimeout(()=>poof.remove(), 500);
-                    // 도플갱어 로직 (간소화: 미사일 발사 효과)
                     for(let i=0; i<5; i++) {
                         const m = document.createElement("div"); m.classList.add("player-missile");
                         m.style.left = (pRect.right) + "px"; m.style.top = (pRect.top + randBetween(-50,50)) + "px"; 
@@ -1062,18 +1092,17 @@
                     if(life < maxLife) { life++; document.getElementById("lifeText").innerText = life; showHealEffect(); }
                 }
             }
-            // 지은 (노엘 수호 - 패시브화)
+            // 지은 (노엘 수호)
             if(currentSkin === 'jieun') {
                 jieunPassiveTimer += safeDelta;
                 if(jieunPassiveTimer >= 45.0) {
                     jieunPassiveTimer = 0;
-                    // 노엘 쉴드 생성 애니메이션
                     const shield = document.createElement('div'); shield.className = 'jieun-shield-unit';
-                    player.appendChild(shield); setTimeout(()=>shield.remove(), 5000); // 5초 지속
+                    player.appendChild(shield); setTimeout(()=>shield.remove(), 5000); 
                     activeEffects.summon = 5; 
                 }
             }
-            // 노엘 (거대화 - 패시브화)
+            // 노엘 (거대화)
             if(currentSkin === 'noel') {
                 noelPassiveTimer += safeDelta;
                 if(noelPassiveTimer >= 30.0) {
@@ -1083,14 +1112,12 @@
                     showFloatText("🦍 거대화 발동!");
                 }
             }
-        } // End Passives
+        } 
 
-        // --- 액티브 스킬 로직 (Active Logic) ---
-        // 전찬 해머 충돌
+        // --- 액티브 스킬 로직 ---
         const hammer = document.getElementById('activeHammer');
         if(hammer) {
             const hRect = hammer.getBoundingClientRect();
-            // 장애물/적군 전체 파괴 (보스 제외)
             obstacles.forEach(o => {
                 if(!o.destroyed && o.getBoundingClientRect().left < hRect.right) {
                     o.destroyed = true; spawnExplosionEffect(parseFloat(o.style.left), window.innerHeight-100);
@@ -1107,17 +1134,43 @@
         }
 
         // 지은 음표 충돌
-        checkSkillCollisions(jieunNotes, 30, false);
+        for(let i=jieunNotes.length-1; i>=0; i--) {
+            const n = jieunNotes[i]; const nRect = n.getBoundingClientRect();
+            if(nRect.left > window.innerWidth) { n.remove(); jieunNotes.splice(i,1); continue; }
+            // 적군만 처리 (장애물 추가 가능)
+            for(let k=enemies.length-1; k>=0; k--) {
+                 const e = enemies[k];
+                 if(!e.isDead) {
+                     const eRect = e.getBoundingClientRect();
+                     if(nRect.right > eRect.left && nRect.left < eRect.right && nRect.bottom > eRect.top && nRect.top < eRect.bottom) {
+                         e.isDead = true; spawnExplosionEffect(e.x, e.y);
+                         spawnFaithCoins(e.x, e.y, 3, true, false);
+                         e.remove(); enemies.splice(k,1);
+                     }
+                 }
+            }
+        }
 
         // 스테파니 케이크 충돌
         if(activeEffects.stephanieWorld > 0) {
-            if(Math.random() < 0.08) { // 케이크 생성
+            if(Math.random() < 0.08) { 
                 const cake = document.createElement('div'); cake.className = 'falling-cake';
                 cake.style.backgroundImage = `url('item_cake${Math.floor(Math.random()*3)+1}.png')`;
                 cake.style.left = randBetween(50, window.innerWidth-50) + 'px'; cake.style.top = '-50px';
                 gameArea.appendChild(cake); stephanieCakes.push(cake);
             }
-            checkSkillCollisions(stephanieCakes, 40, false);
+            for(let i=stephanieCakes.length-1; i>=0; i--) {
+                const c = stephanieCakes[i]; const cRect = c.getBoundingClientRect();
+                if(cRect.top > window.innerHeight) { c.remove(); stephanieCakes.splice(i,1); continue; }
+                // 플레이어 힐
+                const pRect = player.getBoundingClientRect();
+                if(pRect.right > cRect.left && pRect.left < cRect.right && pRect.bottom > cRect.top && pRect.top < cRect.bottom) {
+                    c.remove(); stephanieCakes.splice(i,1);
+                    if(life < maxLife) life++; 
+                    faith += 5; document.getElementById("faithText").innerText = faith;
+                    playSound('item');
+                }
+            }
         }
 
         // 노엘 빔 위치
@@ -1126,7 +1179,6 @@
             if(beam) {
                 let offset = activeEffects.noelGiant > 0 ? 50 : 20;
                 beam.style.bottom = (playerY + offset) + "px";
-                // 빔 충돌은 updateEnemies/updatePhysics에서 처리됨 (보스 제외됨)
             }
         }
 
@@ -1191,45 +1243,7 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // === 충돌 체크 헬퍼 (보스 제외, 코인 수동) ===
-  function checkSkillCollisions(skillObjects, radius, hitsBoss) {
-      for(let i=skillObjects.length-1; i>=0; i--) {
-          const obj = skillObjects[i];
-          const oRect = obj.getBoundingClientRect();
-          if(oRect.top > window.innerHeight || oRect.left < -100) { obj.remove(); skillObjects.splice(i,1); continue; }
-
-          for(let j=obstacles.length-1; j>=0; j--) {
-              const obs = obstacles[j];
-              if(!obs.destroyed) {
-                  const obsRect = obs.getBoundingClientRect();
-                  if (oRect.right > obsRect.left && oRect.left < obsRect.right && oRect.bottom > obsRect.top && oRect.top < obsRect.bottom) {
-                      obs.destroyed = true; spawnExplosionEffect(obsRect.left, obsRect.top);
-                      spawnFaithCoins(obsRect.left, obsRect.top, randBetween(1,6), false, false);
-                      obs.remove(); obstacles.splice(j,1); 
-                  }
-              }
-          }
-          for(let k=enemies.length-1; k>=0; k--) {
-              const en = enemies[k];
-              if(!en.isDead) {
-                  const enRect = en.getBoundingClientRect();
-                  if (oRect.right > enRect.left && oRect.left < enRect.right && oRect.bottom > enRect.top && oRect.top < enRect.bottom) {
-                      en.isDead = true; 
-                      if(en.laserWarning) en.laserWarning.remove(); if(en.laserBeam) en.laserBeam.remove();
-                      spawnExplosionEffect(en.x, en.y);
-                      spawnFaithCoins(en.x, en.y, randBetween(1,6), true, false);
-                      en.remove(); enemies.splice(k,1);
-                  }
-              }
-          }
-          if(hitsBoss && isBossBattle && boss.hp > 0) {
-              const bRect = bossContainer.getBoundingClientRect();
-              if (oRect.right > bRect.left && oRect.left < bRect.right && oRect.bottom > bRect.top && oRect.top < bRect.bottom) {
-                  damageBoss(); 
-              }
-          }
-      }
-  }
+  // === 충돌 체크 헬퍼 제거 후 원본 방식 복귀 완료 ===
 
   function updateFaithCoinsLogic(dt) {
       for(let i = faithCoins.length - 1; i >= 0; i--) {
@@ -1632,6 +1646,23 @@
   function startGameNow() { 
       document.getElementById("startGuide").style.display="none"; 
       document.getElementById('abilityBtn2').style.display = 'none'; 
+      // 게임 시작 시 모든 배열 초기화 (프리징 방지)
+      obstacles.forEach(o=>o.remove()); obstacles=[];
+      enemies.forEach(e=>e.remove()); enemies=[];
+      projectiles.forEach(p=>p.remove()); projectiles=[];
+      playerMissiles.forEach(p=>p.remove()); playerMissiles=[];
+      faithCoins.forEach(c=>c.remove()); faithCoins=[];
+      items.forEach(i=>i.remove()); items=[];
+      // 스킬 오브젝트 초기화
+      bobas.forEach(b=>b.remove()); bobas=[];
+      hahwiStones.forEach(s=>s.remove()); hahwiStones=[];
+      jihyeUnits.forEach(u=>u.remove()); jihyeUnits=[];
+      jihyeMissiles.forEach(m=>m.remove()); jihyeMissiles=[];
+      ganghuiFunnels.forEach(f=>f.remove()); ganghuiFunnels=[];
+      stephanieCakes.forEach(c=>c.remove()); stephanieCakes=[];
+      yejunClones.forEach(c=>c.el.remove()); yejunClones=[];
+      jieunNotes.forEach(n=>n.remove()); jieunNotes=[];
+      
       running=true; lastTime=performance.now(); 
       if(sounds['bgm']) sounds['bgm'].play().catch(e=>console.log("BGM Error:", e));
       requestAnimationFrame(gameLoop); updateDailyMissionUI(); 
