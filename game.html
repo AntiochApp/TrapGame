@@ -12,7 +12,7 @@
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* 하휘 스킬 배경 */
+    /* [수정 11] 하휘 스킬 배경 (우선순위 높임) */
     #gameArea.sand-bg { background: url('Sand.png') no-repeat center/cover !important; }
 
     /* 화면 효과 */
@@ -575,22 +575,22 @@
          { left: (window.innerWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
          { left: '120px', top: (window.innerHeight - playerObj.y - 60) + 'px', transform: 'rotate(0deg)' }
       ], { duration: 800, easing: 'ease-out', fill: 'forwards' }).onfinish = () => {
-         noelFly.remove();
-         
-         const flash = document.getElementById('flashEffect');
-         flash.style.opacity = '0.8';
-         setTimeout(() => flash.style.opacity = '0', 100);
-         playSound('item'); 
+          noelFly.remove();
+          
+          const flash = document.getElementById('flashEffect');
+          flash.style.opacity = '0.8';
+          setTimeout(() => flash.style.opacity = '0', 100);
+          playSound('item'); 
 
-         player.style.backgroundImage = `url('Skill_NJ.png')`;
-         
-         const shield = document.createElement('div');
-         shield.id = 'jieunShield';
-         shield.className = 'jieun-shield';
-         player.appendChild(shield);
+          player.style.backgroundImage = `url('Skill_NJ.png')`;
+          
+          const shield = document.createElement('div');
+          shield.id = 'jieunShield';
+          shield.className = 'jieun-shield';
+          player.appendChild(shield);
 
-         activeEffects.summon = 15;
-         showFloatText("🛡️ 노엘 소환!");
+          activeEffects.summon = 15;
+          showFloatText("🛡️ 노엘 소환!");
       };
   }
 
@@ -747,6 +747,7 @@
     activeEffects.sandstorm = 15;
     document.getElementById('sandstormOverlay').style.opacity = '1';
     gameArea.classList.add('sandstorm-mode');
+    // [수정 11] CSS 클래스 우선순위 적용됨 (style block 내 !important 확인)
     gameArea.classList.add('sand-bg');
     playSound('clear');
   }
@@ -916,6 +917,11 @@
           lastTime = performance.now();
           requestAnimationFrame(gameLoop);
           
+          // [수정 6] 프리징 해결: 애니메이션 완료 후 transition 제거하여 물리 엔진 복귀
+          setTimeout(() => {
+              player.style.transition = 'none';
+          }, 600);
+          
           setTimeout(() => {
               portal.classList.remove('portal-opening');
               portal.classList.add('portal-closing');
@@ -941,6 +947,10 @@
           waitTimer: 0,
           msgEl: null
       };
+      // [수정 7] Lamb 초기 좌표 설정 누락 해결
+      lamb.el = lamb; 
+      lamb.el.x = lamb.x; 
+      lamb.el.y = lamb.y;
   }
 
   // [최적화] 램 업데이트 로직 (GameLoop에서 호출)
@@ -1001,13 +1011,14 @@
 
       hammerObj = document.createElement('div');
       hammerObj.className = 'hammer-skill';
-      hammerObj.style.left = '-60vw'; 
+      // [수정 1] 오른쪽(100vw)에서 왼쪽(-60vw)으로 이동하도록 수정
+      hammerObj.style.left = '100vw'; 
       hammerObj.style.top = '15%'; 
       gameArea.appendChild(hammerObj);
 
       hammerObj.animate([
-          { left: '-60vw' },
-          { left: '100vw' }
+          { left: '100vw' },
+          { left: '-100vw' }
       ], {
           duration: 20000,
           easing: 'linear',
@@ -1029,7 +1040,8 @@
           const strike = document.createElement('div');
           strike.className = 'jc-lightning-strike';
           
-          const randX = randBetween(0, window.innerWidth * 0.5); // 왼쪽에서 시작하도록
+          // [수정 3] 번개 범위 화면 전체로 확장
+          const randX = randBetween(0, window.innerWidth); 
           strike.style.left = randX + 'px';
           strike.style.top = '-50vh';
           // 왼쪽 하늘에서 오른쪽 땅으로 대각선 (\ 모양) -> transform-origin은 css에서 top center. 
@@ -1053,9 +1065,9 @@
           playSound('clear');
 
           // [최적화] JS 배열 순회하여 충돌 체크 (범위를 넓게 잡음)
+          // [수정 3] 충돌 감지 로직 유지하되 화면 전체 범위에 적용됨
           obstacles.forEach(o => {
-              // 번개가 대각선이라 X좌표만으로 정확히 판별어렵지만, 대략적으로 화면 전체 범위 공격 효과
-              if(o.x > randX - 100 && o.x < window.innerWidth && !o.destroyed) {
+              if(o.x > randX - 100 && o.x < randX + 100 && !o.destroyed) {
                   o.destroyed = true;
                   spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
                   spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
@@ -1063,7 +1075,7 @@
               }
           });
           enemies.forEach(e => {
-              if(!e.isDead && e.x > randX - 100 && e.x < window.innerWidth) {
+              if(!e.isDead && e.x > randX - 100 && e.x < randX + 100) {
                   e.isDead = true;
                   spawnExplosionEffect(e.x, e.y);
                   spawnFaithCoins(e.x, e.y, 5, false, true);
@@ -1112,6 +1124,7 @@
 
   function triggerGanghuiGundam() {
       showFloatText("🤖 건담 모드 가동!");
+      // [수정 9] 변신 시 이미지를 Gundam.png로 변경
       player.style.backgroundImage = `url('Gundam.png')`;
       
       const flash = document.getElementById('flashEffect');
@@ -1119,7 +1132,7 @@
       flash.style.opacity = '1';
       setTimeout(() => flash.style.opacity = '0', 300);
 
-      // 변신 시작 시 아우라 생성
+      // [수정 10] 변신 시작 시 아우라 생성
       gundamAura = document.createElement('div');
       gundamAura.className = 'gundam-aura';
       gameArea.appendChild(gundamAura);
@@ -1214,6 +1227,8 @@
             }
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) endJihyeSkill();
             if(k === 'bobaTime' && activeEffects[k] <= 0) { bobas.forEach(b => b.remove()); bobas = []; activeEffects.invincible = 0; }
+            
+            // [수정 10] 강희 스킨 변신 해제 처리
             if(k === 'gundam' && activeEffects[k] <= 0) { 
                 player.style.backgroundImage = `url('skin_ganghui.png')`; 
                 // 변신 해제 시 아우라 생성
@@ -1222,6 +1237,7 @@
                 gameArea.appendChild(gundamAura);
                 setTimeout(() => { if(gundamAura) { gundamAura.remove(); gundamAura = null; } }, 1000);
             }
+
             if(k === 'fly' && currentSkin === 'yejun' && activeEffects[k] <= 0) {
                 const w = player.querySelector('.yejun-wing');
                 if(w) w.remove();
@@ -1347,6 +1363,32 @@
 
         // [최적화] 어린 양 업데이트
         updateLamb(safeDelta);
+        
+        // [수정 2] 전찬 해머 충돌 감지 로직
+        if(hammerObj) {
+            const hRect = hammerObj.getBoundingClientRect();
+            obstacles.forEach(o => {
+                if(!o.destroyed && o.x < window.innerWidth) {
+                    const oRect = o.getBoundingClientRect();
+                    // 해머 Rect와 충돌 체크
+                    if(hRect.right > oRect.left && hRect.left < oRect.right) {
+                        o.destroyed = true;
+                        spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
+                        o.remove();
+                    }
+                }
+            });
+            enemies.forEach(e => {
+                if(!e.isDead && e.x < window.innerWidth) {
+                    const eRect = e.getBoundingClientRect();
+                    if(hRect.right > eRect.left && hRect.left < eRect.right) {
+                        e.isDead = true;
+                        spawnExplosionEffect(e.x, e.y);
+                        e.remove();
+                    }
+                }
+            });
+        }
 
         // 전찬 패시브: 15초마다 번개
         if(currentSkin === 'jeonchan' && running) {
@@ -1528,8 +1570,9 @@
 
                 if(s.state === 'orbit') {
                     s.angle += 3 * safeDelta;
-                    const tx = px + Math.cos(s.angle) * s.radius;
-                    const ty = py + Math.sin(s.angle) * s.radius;
+                    // [수정 5] 인피니티 스톤 중심 보정 (크기가 24px이므로 12px 뺌)
+                    const tx = px + Math.cos(s.angle) * s.radius - 12;
+                    const ty = py + Math.sin(s.angle) * s.radius - 12;
                     sx += (tx-sx)*0.1;
                     sy += (ty-sy)*0.1;
 
@@ -1588,14 +1631,15 @@
 
                 if(b.state === 'orbit') {
                     b.angle += 3 * safeDelta;
-                    const tx = px + Math.cos(b.angle) * b.radius;
-                    const ty = py + Math.sin(b.angle) * b.radius;
+                    // [수정 4] 보바 중심 보정 (크기가 18px이므로 9px 뺌)
+                    const tx = px + Math.cos(b.angle) * b.radius - 9;
+                    const ty = py + Math.sin(b.angle) * b.radius - 9;
                     bx += (tx-bx)*0.1;
                     by += (ty-by)*0.1;
                     
                     let found = null;
-                     // 장애물 확인
-                     for(let k=0; k<obstacles.length; k++){
+                      // 장애물 확인
+                      for(let k=0; k<obstacles.length; k++){
                         if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
                             found = obstacles[k]; break;
                         }
@@ -1726,6 +1770,30 @@
 
             c.el.style.left = c.el.x + 'px';
             c.el.style.bottom = c.el.y + 'px';
+            
+            // [수정 8] 도플갱어 본체 충돌 체크
+            const cRect = {x: c.el.x, y: window.innerHeight - c.el.y - 50, w: 50, h: 50};
+            obstacles.forEach(o => {
+                if(!o.destroyed) {
+                    const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
+                    if(isColliding(cRect, oRect)) {
+                        o.destroyed = true;
+                        spawnExplosionEffect(o.x, oY);
+                        o.remove();
+                    }
+                }
+            });
+            enemies.forEach(e => {
+                if(!e.isDead) {
+                    const eRect = {x: e.x, y: e.y, w: 60, h: 60};
+                    if(isColliding(cRect, eRect)) {
+                        e.isDead = true;
+                        spawnExplosionEffect(e.x, e.y);
+                        e.remove();
+                    }
+                }
+            });
             
             c.fireTimer += safeDelta;
             if(c.fireTimer > 0.8) {
@@ -2297,7 +2365,7 @@
         
         const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
         
-        // [수정] 예준 도플갱어 미사일이 장애물도 파괴하도록 추가
+        // [수정 8] 미사일이 장애물도 파괴하도록 추가
         let hitObs = false;
         for (let k = obstacles.length - 1; k >= 0; k--) {
              let o = obstacles[k];
@@ -2705,7 +2773,7 @@
     }
   }
 
-  function answerQuiz(sel) {
+ function answerQuiz(sel) {
     document.getElementById("quizModal").style.display = "none";
     if (sel === window.correctAnswer) {
       const ef = document.getElementById("correctEffect");
