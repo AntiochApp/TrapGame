@@ -12,8 +12,9 @@
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* [수정 4] 하휘 스킬 배경 (우선순위 강제 적용) */
+    /* [수정 2] 하휘 스킬 배경 이슈 해결: 기존 배경 레이어 숨김 처리 */
     #gameArea.sand-bg { background: url('Sand.png') no-repeat center/cover !important; }
+    #gameArea.sand-bg .bg-layer { opacity: 0; transition: opacity 0.5s; }
 
     /* 화면 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
@@ -23,10 +24,11 @@
 
     #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* [수정 3] 전찬: 번개 (형형색색) */
+    /* 전찬: 번개 */
     .jc-lightning-strike { position: absolute; width: 20px; height: 150vh; z-index: 89; pointer-events: none; box-shadow: 0 0 30px currentColor; transform-origin: top center; opacity: 0; mix-blend-mode: screen; }
-    /* [수정 2] 해머 이미지 반전 (왼쪽에서 오른쪽으로 갈 때 자연스럽게) */
-    .hammer-skill { position: absolute; width: 66vh; height: 66vh; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 10px #000); transform: scaleX(-1); }
+    
+    /* [수정 1] 전찬 해머 이미지 반전 제거 (scaleX(1)로 변경) */
+    .hammer-skill { position: absolute; width: 66vh; height: 66vh; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 10px #000); transform: scaleX(1); }
 
     /* 지은: 음계 및 배경 */
     .music-note { position: absolute; font-size: 40px; font-weight: bold; z-index: 65; pointer-events: none; text-shadow: 2px 2px 0 #fff; animation: noteFloat 1s infinite ease-in-out alternate; }
@@ -64,10 +66,9 @@
     .warp-btn { width: 120px; height: 120px; border-radius: 50%; background: #00ffff; color: #000; font-weight: 900; font-size: 24px; border: 5px solid #fff; box-shadow: 0 0 20px #00ffff; margin-top: 30px; display: flex; justify-content: center; align-items: center; animation: pulseBtn 0.2s infinite alternate; cursor: pointer; }
     @keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-    /* 강희: 판넬 (CSS transition 제거하고 JS 제어) */
+    /* 강희: 판넬 */
     .funnel-unit { position: absolute; width: 40px; height: 40px; background: url('Panel.png') no-repeat center/contain; z-index: 60; pointer-events: none; }
     .funnel-laser { position: absolute; height: 6px; background: #ff00ff; box-shadow: 0 0 10px #ff00ff; z-index: 58; transform-origin: left center; opacity: 0; pointer-events: none; }
-    /* [수정 9] 강희 변신 아우라 (더 진하고 임펙트 있게) */
     .gundam-aura { position: absolute; width: 140px; height: 140px; background: radial-gradient(circle, rgba(0,100,255,0.9), rgba(0,255,255,0.4), transparent 70%); border-radius: 50%; box-shadow: 0 0 50px #0000ff, inset 0 0 20px #fff; z-index: 65; pointer-events: none; transform: translate(-50%, -50%); mix-blend-mode: screen; animation: gundamPulse 0.5s infinite alternate; opacity: 0.9; }
     @keyframes gundamPulse { from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
 
@@ -468,7 +469,6 @@
   let musicNoteTimer = 0;
   let jieunNoelTimer = 0;
   
-  // [수정 10] 코인 콤보 카운트
   let coinCombo = 0;
   let coinComboTimer = 0;
 
@@ -752,7 +752,6 @@
     activeEffects.sandstorm = 15;
     document.getElementById('sandstormOverlay').style.opacity = '1';
     gameArea.classList.add('sandstorm-mode');
-    // [수정 4] CSS 클래스 우선순위 적용됨 (style block 내 !important 확인)
     gameArea.classList.add('sand-bg');
     playSound('clear');
   }
@@ -863,14 +862,16 @@
 
       const portal = document.createElement('div');
       portal.className = 'real-portal portal-opening';
+      // [수정 4] 포탈 진입 Y좌표 조정 (플레이어 센터에 맞춤: -30 -> -80)
       portal.style.left = (playerObj.x + 150) + 'px';
-      portal.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+      portal.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
       gameArea.appendChild(portal);
 
       setTimeout(() => {
           player.style.transition = "transform 0.5s, left 0.5s, top 0.5s";
           player.style.left = (playerObj.x + 150) + 'px';
-          player.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+          // [수정 4] 포탈 진입 Y좌표 조정 (플레이어 센터에 맞춤: -30 -> -80)
+          player.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
           player.style.transform = "scale(0)"; // 회전 제거, 걸어 들어가는 효과
       }, 500);
 
@@ -922,9 +923,10 @@
           lastTime = performance.now();
           requestAnimationFrame(gameLoop);
           
-          // [수정 5] 프리징 해결: 애니메이션 완료 후 transition 제거하여 물리 엔진 복귀
+          // [수정 5] 프리징 해결: 애니메이션 완료 후 top 속성을 제거하여 물리 엔진(bottom)이 우선되게 함
           setTimeout(() => {
               player.style.transition = 'none';
+              player.style.top = ""; // Top 속성 제거 (중요!)
           }, 600);
           
           setTimeout(() => {
@@ -938,10 +940,13 @@
   function spawnLamb() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
-      lamb.x = window.innerWidth + 50;
+      // [수정 3] 어린양 스폰 위치 왼쪽 화면 밖(-100)으로 수정
+      lamb.x = -100;
       lamb.y = 50;
       lamb.style.left = lamb.x + 'px';
       lamb.style.top = lamb.y + 'px'; 
+      // 오른쪽을 보고 뛰어오도록 반전 해제 (기본 이미지가 왼쪽을 본다면 반전 필요, 기본이 오른쪽이면 해제. 보통 왼쪽을 보므로 scaleX(-1) 유지하되 방향에 맞게)
+      // 왼쪽에서 오른쪽으로 오므로 오른쪽을 봐야 함 -> scaleX(-1) 유지 (원본 Lamb이 왼쪽을 보고 있다고 가정)
       lamb.style.transform = "scaleX(-1)";
       gameArea.appendChild(lamb);
       
@@ -952,10 +957,9 @@
           waitTimer: 0,
           msgEl: null
       };
-      // [수정 6] Lamb 초기 좌표 설정 누락 해결 및 객체 참조 오류 수정
+      
       lamb.x = lamb.x; 
       lamb.y = lamb.y;
-      // activeLamb의 el 속성에 올바른 DOM 참조가 있는지 확인
       activeLamb.el.x = lamb.x;
       activeLamb.el.y = lamb.y;
   }
@@ -967,7 +971,8 @@
       const pRect = { x: playerObj.x, y: window.innerHeight - playerObj.y - 60 };
       
       if(lamb.state === 'approach') {
-          const targetX = pRect.x + 50;
+          // [수정 3] 왼쪽에서 오므로 플레이어 왼쪽(-50)을 타겟으로 잡음
+          const targetX = pRect.x - 50; 
           const targetY = pRect.y - 50;
           
           lamb.el.x += (targetX - lamb.el.x) * 0.03;
@@ -1002,6 +1007,7 @@
               if(lamb.msgEl) lamb.msgEl.remove();
           }
       } else if(lamb.state === 'leave') {
+          // 다시 왼쪽으로 퇴장
           lamb.el.x -= 300 * dt;
           lamb.el.style.left = lamb.el.x + 'px';
           if(lamb.el.x < -100) {
@@ -1018,7 +1024,7 @@
 
       hammerObj = document.createElement('div');
       hammerObj.className = 'hammer-skill';
-      // [수정 2] 왼쪽(-60vw)에서 오른쪽(100vw)으로 이동하도록 수정
+      // [수정 1] 망치 시작 위치 및 이동 로직 수정
       hammerObj.style.left = '-60vw'; 
       hammerObj.style.top = '15%'; 
       gameArea.appendChild(hammerObj);
@@ -1027,7 +1033,8 @@
           { left: '-60vw' },
           { left: '100vw' }
       ], {
-          duration: 1500, // 속도 조절
+          // [수정 1] 망치 애니메이션 속도 수정 (1.5초 -> 20초)
+          duration: 20000, 
           easing: 'linear',
           fill: 'forwards'
       }).onfinish = () => {
@@ -1040,11 +1047,9 @@
   function triggerJeonchanLightning() {
       showFloatText("⚡ 천둥 번개!");
       let count = 0;
-      // [수정 3] 화면 전체에 형형색색 번개 여러개 떨어짐
       const strikeLoop = setInterval(() => {
           if(count >= 10) { clearInterval(strikeLoop); return; } // 횟수 증가
           
-          // 한 번에 여러 개 생성
           for(let i=0; i<3; i++) {
               const strike = document.createElement('div');
               strike.className = 'jc-lightning-strike';
@@ -1134,11 +1139,9 @@
       flash.style.opacity = '1';
       setTimeout(() => flash.style.opacity = '0', 300);
 
-      // [수정 9] 변신 시작 시 아우라 생성 (진하고 임펙트 있게)
       gundamAura = document.createElement('div');
       gundamAura.className = 'gundam-aura';
       gameArea.appendChild(gundamAura);
-      // 아우라는 변신 지속시간 동안 유지되도록 삭제하지 않음 (activeEffects 종료 시 삭제)
       
       activeEffects.gundam = 15;
       
@@ -1182,7 +1185,6 @@
     else if(currentSkin === 'jun') { triggerJunSkill(); }
     else if(currentSkin === 'yejun') { 
         activeEffects.fly = 20; 
-        // [수정 7] 스킬 발동 시 현재 위치 유지 (아래로 꺼지는 현상 방지)
         targetY = playerObj.y; 
         
         const wings = document.createElement('div');
@@ -1233,15 +1235,13 @@
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) endJihyeSkill();
             if(k === 'bobaTime' && activeEffects[k] <= 0) { bobas.forEach(b => b.remove()); bobas = []; activeEffects.invincible = 0; }
             
-            // [수정 9] 강희 스킨 변신 해제 처리 (임펙트 있게)
             if(k === 'gundam' && activeEffects[k] <= 0) { 
                 player.style.backgroundImage = `url('skin_ganghui.png')`; 
-                // 기존 아우라가 있다면 제거 후 해제 이펙트 생성
                 if(gundamAura) { gundamAura.remove(); gundamAura = null; }
                 
                 const endAura = document.createElement('div');
                 endAura.className = 'gundam-aura';
-                endAura.style.animation = "obsExplode 0.5s ease-out forwards"; // 폭발 애니메이션 재활용
+                endAura.style.animation = "obsExplode 0.5s ease-out forwards"; 
                 endAura.style.left = (playerObj.x + 30) + 'px';
                 endAura.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
                 gameArea.appendChild(endAura);
@@ -1261,6 +1261,13 @@
                 document.getElementById('jieunWaveBg').style.opacity = '0';
                 musicNotes.forEach(n => n.remove()); musicNotes = [];
             }
+            
+            // [수정 6] 노엘 거대화 지속 시간 종료 체크 로직 이동 (Pause시 멈추도록)
+            if(k === 'giant' && activeEffects[k] <= 0) {
+                player.style.transform = "scale(1)";
+                const aura = player.querySelector('.noel-aura');
+                if(aura) aura.remove();
+            }
 
             if(activeEffects[k] > 0) {
                 let color = "#fff"; let icon = ""; let label = k;
@@ -1277,7 +1284,8 @@
                 else if(k === 'gundam') { color = "#0000ff"; icon = "🤖"; label = "건담"; }
                 else if(k === 'cakeWorld') { color = "#ff69b4"; icon = "🍰"; label = "케이크"; }
                 else if(k === 'musicWave') { color = "#ff00ff"; icon = "🎵"; label = "음계파도"; }
-                if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
+                
+                if(k !== 'magnet' && k !== 'giant') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
     }
@@ -1354,36 +1362,30 @@
         missionUpdateTimer += safeDelta;
         if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
         
-        // 코인 콤보 타이머 (10번)
         if(coinCombo > 0) {
             coinComboTimer += safeDelta;
-            if(coinComboTimer > 0.5) { // 0.5초 내에 연속 획득 아니면 초기화
+            if(coinComboTimer > 0.5) { 
                 coinCombo = 0;
                 coinComboTimer = 0;
             }
         }
 
-        // [최적화] 지혜 변신 추적
         if(jihyeSphereActive && jihyeSphereEl) {
             jihyeSphereEl.style.left = (playerObj.x + 30) + 'px';
             jihyeSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
         }
-        // [수정: 지혜 변신 해제 추적]
         if(jihyeEndSphereEl) {
             jihyeEndSphereEl.style.left = (playerObj.x + 30) + 'px';
             jihyeEndSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
         }
 
-        // [수정 9] 강희 아우라 추적
         if(gundamAura) {
              gundamAura.style.left = (playerObj.x + 30) + 'px';
              gundamAura.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
         }
 
-        // [최적화] 어린 양 업데이트
         updateLamb(safeDelta);
         
-        // [수정 2] 전찬 해머 충돌 감지 로직 (좌표 보정)
         if(hammerObj) {
             const hRect = hammerObj.getBoundingClientRect();
             obstacles.forEach(o => {
@@ -1408,7 +1410,6 @@
             });
         }
 
-        // 전찬 패시브: 15초마다 번개
         if(currentSkin === 'jeonchan' && running) {
             jeonchanTimer += safeDelta;
             if(jeonchanTimer >= 15.0) {
@@ -1417,7 +1418,6 @@
             }
         }
 
-        // 지은 패시브: 노엘 소환 (40초마다 15초 지속)
         if(currentSkin === 'jieun' && running) {
             if(activeEffects.summon <= 0) { 
                 jieunNoelTimer += safeDelta;
@@ -1428,7 +1428,6 @@
             }
         }
 
-        // 하은 보호막 타이머
         if(currentSkin === 'haeun' && running && !isBossBattle) {
             if(!haeunShieldActive) {
                 haeunShieldTimer += safeDelta;
@@ -1451,7 +1450,6 @@
             }
         }
 
-        // 지혜 패시브 힐 (25초마다)
         if(currentSkin === 'jihye' && running) {
             jihyePassiveTimer += safeDelta;
             if(jihyePassiveTimer >= 25.0) {
@@ -1460,7 +1458,6 @@
             }
         }
 
-        // 준 패시브 (어린 양) - 30초마다
         if(currentSkin === 'jun' && running && !isJunTimeTravel) {
             junLambTimer += safeDelta;
             if(junLambTimer >= 30.0) {
@@ -1476,18 +1473,15 @@
                 showFloatText("⚡ 초 거대화!");
                 activeEffects.giant = 10; 
                 player.style.transform = "scale(2)";
-                // Hitbox 보정은 충돌 로직에서 처리
+                
                 const aura = document.createElement('div'); aura.className = 'noel-aura';
                 player.appendChild(aura);
                 noelGiantTimer = 0;
-                setTimeout(() => {
-                    player.style.transform = "scale(1)";
-                    aura.remove();
-                }, 10000);
+                
+                // [수정 6] setTimeout 제거 (updateBuffUI에서 처리)
             }
         }
 
-        // 하휘 인피니티 스톤 (30초마다)
         if(currentSkin === 'hahwi' && running) {
             hahwiStoneTimer += safeDelta;
             if(hahwiStoneTimer >= 30.0) {
@@ -1511,17 +1505,15 @@
             }
         }
         
-        // [수정 8] 강희 패시브 판넬 (10초마다, Max 8)
         if(currentSkin === 'ganghui' && running) {
             if(funnels.length === 0 && ganghuiPanelTimer === 0) spawnFunnel();
             ganghuiPanelTimer += safeDelta;
-            if(ganghuiPanelTimer >= 10.0) { // 15.0 -> 10.0 수정
+            if(ganghuiPanelTimer >= 10.0) {
                 spawnFunnel();
                 ganghuiPanelTimer = 0;
             }
         }
         
-        // 예준 패시브 도플갱어 (50초마다)
         if(currentSkin === 'yejun' && running) {
             yejunCloneTimer += safeDelta;
             if(yejunCloneTimer >= 50.0) {
@@ -1530,7 +1522,6 @@
             }
         }
         
-        // 스테파니 패시브 하트 (30초마다)
         if(currentSkin === 'stephanie' && running) {
             stephanieHeartTimer += safeDelta;
             if(stephanieHeartTimer >= 30.0) {
@@ -1552,7 +1543,6 @@
             if(beam) { beam.style.bottom = (playerObj.y - 20) + "px"; }
         }
 
-        // 지혜 스킨 유닛 
         if(activeEffects.jihyeSquad > 0) {
             jihyeUnits.forEach(u => {
                 u.moveTimer += safeDelta;
@@ -1578,7 +1568,6 @@
             });
         }
         
-        // 하휘 인피니티 스톤 AI (속도 감소 및 타겟 분배)
         if(infinityStones.length > 0) {
             const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             for(let i=infinityStones.length-1; i>=0; i--) {
@@ -1588,20 +1577,17 @@
 
                 if(s.state === 'orbit') {
                     s.angle += 3 * safeDelta;
-                    // 인피니티 스톤 중심 보정
                     const tx = px + Math.cos(s.angle) * s.radius - 12;
                     const ty = py + Math.sin(s.angle) * s.radius - 12;
                     sx += (tx-sx)*0.1;
                     sy += (ty-sy)*0.1;
 
                     let found = null;
-                    // 장애물 먼저 확인
                     for(let k=0; k<obstacles.length; k++){
                         if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
                             found = obstacles[k]; break;
                         }
                     }
-                    // 적 확인
                     if(!found){
                         for(let k=0; k<enemies.length; k++){
                             if(!enemies[k].isDead && !enemies[k].isTargeted){
@@ -1609,7 +1595,6 @@
                             }
                         }
                     }
-
                     if(found) { s.target = found; found.isTargeted = true; s.state = 'attack'; }
                 } 
                 else if(s.state === 'attack') {
@@ -1618,7 +1603,7 @@
                         const tx = s.target.x + 30;
                         const ty = s.target.y || (window.innerHeight - parseFloat(s.target.style.bottom || 0) - 50);
                         
-                        sx += (tx - sx) * 0.08; // 속도 반으로 줄임 (0.15 -> 0.08)
+                        sx += (tx - sx) * 0.08; 
                         sy += (ty - sy) * 0.08;
                         
                         if(Math.hypot(tx-sx, ty-sy) < 40) {
@@ -1639,7 +1624,6 @@
             }
         }
         
-        // 재국 버블 AI 로직 (속도 감소 및 타겟 분배)
         if(activeEffects.bobaTime > 0 && bobas.length > 0) {
             const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             
@@ -1649,20 +1633,17 @@
 
                 if(b.state === 'orbit') {
                     b.angle += 3 * safeDelta;
-                    // 보바 중심 보정
                     const tx = px + Math.cos(b.angle) * b.radius - 9;
                     const ty = py + Math.sin(b.angle) * b.radius - 9;
                     bx += (tx-bx)*0.1;
                     by += (ty-by)*0.1;
                     
                     let found = null;
-                      // 장애물 확인
                       for(let k=0; k<obstacles.length; k++){
                         if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
                             found = obstacles[k]; break;
                         }
                     }
-                    // 적 확인
                     if(!found){
                         for(let k=0; k<enemies.length; k++){
                             if(!enemies[k].isDead && !enemies[k].isTargeted){
@@ -1678,7 +1659,7 @@
                         const tx = b.target.x + 30;
                         const ty = b.target.y || (window.innerHeight - parseFloat(b.target.style.bottom || 0) - 50);
                         
-                        bx += (tx - bx) * 0.08; // 속도 반으로 줄임
+                        bx += (tx - bx) * 0.08;
                         by += (ty - by) * 0.08;
                         
                         if(Math.hypot(tx-bx, ty-by) < 40) {
@@ -1699,7 +1680,6 @@
             });
         }
 
-        // 강희 판넬 로직
         funnels.forEach(f => {
             f.x += (f.tx - f.x)*0.02;
             f.y += (f.ty - f.y)*0.02;
@@ -1711,14 +1691,12 @@
                 f.ty = randBetween(50, window.innerHeight-50);
             }
             
-            // 판넬 본체 충돌 체크
             let crashed = false;
             const fRect = {x: f.x, y: f.y, w: 40, h: 40};
             
             for(let i=obstacles.length-1; i>=0; i--) {
                 if(crashed) break;
                 const o = obstacles[i];
-                // Obstacle의 Y값 계산 (Bottom 기준)
                 const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - (parseFloat(o.style.height));
                 const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                 
@@ -1778,7 +1756,6 @@
             }
         });
         
-        // 예준 도플갱어 로직
         yejunClones.forEach(c => {
             c.el.x += c.vx; 
             c.el.y += c.vy;
@@ -1789,7 +1766,6 @@
             c.el.style.left = c.el.x + 'px';
             c.el.style.bottom = c.el.y + 'px';
             
-            // [수정 8] 도플갱어 본체 충돌 체크
             const cRect = {x: c.el.x, y: window.innerHeight - c.el.y - 50, w: 50, h: 50};
             obstacles.forEach(o => {
                 if(!o.destroyed) {
@@ -1823,7 +1799,6 @@
             }
         });
         
-        // 스테파니 케이크 낙하
         if(activeEffects.cakeWorld > 0) {
             cakeDropTimer += safeDelta;
             if(cakeDropTimer > 0.3) {
@@ -1865,7 +1840,6 @@
             if(hit) { c.remove(); cakes.splice(i,1); }
         }
         
-        // 지은 음계 파도
         if(musicWaveActive) {
             musicNoteTimer += safeDelta;
             if(musicNoteTimer > 0.2) {
@@ -1920,7 +1894,6 @@
             if(hit) { n.remove(); musicNotes.splice(i,1); }
         }
 
-        // 지혜 미사일 로직
         if(jihyeMissiles.length > 0) {
             for(let i=jihyeMissiles.length-1; i>=0; i--) {
                 const m = jihyeMissiles[i];
@@ -1956,7 +1929,6 @@
             }
         }
         
-        // 하휘 모래폭풍 충돌
         if(activeEffects.sandstorm > 0) {
              const pX = playerObj.x; const pY = window.innerHeight - playerObj.y - playerObj.h;
              obstacles.forEach(o => {
@@ -2028,7 +2000,6 @@
             if (it.x < -60) { it.remove(); items.splice(i, 1); continue; }
             
             const iRect = {x: it.x, y: it.y, w: 48, h: 48};
-            // 플레이어 히트박스
             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
 
             if (isColliding(pRect, iRect)) {
@@ -2081,14 +2052,13 @@
                   document.getElementById("faithText").innerText = faith;
                   playSound('item'); 
                   
-                  // [수정 10] 코인 획득 시 텍스트 및 대박 로직
                   showFloatText("+1 신앙심");
                   
                   coinCombo++;
                   coinComboTimer = 0;
                   if(coinCombo >= 5) {
                       showFloatText("대박!");
-                      coinCombo = 0; // 초기화하여 연속 대박 방지 (또는 유지하고 싶으면 조건 변경)
+                      coinCombo = 0; 
                   }
 
                   coin.remove(); faithCoins.splice(i, 1); continue;
@@ -2228,7 +2198,6 @@
               if(e.isDead) { clearInterval(check); laser.remove(); return; }
 
               duration += 0.1; let laserY = parseFloat(laser.style.top);
-              // [최적화] JS 변수로 충돌 체크
               if(Math.abs((window.innerHeight - playerObj.y) - laserY) < 30 && !invincible) damageLife();
               if(duration > 5.0) { 
                   clearInterval(check); 
@@ -2279,7 +2248,6 @@
     const warning = document.getElementById('bossWarning'); warning.innerText = `⚠️ BOSS LV.${bossLevel}!!`;
     warning.style.display = 'block'; setTimeout(() => warning.style.display = 'none', 3000);
     
-    // 정리
     obstacles.forEach(o => o.remove()); obstacles = []; 
     enemies.forEach(e => e.remove()); enemies = []; 
     
@@ -2306,7 +2274,6 @@
         bossContainer.style.right = (window.innerWidth - 100) + "px"; 
         
         setTimeout(() => { 
-            // 보스 Y는 %단위, 플레이어 Y는 px(bottom) 단위. 변환 필요
             const bossYPx = (100 - boss.y) / 100 * window.innerHeight;
             if(playerObj.y > bossYPx - 100 && playerObj.y < bossYPx + 50) {
                 damageLife(); 
@@ -2379,7 +2346,6 @@
 
     const safeActive = (val) => (val && val > 0);
 
-    // 플레이어 미사일 업데이트
     for (let i = playerMissiles.length - 1; i >= 0; i--) {
         let m = playerMissiles[i];
         let mx = parseFloat(m.style.left);
@@ -2389,7 +2355,6 @@
         
         const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
         
-        // [수정 8] 미사일이 장애물도 파괴하도록 추가
         let hitObs = false;
         for (let k = obstacles.length - 1; k >= 0; k--) {
              let o = obstacles[k];
@@ -2435,7 +2400,6 @@
         }
     }
 
-    // 적/보스 투사체 업데이트
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
         
@@ -2458,7 +2422,6 @@
              boom.style.left = (p.x - 100) + "px"; boom.style.top = (p.y - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
              
-             // [최적화] AABB 충돌 계산
              const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
              const bRect = {x: p.x - 100, y: p.y - 100, w: 260, h: 260};
 
@@ -2484,15 +2447,11 @@
 
         if (isBossBattle && p.isReflected) {
             const bRect = bossContainer.getBoundingClientRect(); 
-            // 보스 Rect는 DOM에서 가져오되 빈도수가 적으므로 허용, 혹은 최적화 가능
-            // 여기서는 투사체가 적으므로 getBoundingClientRect 써도 무방하지만 일관성을 위해직접 계산 추천
-            // 하지만 보스 컨테이너는 CSS 애니메이션이 많아 getBoundingClientRect 유지 (BossBattle 중에는 오브젝트 수가 적음)
             const pRect = p.getBoundingClientRect();
             if (pRect.right > bRect.left && pRect.left < bRect.right && pRect.bottom > bRect.top && pRect.top < bRect.bottom) { damageBoss(); p.remove(); projectiles.splice(i, 1); continue; }
         }
     }
 
-    // 적군 본체 충돌 체크
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         if (!safeActive(activeEffects.invincible) && !invincible) {
@@ -2500,7 +2459,6 @@
             const eRect = {x: e.x, y: e.y, w: 60, h: 60};
             
             if (isColliding(pRect, eRect)) {
-                // 노엘 거대화 충돌 처리
                 if(activeEffects.giant > 0) {
                      e.isDead = true;
                     if(e.laserWarning) e.laserWarning.remove();
@@ -2529,7 +2487,6 @@
         }
     }
 
-    // 장애물 이동 및 충돌 체크
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
         o.x -= gameSpeed * delta;
@@ -2539,11 +2496,9 @@
         const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
         const oRect = {x: o.x, y: oY, w: rw, h: parseFloat(o.style.height)};
         
-        // 노엘 스킨: 에너지파 충돌
         if (activeEffects.noelLaser > 0 && !o.destroyed) {
             const beam = document.getElementById('noelBeam');
             if (beam) {
-                // 빔은 고정 위치이므로 하드코딩된 Rect 사용 가능
                 const bRect = {x: 170, y: window.innerHeight - playerObj.y - 120, w: window.innerWidth, h: 100};
                 if (isColliding(bRect, oRect)) {
                     o.destroyed = true;
@@ -2556,7 +2511,6 @@
             }
         }
         
-        // 노엘 거대화 충돌
         if(activeEffects.giant > 0 && !o.destroyed) {
              const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
              if (isColliding(pRect, oRect)) {
@@ -2569,7 +2523,6 @@
              }
         }
 
-        // 피버타임 충돌
         if (isFeverTime && o.x < 180 && !o.destroyed) {
             o.destroyed = true; 
             spawnExplosionEffect(o.x + 30, oY);
@@ -2579,7 +2532,6 @@
             continue;
         }
 
-        // 화면 밖으로 나감 (회피 성공)
         if (o.x + rw < 0) {
             o.remove(); obstacles.splice(i, 1); obstacleSurviveCount++;
             if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
@@ -2591,9 +2543,7 @@
             continue;
         }
         
-        // 지은 스킨: 소환 상태 충돌 (보호막 범위)
         if (currentSkin === 'jieun' && activeEffects.summon > 0 && !o.destroyed) {
-            // 보호막은 플레이어보다 약간 큼
             const sRect = {x: playerObj.x - 20, y: window.innerHeight - playerObj.y - playerObj.h - 20, w: playerObj.w + 40, h: playerObj.h + 40};
             
             if (isColliding(sRect, oRect)) {
@@ -2606,13 +2556,12 @@
             }
         }
 
-        // 하은 스킨: 보호막 충돌
         if (currentSkin === 'haeun' && haeunShieldActive && !o.destroyed) {
             const sRect = {x: playerObj.x - 10, y: window.innerHeight - playerObj.y - playerObj.h - 10, w: playerObj.w + 20, h: playerObj.h + 20};
             
             if (isColliding(sRect, oRect)) {
                 o.destroyed = true;
-                haeunShieldActive = false; // 보호막 해제
+                haeunShieldActive = false; 
                 removeHaeunShield();
                 
                 spawnExplosionEffect(o.x + 30, oY);
@@ -2626,7 +2575,6 @@
             }
         }
 
-        // 일반 충돌 (피버X, 무적X, 소환X, 하은쉴드X)
         if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
             if (isColliding(pRect, oRect)) {
@@ -2660,7 +2608,6 @@
         for(let k=0; k<cnt; k++) {
             const b = document.createElement("div"); b.classList.add("obstacle", "obs-long");
             b.x = window.innerWidth+80; b.style.left = b.x+"px";
-            // [수정 1] obs-long에 height 명시적 할당 (충돌 계산용)
             b.style.height = "35px";
             
             let sh = window.innerHeight;
