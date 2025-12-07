@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Disciple Run – Remastered Optimized</title>
+  <title>Disciple Run – Final Fixed Ver</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <style>
@@ -12,23 +12,25 @@
     
     #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
     
-    /* [수정 2] 하휘 스킬 배경 이슈 해결: 기존 배경 레이어 숨김 처리 */
+    /* 하휘 스킬 배경 */
     #gameArea.sand-bg { background: url('Sand.png') no-repeat center/cover !important; }
     #gameArea.sand-bg .bg-layer { opacity: 0; transition: opacity 0.5s; }
 
     /* 화면 효과 */
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
     #gameArea.sandstorm-mode { filter: sepia(80%) brightness(0.9); }
-    #gameArea.shake-screen { animation: screenShake 0.1s infinite; }
-    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-3px, 4px); } 50% { transform: translate(3px, -4px); } 75% { transform: translate(-4px, -3px); } 100% { transform: translate(0, 0); } }
+    #gameArea.shake-screen { animation: screenShake 0.2s infinite; }
+    @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } 100% { transform: translate(0, 0); } }
 
     #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* 전찬: 번개 */
-    .jc-lightning-strike { position: absolute; width: 20px; height: 150vh; z-index: 89; pointer-events: none; box-shadow: 0 0 30px currentColor; transform-origin: top center; opacity: 0; mix-blend-mode: screen; }
-    
-    /* [수정 1] 전찬 해머 이미지 반전 제거 (scaleX(1)로 변경) */
-    .hammer-skill { position: absolute; width: 66vh; height: 66vh; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 10px #000); transform: scaleX(1); }
+    /* 전찬: 번개 (수정: 더 화려하고 랜덤하게) */
+    .jc-lightning-strike { position: absolute; width: 15px; height: 120vh; z-index: 89; pointer-events: none; box-shadow: 0 0 20px #fff, 0 0 40px yellow; transform-origin: top center; opacity: 0; mix-blend-mode: screen; background: #fff; }
+
+    /* [수정 4] 전찬 해머: CSS 애니메이션 제거하고 JS로 제어, 파티클 효과 추가 */
+    .hammer-skill { position: absolute; width: 400px; height: 400px; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 20px gold); transform: rotate(-45deg); }
+    .hammer-lightning { position: absolute; width: 4px; height: 100px; background: #fff; box-shadow: 0 0 10px cyan; pointer-events: none; z-index: 94; transform-origin: top center; animation: sparkFade 0.3s forwards; }
+    @keyframes sparkFade { 0% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(0); } }
 
     /* 지은: 음계 및 배경 */
     .music-note { position: absolute; font-size: 40px; font-weight: bold; z-index: 65; pointer-events: none; text-shadow: 2px 2px 0 #fff; animation: noteFloat 1s infinite ease-in-out alternate; }
@@ -52,7 +54,7 @@
     @keyframes turnToDust { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2) translateY(-20px); opacity: 0; } }
 
     /* 준: 포탈 & 미니게임 */
-    .real-portal { position: absolute; width: 140px; height: 140px; background: radial-gradient(circle, #000, #4b0082, #00ffff); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 30px #00ffff, inset 0 0 50px #000; z-index: 45; transform: translate(-50%, -50%) scale(0); }
+    .real-portal { position: absolute; width: 160px; height: 160px; background: radial-gradient(circle, #000, #4b0082, #00ffff); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 40px #00ffff, inset 0 0 60px #000; z-index: 45; transform: translate(-50%, -50%) scale(0); }
     .portal-opening { animation: pOpen 0.5s forwards; }
     .portal-closing { animation: pClose 0.5s forwards; }
     @keyframes pOpen { 0% { transform: translate(-50%, -50%) scale(0); } 100% { transform: translate(-50%, -50%) scale(1); } }
@@ -80,7 +82,8 @@
     .cake-item { position: absolute; width: 60px; height: 60px; background-size: contain; background-repeat: no-repeat; z-index: 88; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
     .heart-emit { position: absolute; font-size: 30px; color: #ff69b4; font-weight: bold; animation: heartFloat 1s forwards; z-index: 99; }
     @keyframes heartFloat { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
-    .cake-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 0; transition: opacity 1s; }
+    /* [수정 8] 케이크 배경 z-index 수정 (0 -> 5) */
+    .cake-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 5; transition: opacity 1s; }
 
     /* 지혜 스킨 변신 */
     .jihye-transform-sphere { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle at center, #fff 20%, #ffd700 80%); box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff; z-index: 52; transform: translate(-50%, -50%); animation: sphereCharge 2s ease-in forwards; mix-blend-mode: screen; }
@@ -153,8 +156,11 @@
     #pauseBtn { position: fixed; z-index: 900; top: 15px; right: 15px; width: 50px; height: 50px; background: #fdfaf2; border: 4px solid #3a2513; border-radius: 12px; box-shadow: 0 4px 0 #8b4f26; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; color: #3a2513; transition: transform 0.1s, box-shadow 0.1s; }
     #pauseBtn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b4f26; }
 
-    #buffArea { position: fixed; z-index: 2147483647; bottom: 20px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
+    /* [수정 2] 버프 영역 위치 상향 조정 (버튼과 겹침 방지) */
+    #buffArea { position: fixed; z-index: 2147483647; bottom: 120px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    /* 패시브 쿨타임 전용 스타일 */
+    .buff-tag.passive-cd { opacity: 0.7; border-color: #aaa; }
 
     #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
@@ -318,9 +324,7 @@
 <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
 
 <script>
-  // [최적화] 충돌 박스 계산 헬퍼 함수 (DOM 접근 최소화)
   function isColliding(a, b) {
-    // a, b는 {x, y, w, h} 형태의 객체여야 함
     return (a.x < b.x + b.w && a.x + a.w > b.x &&
             a.y < b.y + b.h && a.y + a.h > b.y);
   }
@@ -382,6 +386,20 @@
     ganghui: { type: "Active", cd: 60 },
     jieun: { type: "Active", cd: 60 }
   };
+  
+  // [수정 3] 패시브 스킬 쿨타임 정의 (화면에 남은 시간 표기를 위해)
+  const PASSIVE_COOLDOWNS = {
+      'jeonchan': 15,
+      'jieun': 40,
+      'haeun': 25,
+      'jihye': 25,
+      'jun': 30,
+      'noel': 30,
+      'hahwi': 30,
+      'yejun': 50,
+      'stephanie': 30,
+      'ganghui': 10
+  };
 
   const abilityBtn = document.getElementById('abilityBtn');
   if(SKIN_DATA[currentSkin].type === "Active") abilityBtn.style.display = 'flex';
@@ -405,8 +423,7 @@
   let speedLines = document.getElementById("speedLines");
   let timeTunnelBg = document.getElementById("timeTunnelBg");
 
-  // [최적화] 플레이어 좌표 객체 관리
-  let playerObj = { x: 120, y: 40, w: 40, h: 50 }; // 히트박스 약간 작게 조정
+  let playerObj = { x: 120, y: 40, w: 40, h: 50 }; 
   let velocity = 0; 
   let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
     
@@ -427,7 +444,6 @@
   let abilityCD = 0;
   let missionUpdateTimer = 0;
   
-  // 상태 변수들
   let jeonchanTimer = 0;
   let haeunLifeTimer = 0;
   let haeunShieldTimer = 0;
@@ -438,7 +454,6 @@
   let jihyeMissiles = []; 
   let jihyePassiveTimer = 0; 
   
-  // [최적화] 지혜 스킨 변신 추적을 위한 플래그 (setInterval 대체)
   let jihyeSphereActive = false;
   let jihyeSphereEl = null;
   let jihyeEndSphereEl = null;
@@ -446,7 +461,6 @@
   let junLambTimer = 0;
   let isJunTimeTravel = false;
   
-  // [최적화] 준 스킨 어린양 관리를 위한 객체 (setInterval 대체)
   let activeLamb = null;
 
   let noelGiantTimer = 0;
@@ -532,7 +546,6 @@
           const spreadX = (Math.random() - 0.5) * 100 * spreadMult;
           const spreadY = (Math.random() - 0.5) * 100 * spreadMult;
           coin.style.left = x + 'px'; coin.style.top = y + 'px';
-          // [최적화] 동전 좌표 변수 추가
           coin.x = x; coin.y = y;
           coin.vx = spreadX; coin.vy = spreadY; coin.timer = 0;
           gameArea.appendChild(coin); faithCoins.push(coin);
@@ -574,7 +587,7 @@
       noelFly.style.top = '-50px';
       gameArea.appendChild(noelFly);
 
-      const pRect = { left: playerObj.x, top: window.innerHeight - playerObj.y - playerObj.h }; // 근사치
+      const pRect = { left: playerObj.x, top: window.innerHeight - playerObj.y - playerObj.h }; 
 
       noelFly.animate([
          { left: (window.innerWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
@@ -702,7 +715,6 @@
     shieldCooldown = 0.5;
     subActionBtn.classList.add('cooldown');
     let reflected = false;
-    // [최적화] JS 변수 좌표 기반으로 거리 계산
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected) {
             const dist = Math.hypot(p.x - playerObj.x, p.y - (window.innerHeight - playerObj.y - 30));
@@ -763,7 +775,6 @@
       sphere.className = 'jihye-transform-sphere';
       gameArea.appendChild(sphere);
 
-      // [최적화] setInterval 제거하고 게임 루프에서 추적
       jihyeSphereEl = sphere;
       jihyeSphereActive = true;
 
@@ -807,7 +818,6 @@
       sphere.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
       gameArea.appendChild(sphere);
       
-      // 변신 해제 시 구체가 플레이어를 따라다니도록 설정
       jihyeEndSphereEl = sphere;
 
       activeEffects.invincible = 2.0;
@@ -834,8 +844,6 @@
       pillar.className = 'holy-light-pillar';
       gameArea.appendChild(pillar);
 
-      // [최적화] 힐러 이동 애니메이션도 CSS transition으로 처리하거나 requestAnimation 내에서 처리 권장
-      // 여기서는 CSS transition 사용 중이므로 위치만 초기화
       healer.style.left = (playerObj.x + 10) + 'px';
       healer.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
       pillar.style.left = (playerObj.x + 30) + 'px';
@@ -855,6 +863,7 @@
       }, 2000);
   }
 
+  // [수정 7] 포탈 위치 및 복귀 좌표 수정
   function triggerJunSkill() {
       if(isJunTimeTravel) return;
       isJunTimeTravel = true;
@@ -862,17 +871,22 @@
 
       const portal = document.createElement('div');
       portal.className = 'real-portal portal-opening';
-      // [수정 4] 포탈 진입 Y좌표 조정 (플레이어 센터에 맞춤: -30 -> -80)
-      portal.style.left = (playerObj.x + 150) + 'px';
-      portal.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
+      
+      // 플레이어의 정중앙 좌표 계산
+      const playerCenterX = playerObj.x + (playerObj.w / 2);
+      const playerCenterY = window.innerHeight - playerObj.y - (playerObj.h / 2);
+
+      portal.style.left = playerCenterX + 'px';
+      portal.style.top = playerCenterY + 'px';
       gameArea.appendChild(portal);
 
       setTimeout(() => {
           player.style.transition = "transform 0.5s, left 0.5s, top 0.5s";
-          player.style.left = (playerObj.x + 150) + 'px';
-          // [수정 4] 포탈 진입 Y좌표 조정 (플레이어 센터에 맞춤: -30 -> -80)
-          player.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
-          player.style.transform = "scale(0)"; // 회전 제거, 걸어 들어가는 효과
+          player.style.left = playerCenterX + 'px';
+          // Top으로 강제 이동
+          player.style.top = playerCenterY + 'px';
+          player.style.bottom = 'auto'; // bottom 해제
+          player.style.transform = "translate(-50%, -50%) scale(0)"; 
       }, 500);
 
       setTimeout(() => {
@@ -898,11 +912,13 @@
       document.getElementById('junMiniGameUI').style.display = 'none';
       junMiniGameActive = false;
       
-      portal.style.left = '200px'; 
+      // 화면 중앙으로 포탈 이동
+      portal.style.left = '50%'; 
       portal.style.top = '50%';
       
+      // 플레이어도 화면 중앙으로 이동 (보이지 않지만 좌표 동기화)
       player.style.transition = 'none';
-      player.style.left = '200px';
+      player.style.left = '50%';
       player.style.top = '50%';
       
       timeTunnelBg.style.opacity = '0';
@@ -913,20 +929,33 @@
       showFloatText(`📍 +${junWarpDist}m 이동!`);
 
       setTimeout(() => {
-          player.style.transition = "transform 0.5s ease-out, left 0.5s";
-          player.style.transform = 'scale(1) rotate(0deg)';
-          player.style.left = '120px';
+          player.style.transition = "transform 0.5s ease-out";
+          // 중앙에서 튀어나오기
+          player.style.transform = 'translate(-50%, -50%) scale(1)';
+          
+          // 물리 좌표 복귀
           playerObj.y = window.innerHeight / 2;
+          // left는 css 50%를 픽셀로 변환하거나, 고정값 사용. 여기선 120px로 부드럽게 복귀시킴
+          
+          setTimeout(() => {
+               // [수정] 복귀 애니메이션
+               player.style.transition = "left 0.5s, top 0.5s";
+               player.style.left = "120px";
+               player.style.top = (window.innerHeight - 40) + "px"; // 바닥 근처로
+               playerObj.y = 40;
+          }, 100);
+
           velocity = 0;
           
           running = true; 
           lastTime = performance.now();
           requestAnimationFrame(gameLoop);
           
-          // [수정 5] 프리징 해결: 애니메이션 완료 후 top 속성을 제거하여 물리 엔진(bottom)이 우선되게 함
           setTimeout(() => {
               player.style.transition = 'none';
-              player.style.top = ""; // Top 속성 제거 (중요!)
+              player.style.top = ""; // Top 속성 제거 (물리엔진 복귀)
+              player.style.bottom = playerObj.y + "px";
+              player.style.transform = "none";
           }, 600);
           
           setTimeout(() => {
@@ -940,17 +969,15 @@
   function spawnLamb() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
-      // [수정 3] 어린양 스폰 위치 왼쪽 화면 밖(-100)으로 수정
-      lamb.x = -100;
+      // [수정 6] Z-index 문제 해결을 위해 스타일 확실히 적용 및 시작 위치 조정
+      lamb.x = -150; 
       lamb.y = 50;
       lamb.style.left = lamb.x + 'px';
       lamb.style.top = lamb.y + 'px'; 
-      // 오른쪽을 보고 뛰어오도록 반전 해제 (기본 이미지가 왼쪽을 본다면 반전 필요, 기본이 오른쪽이면 해제. 보통 왼쪽을 보므로 scaleX(-1) 유지하되 방향에 맞게)
-      // 왼쪽에서 오른쪽으로 오므로 오른쪽을 봐야 함 -> scaleX(-1) 유지 (원본 Lamb이 왼쪽을 보고 있다고 가정)
       lamb.style.transform = "scaleX(-1)";
+      lamb.style.zIndex = "51"; // 플레이어(50) 위
       gameArea.appendChild(lamb);
       
-      // [최적화] setInterval 제거하고 활성 객체로 등록
       activeLamb = {
           el: lamb,
           state: 'approach',
@@ -958,25 +985,23 @@
           msgEl: null
       };
       
-      lamb.x = lamb.x; 
-      lamb.y = lamb.y;
+      // JS 객체 좌표 동기화
       activeLamb.el.x = lamb.x;
       activeLamb.el.y = lamb.y;
   }
 
-  // [최적화] 램 업데이트 로직 (GameLoop에서 호출)
   function updateLamb(dt) {
       if(!activeLamb) return;
       const lamb = activeLamb;
       const pRect = { x: playerObj.x, y: window.innerHeight - playerObj.y - 60 };
       
       if(lamb.state === 'approach') {
-          // [수정 3] 왼쪽에서 오므로 플레이어 왼쪽(-50)을 타겟으로 잡음
           const targetX = pRect.x - 50; 
           const targetY = pRect.y - 50;
           
-          lamb.el.x += (targetX - lamb.el.x) * 0.03;
-          lamb.el.y += (targetY - lamb.el.y) * 0.03;
+          // [수정 6] 이동 속도 증가 (0.03 -> 0.08) 하여 확실히 보이게 함
+          lamb.el.x += (targetX - lamb.el.x) * 0.08;
+          lamb.el.y += (targetY - lamb.el.y) * 0.08;
           
           lamb.el.style.left = lamb.el.x + 'px';
           lamb.el.style.top = lamb.el.y + 'px';
@@ -1007,92 +1032,81 @@
               if(lamb.msgEl) lamb.msgEl.remove();
           }
       } else if(lamb.state === 'leave') {
-          // 다시 왼쪽으로 퇴장
-          lamb.el.x -= 300 * dt;
+          lamb.el.x -= 400 * dt; // 퇴장 속도
           lamb.el.style.left = lamb.el.x + 'px';
-          if(lamb.el.x < -100) {
+          if(lamb.el.x < -150) {
               lamb.el.remove();
               activeLamb = null;
           }
       }
   }
   
+  // [수정 4] 전찬 해머 스킬 로직 변경 (JS 제어)
   function triggerJeonchanHammer() {
       showFloatText("🔨 심판의 망치!");
       gameArea.classList.add('shake-screen');
-      setTimeout(() => gameArea.classList.remove('shake-screen'), 2000); 
+      setTimeout(() => gameArea.classList.remove('shake-screen'), 500); // 쉐이크 짧게
 
+      // 기존 CSS 애니메이션 요소 제거하고 JS 객체 생성
       hammerObj = document.createElement('div');
       hammerObj.className = 'hammer-skill';
-      // [수정 1] 망치 시작 위치 및 이동 로직 수정
-      hammerObj.style.left = '-60vw'; 
-      hammerObj.style.top = '15%'; 
+      hammerObj.x = -400; // 화면 왼쪽 밖
+      hammerObj.y = 50;   // 상단
+      hammerObj.vx = 800; // 이동 속도
+      hammerObj.style.left = hammerObj.x + 'px';
+      hammerObj.style.top = hammerObj.y + 'px';
       gameArea.appendChild(hammerObj);
-
-      hammerObj.animate([
-          { left: '-60vw' },
-          { left: '100vw' }
-      ], {
-          // [수정 1] 망치 애니메이션 속도 수정 (1.5초 -> 20초)
-          duration: 20000, 
-          easing: 'linear',
-          fill: 'forwards'
-      }).onfinish = () => {
-          if(hammerObj) hammerObj.remove();
-          hammerObj = null;
-          gameArea.classList.remove('shake-screen');
-      };
   }
 
+  // [수정 5] 전찬 패시브: 더 화려하고 랜덤하게
   function triggerJeonchanLightning() {
-      showFloatText("⚡ 천둥 번개!");
-      let count = 0;
-      const strikeLoop = setInterval(() => {
-          if(count >= 10) { clearInterval(strikeLoop); return; } // 횟수 증가
+      // showFloatText("⚡ 천둥 번개!"); // 텍스트 제거하고 시각효과만 (너무 자주 떠서)
+      
+      // 1초동안 10번 번개 침 (화려하게)
+      let strikes = 0;
+      const storm = setInterval(() => {
+          if(strikes > 10) { clearInterval(storm); return; }
           
-          for(let i=0; i<3; i++) {
-              const strike = document.createElement('div');
-              strike.className = 'jc-lightning-strike';
-              
-              const randX = randBetween(0, window.innerWidth); 
-              strike.style.left = randX + 'px';
-              strike.style.top = '-50vh';
-              strike.style.transform = `rotate(${randBetween(-30, 30)}deg)`; 
-              
-              // 형형색색 (Random Hue)
-              const hue = Math.floor(Math.random() * 360);
-              strike.style.color = `hsl(${hue}, 100%, 70%)`;
-              strike.style.background = `linear-gradient(to bottom, #fff, hsl(${hue}, 100%, 50%), transparent)`;
-              
-              gameArea.appendChild(strike);
-              
-              strike.animate([
-                  { opacity: 0, height: '0' },
-                  { opacity: 1, height: '150vh' },
-                  { opacity: 0 }
-              ], { duration: 300, fill: 'forwards' }).onfinish = () => strike.remove();
+          const strike = document.createElement('div');
+          strike.className = 'jc-lightning-strike';
+          
+          const randX = randBetween(50, window.innerWidth - 50); 
+          strike.style.left = randX + 'px';
+          strike.style.top = '-120vh'; // 위에서부터
+          
+          // 랜덤 각도 및 굵기
+          strike.style.transform = `rotate(${randBetween(-15, 15)}deg)`; 
+          strike.style.width = randBetween(10, 30) + "px";
+          
+          gameArea.appendChild(strike);
+          
+          strike.animate([
+              { top: '-120vh', opacity: 0 },
+              { top: '-20vh', opacity: 1 }, // 땅에 꽂힘
+              { top: '-20vh', opacity: 0 }
+          ], { duration: 150, fill: 'forwards' }).onfinish = () => strike.remove();
 
-              // 충돌 감지 (화면 전체 범위)
-              obstacles.forEach(o => {
-                  if(o.x > randX - 100 && o.x < randX + 100 && !o.destroyed) {
-                      o.destroyed = true;
-                      spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
-                      spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
-                      o.remove();
-                  }
-              });
-              enemies.forEach(e => {
-                  if(!e.isDead && e.x > randX - 100 && e.x < randX + 100) {
-                      e.isDead = true;
-                      spawnExplosionEffect(e.x, e.y);
-                      spawnFaithCoins(e.x, e.y, 5, false, true);
-                      e.remove();
-                  }
-              });
-          }
-          playSound('clear');
-          count++;
-      }, 100);
+          // 충돌 판정
+          obstacles.forEach(o => {
+              if(o.x > randX - 80 && o.x < randX + 80 && !o.destroyed) {
+                  o.destroyed = true;
+                  spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
+                  spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
+                  o.remove();
+              }
+          });
+          enemies.forEach(e => {
+              if(!e.isDead && e.x > randX - 80 && e.x < randX + 80) {
+                  e.isDead = true;
+                  spawnExplosionEffect(e.x, e.y);
+                  spawnFaithCoins(e.x, e.y, 5, false, true);
+                  e.remove();
+              }
+          });
+          
+          if(strikes % 3 === 0) playSound('clear'); // 소리는 가끔
+          strikes++;
+      }, 80);
   }
 
   function triggerStephanieSkill() {
@@ -1213,6 +1227,8 @@
         document.getElementById("feverFill").style.width = feverGauge + "%";
         if(feverGauge <= 0) endFeverTime();
     }
+
+    // [수정 1] 액티브 스킬 지속시간 표기 (누락된 스킨들 추가)
     for(let k in activeEffects) {
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
@@ -1262,7 +1278,6 @@
                 musicNotes.forEach(n => n.remove()); musicNotes = [];
             }
             
-            // [수정 6] 노엘 거대화 지속 시간 종료 체크 로직 이동 (Pause시 멈추도록)
             if(k === 'giant' && activeEffects[k] <= 0) {
                 player.style.transform = "scale(1)";
                 const aura = player.querySelector('.noel-aura');
@@ -1277,7 +1292,7 @@
                 else if(k === 'fly') { color = "#87ceeb"; icon = "✈️"; label = "비행"; }
                 else if(k === 'revive') { color = "#ff69b4"; icon = "👼"; label = "부활"; }
                 else if(k === 'noelLaser') { color = "#00ffff"; icon = "🌊"; label = "에너지파"; }
-                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "소환"; }
+                else if(k === 'summon') { color = "#e040fb"; icon = "✨"; label = "노엘 소환"; }
                 else if(k === 'bobaTime') { color = "#795548"; icon = "🧋"; label = "보바 타임"; }
                 else if(k === 'sandstorm') { color = "#d2b48c"; icon = "🌪️"; label = "모래폭풍"; }
                 else if(k === 'jihyeSquad') { color = "#ff9100"; icon = "⚔️"; label = "발키리"; }
@@ -1285,10 +1300,34 @@
                 else if(k === 'cakeWorld') { color = "#ff69b4"; icon = "🍰"; label = "케이크"; }
                 else if(k === 'musicWave') { color = "#ff00ff"; icon = "🎵"; label = "음계파도"; }
                 
-                if(k !== 'magnet' && k !== 'giant') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
+                if(k !== 'magnet') html += `<div class="buff-tag" style="border-color:${color}">${icon} ${label} ${Math.ceil(activeEffects[k])}s</div>`;
             }
         } else { activeEffects[k] = 0; }
     }
+    
+    // [수정 3] 패시브 쿨타임 표시 로직 추가
+    if(SKIN_DATA[currentSkin].type === "Passive" || currentSkin === 'jeonchan' || currentSkin === 'noel') {
+        let timerVal = 0;
+        let limit = PASSIVE_COOLDOWNS[currentSkin] || 30;
+        let label = "패시브";
+
+        if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡ 번개"; }
+        else if(currentSkin === 'jieun') { timerVal = jieunNoelTimer; label = "🛡️ 소환"; }
+        else if(currentSkin === 'haeun') { timerVal = haeunShieldTimer; label = "🛡️ 보호막"; }
+        else if(currentSkin === 'jihye') { timerVal = jihyePassiveTimer; label = "💖 힐"; }
+        else if(currentSkin === 'jun') { timerVal = junLambTimer; label = "🐑 어린양"; }
+        else if(currentSkin === 'noel') { timerVal = noelGiantTimer; label = "🦶 거대화"; }
+        else if(currentSkin === 'hahwi') { timerVal = hahwiStoneTimer; label = "💎 스톤"; }
+        else if(currentSkin === 'yejun') { timerVal = yejunCloneTimer; label = "💨 분신"; }
+        else if(currentSkin === 'stephanie') { timerVal = stephanieHeartTimer; label = "❤️ 하트"; }
+        else if(currentSkin === 'ganghui') { timerVal = ganghuiPanelTimer; label = "🛰️ 판넬"; }
+
+        if(timerVal > 0 && timerVal < limit) {
+             let remain = Math.ceil(timerVal - limit);
+             html += `<div class="buff-tag passive-cd">${label} ${remain}s</div>`;
+        }
+    }
+
     buffContainer.innerHTML = html;
 
     if(shieldCooldown > 0) { shieldCooldown -= delta; if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown'); }
@@ -1386,28 +1425,50 @@
 
         updateLamb(safeDelta);
         
+        // [수정 4] 해머 이동 및 파티클 생성 로직
         if(hammerObj) {
-            const hRect = hammerObj.getBoundingClientRect();
-            obstacles.forEach(o => {
-                if(!o.destroyed && o.x < window.innerWidth) {
-                    const oRect = o.getBoundingClientRect();
-                    if(hRect.right > oRect.left && hRect.left < oRect.right) {
-                        o.destroyed = true;
-                        spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
-                        o.remove();
+            hammerObj.x += hammerObj.vx * safeDelta;
+            hammerObj.style.left = hammerObj.x + 'px';
+            
+            // 해머 끝부분에서 번개 튀김
+            if(Math.random() < 0.3) {
+                 const spark = document.createElement('div');
+                 spark.className = 'hammer-lightning';
+                 spark.style.left = (hammerObj.x + 200) + 'px'; // 해머 중심부
+                 spark.style.top = (hammerObj.y + 200) + 'px';
+                 spark.style.transform = `rotate(${randBetween(-180, 180)}deg)`;
+                 gameArea.appendChild(spark);
+                 setTimeout(() => spark.remove(), 300);
+            }
+
+            if(hammerObj.x > window.innerWidth + 200) {
+                hammerObj.remove();
+                hammerObj = null;
+                gameArea.classList.remove('shake-screen');
+            } else {
+                // 충돌 처리
+                const hRect = { left: hammerObj.x + 50, right: hammerObj.x + 350, top: hammerObj.y + 50, bottom: hammerObj.y + 350 };
+                obstacles.forEach(o => {
+                    if(!o.destroyed && o.x < window.innerWidth) {
+                        const oRect = o.getBoundingClientRect();
+                        if(hRect.right > oRect.left && hRect.left < oRect.right) {
+                            o.destroyed = true;
+                            spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
+                            o.remove();
+                        }
                     }
-                }
-            });
-            enemies.forEach(e => {
-                if(!e.isDead && e.x < window.innerWidth) {
-                    const eRect = e.getBoundingClientRect();
-                    if(hRect.right > eRect.left && hRect.left < eRect.right) {
-                        e.isDead = true;
-                        spawnExplosionEffect(e.x, e.y);
-                        e.remove();
+                });
+                enemies.forEach(e => {
+                    if(!e.isDead && e.x < window.innerWidth) {
+                        const eRect = e.getBoundingClientRect();
+                        if(hRect.right > eRect.left && hRect.left < eRect.right) {
+                            e.isDead = true;
+                            spawnExplosionEffect(e.x, e.y);
+                            e.remove();
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         if(currentSkin === 'jeonchan' && running) {
@@ -1477,8 +1538,6 @@
                 const aura = document.createElement('div'); aura.className = 'noel-aura';
                 player.appendChild(aura);
                 noelGiantTimer = 0;
-                
-                // [수정 6] setTimeout 제거 (updateBuffUI에서 처리)
             }
         }
 
