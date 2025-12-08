@@ -24,10 +24,10 @@
 
     #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* 전찬: 번개 (수정: 더 화려하고 랜덤하게) */
+    /* 전찬: 번개 */
     .jc-lightning-strike { position: absolute; width: 15px; height: 120vh; z-index: 89; pointer-events: none; box-shadow: 0 0 20px #fff, 0 0 40px yellow; transform-origin: top center; opacity: 0; mix-blend-mode: screen; background: #fff; }
 
-    /* [수정 4] 전찬 해머: CSS 애니메이션 제거하고 JS로 제어, 파티클 효과 추가 */
+    /* 전찬 해머 */
     .hammer-skill { position: absolute; width: 400px; height: 400px; background: url('Hammer.png') no-repeat center/contain; z-index: 95; pointer-events: none; filter: drop-shadow(0 0 20px gold); transform: rotate(-45deg); }
     .hammer-lightning { position: absolute; width: 4px; height: 100px; background: #fff; box-shadow: 0 0 10px cyan; pointer-events: none; z-index: 94; transform-origin: top center; animation: sparkFade 0.3s forwards; }
     @keyframes sparkFade { 0% { opacity: 1; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(0); } }
@@ -82,7 +82,7 @@
     .cake-item { position: absolute; width: 60px; height: 60px; background-size: contain; background-repeat: no-repeat; z-index: 88; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
     .heart-emit { position: absolute; font-size: 30px; color: #ff69b4; font-weight: bold; animation: heartFloat 1s forwards; z-index: 99; }
     @keyframes heartFloat { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
-    /* [수정 8] 케이크 배경 z-index 수정 (0 -> 5) */
+    /* 케이크 배경 */
     .cake-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 5; transition: opacity 1s; }
 
     /* 지혜 스킨 변신 */
@@ -204,7 +204,8 @@
     .modal-input { width: 85%; max-width: 320px; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #b8a792; margin: 8px auto 18px; display: block; }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
 
-    .lamb-unit { position: absolute; width: 60px; height: 60px; background: url('Lamb.png') no-repeat center/contain; z-index: 51; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3)); }
+    /* [수정 6, 7] Lamb.png -> Lam.png 및 위치/방향 수정을 위한 스타일 */
+    .lamb-unit { position: absolute; width: 60px; height: 60px; background: url('Lam.png') no-repeat center/contain; z-index: 51; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3)); }
     .lamb-msg { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #fff; border: 3px solid #3a2513; padding: 6px 12px; border-radius: 15px; font-size: 14px; font-weight: 800; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); color: #3a2513; }
     .lamb-msg::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent; display: block; width: 0; }
 
@@ -387,7 +388,6 @@
     jieun: { type: "Active", cd: 60 }
   };
   
-  // [수정 3] 패시브 스킬 쿨타임 정의 (화면에 남은 시간 표기를 위해)
   const PASSIVE_COOLDOWNS = {
       'jeonchan': 15,
       'jieun': 40,
@@ -863,7 +863,7 @@
       }, 2000);
   }
 
-  // [수정 7] 포탈 위치 및 복귀 좌표 수정
+  // [수정 7, 8] 포탈 위치, 복귀 좌표(낙하 버그 수정)
   function triggerJunSkill() {
       if(isJunTimeTravel) return;
       isJunTimeTravel = true;
@@ -933,16 +933,13 @@
           // 중앙에서 튀어나오기
           player.style.transform = 'translate(-50%, -50%) scale(1)';
           
-          // 물리 좌표 복귀
+          // [수정 8] 낙하 버그 해결: 바닥(40)이 아니라 공중(화면 중간) 좌표 할당
           playerObj.y = window.innerHeight / 2;
-          // left는 css 50%를 픽셀로 변환하거나, 고정값 사용. 여기선 120px로 부드럽게 복귀시킴
           
           setTimeout(() => {
-               // [수정] 복귀 애니메이션
-               player.style.transition = "left 0.5s, top 0.5s";
+               // 복귀 애니메이션 (X축만 이동, Y축은 물리엔진이 처리)
+               player.style.transition = "left 0.5s";
                player.style.left = "120px";
-               player.style.top = (window.innerHeight - 40) + "px"; // 바닥 근처로
-               playerObj.y = 40;
           }, 100);
 
           velocity = 0;
@@ -954,7 +951,7 @@
           setTimeout(() => {
               player.style.transition = 'none';
               player.style.top = ""; // Top 속성 제거 (물리엔진 복귀)
-              player.style.bottom = playerObj.y + "px";
+              // 여기서는 bottom을 설정하지 않고 updatePhysics가 처리하게 함
               player.style.transform = "none";
           }, 600);
           
@@ -966,16 +963,18 @@
       }, 500);
   }
 
+  // [수정 6, 7] Lamb 등장 위치(오른쪽) 및 이미지명(Lam.png) 수정
   function spawnLamb() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
-      // [수정 6] Z-index 문제 해결을 위해 스타일 확실히 적용 및 시작 위치 조정
-      lamb.x = -150; 
+      // 오른쪽 화면 밖
+      lamb.x = window.innerWidth + 150; 
       lamb.y = 50;
       lamb.style.left = lamb.x + 'px';
       lamb.style.top = lamb.y + 'px'; 
-      lamb.style.transform = "scaleX(-1)";
-      lamb.style.zIndex = "51"; // 플레이어(50) 위
+      // 처음엔 왼쪽을 바라보도록 (이미지 방향에 따라 다를 수 있음, 일단 유지)
+      lamb.style.transform = "scaleX(-1)"; 
+      lamb.style.zIndex = "51"; 
       gameArea.appendChild(lamb);
       
       activeLamb = {
@@ -985,7 +984,6 @@
           msgEl: null
       };
       
-      // JS 객체 좌표 동기화
       activeLamb.el.x = lamb.x;
       activeLamb.el.y = lamb.y;
   }
@@ -999,7 +997,7 @@
           const targetX = pRect.x - 50; 
           const targetY = pRect.y - 50;
           
-          // [수정 6] 이동 속도 증가 (0.03 -> 0.08) 하여 확실히 보이게 함
+          // 플레이어 쪽으로 이동 (왼쪽으로)
           lamb.el.x += (targetX - lamb.el.x) * 0.08;
           lamb.el.y += (targetY - lamb.el.y) * 0.08;
           
@@ -1029,40 +1027,42 @@
           lamb.waitTimer += dt;
           if(lamb.waitTimer > 1.5) { 
               lamb.state = 'leave';
+              // 퇴장 시 방향 전환 (오른쪽 보기)
+              lamb.el.style.transform = "scaleX(1)";
               if(lamb.msgEl) lamb.msgEl.remove();
           }
       } else if(lamb.state === 'leave') {
-          lamb.el.x -= 400 * dt; // 퇴장 속도
+          // 오른쪽으로 퇴장
+          lamb.el.x += 400 * dt; 
           lamb.el.style.left = lamb.el.x + 'px';
-          if(lamb.el.x < -150) {
+          if(lamb.el.x > window.innerWidth + 150) {
               lamb.el.remove();
               activeLamb = null;
           }
       }
   }
   
-  // [수정 4] 전찬 해머 스킬 로직 변경 (JS 제어)
+  // [수정 1] 전찬 해머: 속도 및 지속시간 수정 (20초 동안 화면 횡단)
   function triggerJeonchanHammer() {
       showFloatText("🔨 심판의 망치!");
       gameArea.classList.add('shake-screen');
-      setTimeout(() => gameArea.classList.remove('shake-screen'), 500); // 쉐이크 짧게
+      setTimeout(() => gameArea.classList.remove('shake-screen'), 500); 
 
-      // 기존 CSS 애니메이션 요소 제거하고 JS 객체 생성
       hammerObj = document.createElement('div');
       hammerObj.className = 'hammer-skill';
-      hammerObj.x = -400; // 화면 왼쪽 밖
+      hammerObj.x = -400; // 화면 왼쪽 밖 시작
       hammerObj.y = 50;   // 상단
-      hammerObj.vx = 800; // 이동 속도
+      
+      // 화면 전체 너비 + 해머 너비 + 여유분을 20초 동안 이동
+      const totalDist = window.innerWidth + 800; 
+      hammerObj.vx = totalDist / 20; // 20초 지속 속도 계산
+
       hammerObj.style.left = hammerObj.x + 'px';
       hammerObj.style.top = hammerObj.y + 'px';
       gameArea.appendChild(hammerObj);
   }
 
-  // [수정 5] 전찬 패시브: 더 화려하고 랜덤하게
   function triggerJeonchanLightning() {
-      // showFloatText("⚡ 천둥 번개!"); // 텍스트 제거하고 시각효과만 (너무 자주 떠서)
-      
-      // 1초동안 10번 번개 침 (화려하게)
       let strikes = 0;
       const storm = setInterval(() => {
           if(strikes > 10) { clearInterval(storm); return; }
@@ -1072,9 +1072,8 @@
           
           const randX = randBetween(50, window.innerWidth - 50); 
           strike.style.left = randX + 'px';
-          strike.style.top = '-120vh'; // 위에서부터
+          strike.style.top = '-120vh'; 
           
-          // 랜덤 각도 및 굵기
           strike.style.transform = `rotate(${randBetween(-15, 15)}deg)`; 
           strike.style.width = randBetween(10, 30) + "px";
           
@@ -1082,11 +1081,10 @@
           
           strike.animate([
               { top: '-120vh', opacity: 0 },
-              { top: '-20vh', opacity: 1 }, // 땅에 꽂힘
+              { top: '-20vh', opacity: 1 }, 
               { top: '-20vh', opacity: 0 }
           ], { duration: 150, fill: 'forwards' }).onfinish = () => strike.remove();
 
-          // 충돌 판정
           obstacles.forEach(o => {
               if(o.x > randX - 80 && o.x < randX + 80 && !o.destroyed) {
                   o.destroyed = true;
@@ -1104,7 +1102,7 @@
               }
           });
           
-          if(strikes % 3 === 0) playSound('clear'); // 소리는 가끔
+          if(strikes % 3 === 0) playSound('clear');
           strikes++;
       }, 80);
   }
@@ -1141,7 +1139,7 @@
               c.el.remove();
           });
           yejunClones = [];
-      }, 15000); // 15초 지속
+      }, 15000); 
   }
 
   function triggerGanghuiGundam() {
@@ -1228,7 +1226,6 @@
         if(feverGauge <= 0) endFeverTime();
     }
 
-    // [수정 1] 액티브 스킬 지속시간 표기 (누락된 스킨들 추가)
     for(let k in activeEffects) {
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
@@ -1305,26 +1302,39 @@
         } else { activeEffects[k] = 0; }
     }
     
-    // [수정 3] 패시브 쿨타임 표시 로직 추가
-    if(SKIN_DATA[currentSkin].type === "Passive" || currentSkin === 'jeonchan' || currentSkin === 'noel') {
-        let timerVal = 0;
+    // [수정 2, 3, 11] 패시브 쿨타임 표시: 조건문 수정 및 하은 2개 패시브 처리
+    const passiveSkins = ['jeonchan', 'noel', 'haeun', 'hahwi', 'jihye', 'jun', 'stephanie', 'ganghui', 'jieun', 'yejun'];
+    if(SKIN_DATA[currentSkin].type === "Passive" || passiveSkins.includes(currentSkin)) {
         let limit = PASSIVE_COOLDOWNS[currentSkin] || 30;
         let label = "패시브";
+        let timerVal = 0;
 
-        if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡ 번개"; }
-        else if(currentSkin === 'jieun') { timerVal = jieunNoelTimer; label = "🛡️ 소환"; }
-        else if(currentSkin === 'haeun') { timerVal = haeunShieldTimer; label = "🛡️ 보호막"; }
-        else if(currentSkin === 'jihye') { timerVal = jihyePassiveTimer; label = "💖 힐"; }
-        else if(currentSkin === 'jun') { timerVal = junLambTimer; label = "🐑 어린양"; }
-        else if(currentSkin === 'noel') { timerVal = noelGiantTimer; label = "🦶 거대화"; }
-        else if(currentSkin === 'hahwi') { timerVal = hahwiStoneTimer; label = "💎 스톤"; }
-        else if(currentSkin === 'yejun') { timerVal = yejunCloneTimer; label = "💨 분신"; }
-        else if(currentSkin === 'stephanie') { timerVal = stephanieHeartTimer; label = "❤️ 하트"; }
-        else if(currentSkin === 'ganghui') { timerVal = ganghuiPanelTimer; label = "🛰️ 판넬"; }
+        if (currentSkin === 'haeun') {
+            // 하은 스페셜 로직: 2개의 패시브
+            let shieldRemain = Math.ceil(haeunShieldTimer - 10); // 쿨타임 10초로 가정 (게임루프 로직 확인 필요)
+            // 게임루프 로직: if(haeunShieldTimer >= 10.0)
+            if(haeunShieldTimer > 0 && haeunShieldTimer < 10) {
+                 html += `<div class="buff-tag passive-cd">🛡️ 보호막 ${Math.ceil(10 - haeunShieldTimer)}s</div>`;
+            }
+            if(haeunLifeTimer > 0 && haeunLifeTimer < 25) {
+                 html += `<div class="buff-tag passive-cd">💖 힐 ${Math.ceil(25 - haeunLifeTimer)}s</div>`;
+            }
+        } else {
+            // 나머지 스킨 단일 패시브
+            if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡ 번개"; }
+            else if(currentSkin === 'jieun') { timerVal = jieunNoelTimer; label = "🛡️ 소환"; }
+            else if(currentSkin === 'jihye') { timerVal = jihyePassiveTimer; label = "💖 힐"; }
+            else if(currentSkin === 'jun') { timerVal = junLambTimer; label = "🐑 어린양"; }
+            else if(currentSkin === 'noel') { timerVal = noelGiantTimer; label = "🦶 거대화"; }
+            else if(currentSkin === 'hahwi') { timerVal = hahwiStoneTimer; label = "💎 스톤"; }
+            else if(currentSkin === 'yejun') { timerVal = yejunCloneTimer; label = "💨 분신"; }
+            else if(currentSkin === 'stephanie') { timerVal = stephanieHeartTimer; label = "❤️ 하트"; }
+            else if(currentSkin === 'ganghui') { timerVal = ganghuiPanelTimer; label = "🛰️ 판넬"; }
 
-        if(timerVal > 0 && timerVal < limit) {
-             let remain = Math.ceil(timerVal - limit);
-             html += `<div class="buff-tag passive-cd">${label} ${remain}s</div>`;
+            if(timerVal > 0 && timerVal < limit) {
+                 let remain = Math.ceil(limit - timerVal);
+                 html += `<div class="buff-tag passive-cd">${label} ${remain}s</div>`;
+            }
         }
     }
 
@@ -1425,7 +1435,6 @@
 
         updateLamb(safeDelta);
         
-        // [수정 4] 해머 이동 및 파티클 생성 로직
         if(hammerObj) {
             hammerObj.x += hammerObj.vx * safeDelta;
             hammerObj.style.left = hammerObj.x + 'px';
@@ -1441,12 +1450,11 @@
                  setTimeout(() => spark.remove(), 300);
             }
 
-            if(hammerObj.x > window.innerWidth + 200) {
+            if(hammerObj.x > window.innerWidth + 400) { // 화면 밖으로 충분히 나갔을 때
                 hammerObj.remove();
                 hammerObj = null;
                 gameArea.classList.remove('shake-screen');
             } else {
-                // 충돌 처리
                 const hRect = { left: hammerObj.x + 50, right: hammerObj.x + 350, top: hammerObj.y + 50, bottom: hammerObj.y + 350 };
                 obstacles.forEach(o => {
                     if(!o.destroyed && o.x < window.innerWidth) {
@@ -1527,7 +1535,6 @@
             }
         }
 
-        // 노엘 거대화 (30초마다)
         if(currentSkin === 'noel' && running) {
             noelGiantTimer += safeDelta;
             if(noelGiantTimer >= 30.0) {
@@ -1587,6 +1594,8 @@
                 if(life < maxLife) {
                     life++;
                     document.getElementById("lifeText").innerText = life;
+                    // [수정 9] 스테파니 힐 텍스트 추가
+                    showFloatText("💖 +1 Life");
                 }
                 const heart = document.createElement('div');
                 heart.className = 'heart-emit'; heart.innerText = "❤️";
