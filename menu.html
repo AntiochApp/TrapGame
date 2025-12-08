@@ -623,14 +623,20 @@
   }
 
   function checkPassword() {
+    function checkPassword() {
     const input = document.getElementById("adminPasswordInput").value;
+    
     if (input === ADMIN_PW) {
-      closePasswordModal(); // 인증 성공 시 창 닫기
+      // [수정] 동작을 먼저 실행하고, 나중에 창을 닫아야 합니다.
       if (authAction === 'write') {
         showWriteForm();
       } else if (authAction === 'delete') {
         executeDelete(pendingDeleteIndex);
       }
+      
+      // 동작 수행 후 비밀번호 창 닫기 (이때 authAction이 초기화됨)
+      closePasswordModal(); 
+      
     } else {
       alert("비밀번호가 틀렸습니다.");
       document.getElementById("adminPasswordInput").value = "";
