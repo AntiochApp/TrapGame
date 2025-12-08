@@ -242,11 +242,11 @@
         • <b>점프:</b> 화면 터치 / Space<br>
         • <b>스킬:</b> A키 / SKILL 버튼<br>
         • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
-        [업데이트]<br>
-        ⚔️ <b>전찬:</b> 화려한 번개(패시브) & 해머 소환(액티브)<br>
-        🛡️ <b>지은:</b> 노엘 소환(패시브) & 음계 파도<br>
-        ⏳ <b>준:</b> 리얼 텔레포트 & 시공간 미니게임<br>
-        🌪️ <b>하휘:</b> 인피니티 스톤 & 모래폭풍
+        [게임안내]<br>
+        ⚔️ <b>200m까지는 초보자 구간입니다<br>
+        🛡️ <b>200m 이후부터는 보스와 적들이 등장합니다<br>
+        ⏳ <b>각 스킨들은 특별한 고유 능력을 지니고 있습니다<br>
+        🌪️ <b>거리가 멀어질수록 속도와 난이도는 증가합니다다
       </div>
       <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
@@ -1357,10 +1357,10 @@
 
         if (currentSkin === 'haeun') {
             if(haeunShieldTimer > 0 && haeunShieldTimer < 10) {
-                 html += `<div class="buff-tag passive-cd">🛡️ ${Math.ceil(haeunShieldTimer - 10)}s</div>`;
+                 html += `<div class="buff-tag passive-cd">🛡️ 쉴드 ${Math.ceil(haeunShieldTimer - 10)}s</div>`;
             }
             if(haeunLifeTimer > 0 && haeunLifeTimer < 25) {
-                 html += `<div class="buff-tag passive-cd">💖 ${Math.ceil(haeunLifeTimer - 25)}s</div>`;
+                 html += `<div class="buff-tag passive-cd">💖 체력회복 ${Math.ceil(haeunLifeTimer - 25)}s</div>`;
             }
         } else {
             if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡ 번개소환"; }
