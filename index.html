@@ -92,8 +92,18 @@
     image-rendering: pixelated;
     filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.2)); /* 캐릭터 그림자 */
     animation: bounce 0.8s infinite alternate cubic-bezier(0.5, 0.05, 1, 0.5);
+    
+    /* [수정] 클릭 가능하도록 커서 변경 및 호버 효과 */
+    cursor: pointer;
+    transition: transform 0.1s;
   }
   
+  /* [추가] 마우스 올렸을 때 살짝 커짐 */
+  .char-img:hover {
+    transform: scale(1.1) translateY(-5px);
+    z-index: 10;
+  }
+   
   .char-img:nth-child(1) { animation-delay: 0s; }
   .char-img:nth-child(2) { animation-delay: 0.2s; }
   .char-img:nth-child(3) { animation-delay: 0.4s; }
@@ -106,6 +116,49 @@
     0% { transform: translateY(0); }
     100% { transform: translateY(-12px); }
   }
+
+  /* ---------------------------------------------------- */
+  /* [추가] 로켓 발사 애니메이션 및 이펙트 스타일 정의 */
+  /* ---------------------------------------------------- */
+  
+  /* 발사 중일 때 적용되는 클래스 (기존 애니메이션 덮어쓰기) */
+  .char-img.launching {
+    animation: rocket-launch 1.5s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards !important;
+    pointer-events: none; /* 발사 중 중복 클릭 방지 */
+  }
+
+  /* 하늘로 날아가는 키프레임 */
+  @keyframes rocket-launch {
+    0% { transform: translateY(0) scale(1); }
+    15% { transform: translateY(15px) scale(1.2, 0.8); } /* 힘을 모으듯 찌그러짐 */
+    100% { transform: translateY(-1200px) scale(1); opacity: 0; } /* 하늘 끝까지 날아감 */
+  }
+
+  /* 발사 시 나오는 추진체(불꽃/연기) 이펙트 */
+  .char-img.launching::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -20px; left: 50%;
+    transform: translateX(-50%);
+    width: 10px; height: 10px;
+    background: transparent;
+    /* 픽셀 스타일의 불꽃과 연기 (box-shadow 활용) */
+    box-shadow: 
+      0 0 0 4px #ff9800,       /* 주황색 불꽃 */
+      0 10px 0 6px #ff5722,    /* 붉은색 코어 */
+      0 20px 0 8px #9e9e9e,    /* 회색 연기 시작 */
+      0 35px 0 10px rgba(255,255,255,0.7); /* 흰색 연기 끝 */
+    animation: jet-engine 0.1s infinite alternate;
+    opacity: 0.9;
+  }
+
+  @keyframes jet-engine {
+    0% { transform: translateX(-50%) scale(1); }
+    100% { transform: translateX(-50%) scale(1.2); opacity: 0.7; }
+  }
+  /* ---------------------------------------------------- */
+
 
   /* 타이틀 스타일 강화 */
   .pixel-title {
@@ -165,12 +218,12 @@
     position: relative;
     top: 0; left: 0;
   }
-  
+   
   .btn-main:active:not(:disabled) { 
     top: 4px; left: 4px;
     box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2); /* 눌린 효과 */
   }
-  
+   
   .btn-main:disabled { 
     background: #9e9e9e; 
     box-shadow: none; 
@@ -217,11 +270,11 @@
 <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
 
 <div class="pixel-card" id="loginBox">
-  
+   
   <div class="deco-chars">
-    <div class="char-img moses"></div>
-    <div class="char-img david"></div>
-    <div class="char-img peter"></div>
+    <div class="char-img moses" onclick="launchCharacter(this)"></div>
+    <div class="char-img david" onclick="launchCharacter(this)"></div>
+    <div class="char-img peter" onclick="launchCharacter(this)"></div>
   </div>
 
   <h1 class="pixel-title">Disciple Run</h1>
@@ -301,6 +354,18 @@
   const loginBox  = document.getElementById("loginBox");
   const signupBox = document.getElementById("signupBox");
   const findPwBox = document.getElementById("findPwBox");
+
+  // [추가] 캐릭터 로켓 발사 기능
+  function launchCharacter(element) {
+    // 이미 발사 중이라면 중복 실행 방지
+    if (element.classList.contains('launching')) return;
+    
+    // launching 클래스 추가 -> CSS 애니메이션 시작
+    element.classList.add('launching');
+    
+    // (선택사항) 만약 일정 시간 뒤에 캐릭터가 다시 나타나게 하려면 아래 주석 해제
+    // setTimeout(() => { element.classList.remove('launching'); }, 3000);
+  }
 
   function handleEnter(e, func) {
     if (e.key === "Enter") func();
