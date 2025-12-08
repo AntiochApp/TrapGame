@@ -1363,15 +1363,15 @@
                  html += `<div class="buff-tag passive-cd">💖 ${Math.ceil(haeunLifeTimer - 25)}s</div>`;
             }
         } else {
-            if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡"; }
-            else if(currentSkin === 'jieun') { timerVal = jieunNoelTimer; label = "🛡️"; }
-            else if(currentSkin === 'jihye') { timerVal = jihyePassiveTimer; label = "💖"; }
-            else if(currentSkin === 'jun') { timerVal = junLambTimer; label = "🐑"; }
-            else if(currentSkin === 'noel') { timerVal = noelGiantTimer; label = "🦶"; }
-            else if(currentSkin === 'hahwi') { timerVal = hahwiStoneTimer; label = "💎"; }
-            else if(currentSkin === 'yejun') { timerVal = yejunCloneTimer; label = "💨"; }
-            else if(currentSkin === 'stephanie') { timerVal = stephanieHeartTimer; label = "❤️"; }
-            else if(currentSkin === 'ganghui') { timerVal = ganghuiPanelTimer; label = "🛰️"; }
+            if(currentSkin === 'jeonchan') { timerVal = jeonchanTimer; label = "⚡번개소환"; }
+            else if(currentSkin === 'jieun') { timerVal = jieunNoelTimer; label = "🛡️쉴드"; }
+            else if(currentSkin === 'jihye') { timerVal = jihyePassiveTimer; label = "💖레스큐"; }
+            else if(currentSkin === 'jun') { timerVal = junLambTimer; label = "🐑양소환"; }
+            else if(currentSkin === 'noel') { timerVal = noelGiantTimer; label = "🦶거대화"; }
+            else if(currentSkin === 'hahwi') { timerVal = hahwiStoneTimer; label = "💎인피니티스톤"; }
+            else if(currentSkin === 'yejun') { timerVal = yejunCloneTimer; label = "💨분신술"; }
+            else if(currentSkin === 'stephanie') { timerVal = stephanieHeartTimer; label = "❤️체력회복"; }
+            else if(currentSkin === 'ganghui') { timerVal = ganghuiPanelTimer; label = "🛰️판넬소환"; }
 
             if(timerVal > 0 && timerVal < limit) {
                  let remain = Math.ceil(timerVal - limit); // 음수로 표시
@@ -1641,7 +1641,7 @@
                     showFloatText("💖 +1 Life");
                 }
                 const heart = document.createElement('div');
-                heart.className = 'heart-emit'; heart.innerText = "❤️";
+                heart.className = 'heart-emit'; heart.innerText = "❤️힐링";
                 heart.style.left = (playerObj.x+15)+'px'; heart.style.top = (window.innerHeight - playerObj.y - 40)+'px';
                 gameArea.appendChild(heart);
                 setTimeout(()=>heart.remove(), 1000);
