@@ -1635,6 +1635,9 @@ function triggerJunSkill() {
                     stone.angle = (i/6)*Math.PI*2;
                     stone.radius = 80;
                     stone.state = 'orbit'; 
+                    
+                    stone.lifeTime = 10.0; // [추가] 수명 10초 설정
+                    
                     const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
                     stone.style.left = px + 'px';
                     stone.style.top = py + 'px';
@@ -1713,6 +1716,18 @@ function triggerJunSkill() {
             const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
             for(let i=infinityStones.length-1; i>=0; i--) {
                 const s = infinityStones[i];
+
+                // [추가] 10초 카운트다운 및 제거 로직
+                s.lifeTime -= safeDelta;
+                if (s.lifeTime <= 0) {
+                    // 사라질 때 파티클 효과 (선택사항)
+                    spawnParticles(parseFloat(s.style.left), parseFloat(s.style.top), 'dust');
+                    s.remove();
+                    infinityStones.splice(i, 1);
+                    continue; // 다음 반복으로 건너뜀
+                }
+                // [여기까지 추가]
+
                 let sx = parseFloat(s.style.left);
                 let sy = parseFloat(s.style.top);
 
