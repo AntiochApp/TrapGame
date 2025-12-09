@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Disciple Run - World Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff">
+
+<style>
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  body {
+    margin: 0; padding: 0;
+    width: 100vw; height: 100vh;
+    background-color: #2c2c2c;
+    font-family: 'DungGeunMo', sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 맵 컨테이너: 이미지 비율 유지 (5:6) */
+  #mapContainer {
+    position: relative;
+    width: 100%;
+    max-width: 800px; 
+    aspect-ratio: 5 / 6; 
+    background-image: url('WorldMap.jpg'); 
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  /* 상단 UI */
+  .top-ui {
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    display: flex; justify-content: space-between;
+    z-index: 100;
+  }
+  .ui-btn {
+    background: #5d4037; color: #fff;
+    border: 3px solid #3e2723;
+    padding: 8px 16px;
+    font-family: 'DungGeunMo', sans-serif;
+    font-size: 16px; cursor: pointer;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+  }
+  .ui-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+
+  /* 성 버튼 */
+  .castle-btn {
+    position: absolute;
+    width: 12%; height: 10%;
+    background: transparent; 
+    cursor: pointer;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+  }
+  .castle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  /* 성 정보 라벨 */
+  .castle-label {
+    position: absolute;
+    bottom: 100%; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 2px solid #bcaaa4;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 12px;
+    pointer-events: none;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  
+  /* 아이콘 크기 조정 (보스 이미지가 잘 보이도록) */
+  .lord-icon {
+    display: block; width: 40px; height: 40px; margin: 0 auto 4px;
+    background-size: contain; background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+  }
+
+  .castle-name { color: #ffd700; font-weight: bold; display: block; margin-bottom: 2px; font-size: 13px; }
+  .lord-name { color: #00e5ff; font-size: 11px; }
+
+  /* 로딩 화면 */
+  #loading {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    color: white; 
+    display: flex; 
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+    font-size: 20px; 
+    z-index: 999;
+    backdrop-filter: blur(5px);
+  }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 4px solid #fff; 
+    border-top: 4px solid #ff9800; border-radius: 50%;
+    animation: spin 1s linear infinite; margin-bottom: 15px;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body oncontextmenu="return false" onselectstart="return false">
+
+  <div id="mapContainer">
+    <div class="top-ui">
+      <button class="ui-btn" onclick="location.href='menu.html'">← 메뉴</button>
+      <div class="ui-btn" style="background:#333;">🏰 월드맵 (공성전)</div>
+    </div>
+
+    <div id="loading">
+      <div class="loading-spinner"></div>
+      <div>성주 정보를 수신 중...</div>
+    </div>
+
+    <div id="castlesLayer"></div>
+  </div>
+
+<script>
+  // 1. Google Apps Script URL (본인 URL 유지)
+  const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
+
+  // 2. 성 위치 데이터
+  const CASTLES = [
+    { id: 1, name: "베드로 성", top: 18, left: 18 },
+    { id: 2, name: "안드레 성", top: 15, left: 50 },
+    { id: 3, name: "야고보 성", top: 20, left: 82 },
+    { id: 4, name: "요한 성",   top: 38, left: 23 },
+    { id: 5, name: "빌립 성",   top: 40, left: 50 },
+    { id: 6, name: "바돌로매 성", top: 45, left: 85 },
+    { id: 7, name: "도마 성",   top: 70, left: 16 },
+    { id: 8, name: "마태 성",   top: 58, left: 38 },
+    { id: 9, name: "알패오 성", top: 60, left: 63 },
+    { id: 10, name: "다대오 성", top: 82, left: 38 },
+    { id: 11, name: "시몬 성",   top: 80, left: 65 },
+    { id: 12, name: "맛디아 성", top: 75, left: 85 }
+  ];
+
+  async function loadMapData() {
+    try {
+      // 1. 서버에 데이터 요청
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        redirect: "follow",
+        body: JSON.stringify({ type: "getAllCastles" })
+      });
+      const castleData = await res.json();
+      
+      // 2. 데이터가 오면 성 그리기
+      renderCastles(castleData);
+      
+    } catch (e) {
+      console.error(e);
+      alert("성 정보를 불러오는데 실패했습니다.");
+      renderCastles([]); // 실패 시 빈 상태로라도 표시
+    } finally {
+      // 3. 로딩 화면 제거
+      const loadingEl = document.getElementById("loading");
+      loadingEl.style.transition = "opacity 0.5s";
+      loadingEl.style.opacity = "0";
+      setTimeout(() => loadingEl.style.display = "none", 500);
+    }
+  }
+
+  function renderCastles(serverData) {
+    const layer = document.getElementById("castlesLayer");
+    layer.innerHTML = "";
+
+    CASTLES.forEach(c => {
+      // 해당 성의 성주 정보 찾기
+      const info = serverData ? serverData.find(d => d.id == c.id) : null;
+      
+      let ownerName = "NPC 수호자";
+      // [수정 포인트] 기본값일 때 C_boss + 성ID 사용 (예: C_boss1, C_boss12)
+      let ownerSkin = "C_boss" + c.id; 
+      
+      // 성주가 있으면 정보 갱신
+      if (info && info.ownerName) {
+        ownerName = `👑 ${info.ownerName}`;
+        ownerSkin = `skin_${info.skin}`;
+      }
+
+      const btn = document.createElement("div");
+      btn.className = "castle-btn";
+      btn.style.top = c.top + "%";
+      btn.style.left = c.left + "%";
+      btn.onclick = () => enterCastle(c.id);
+
+      const label = document.createElement("div");
+      label.className = "castle-label";
+      
+      // 이미지 경로 생성 (예: C_boss1.png 또는 skin_noel.png)
+      const skinUrl = `${ownerSkin}.png`;
+      const fallbackUrl = "disciple.png"; // 이미지 없을 때 기본값
+
+      label.innerHTML = `
+        <div class="lord-icon" style="background-image:url('${skinUrl}'), url('${fallbackUrl}')"></div>
+        <span class="castle-name">${c.name}</span>
+        <span class="lord-name">${ownerName}</span>
+      `;
+      
+      btn.appendChild(label);
+      layer.appendChild(btn);
+    });
+  }
+
+  function enterCastle(id) {
+    // 공성전 페이지로 이동
+    window.location.href = `Siege.html?castle=${id}`;
+  }
+
+  // 시작
+  loadMapData();
+</script>
+
+</body>
+</html>
