@@ -394,6 +394,18 @@
   let faith = saveData.faith || 0;
   let agility = saveData.agility || 0;
   let currentSkin = saveData.equippedSkin || "default";
+  let skinLvl = 0;
+  if (saveData.skinLevels && saveData.skinLevels[currentSkin] !== undefined) {
+      skinLvl = saveData.skinLevels[currentSkin];
+  } else {
+      // 히든 스킨이나 기본 스킨은 기본적으로 만렙 처리 (기존 유저 배려)
+      if(currentSkin === 'default' || currentSkin.startsWith('Hidden')) skinLvl = 2; 
+      else skinLvl = 0; 
+  }
+  const activeSkillLevel = {
+      'noel': 2, 'jeonchan': 2, 'jaeguk': 1, 'hahwi': 2, 'jihye': 2, 
+      'jun': 2, 'stephanie': 2, 'yejun': 1, 'ganghui': 2, 'jieun': 1
+  };
 
   const SKIN_DATA = {
     default: { type: "none" }, 
@@ -424,7 +436,12 @@
   };
 
   const abilityBtn = document.getElementById('abilityBtn');
-  if(SKIN_DATA[currentSkin].type === "Active") abilityBtn.style.display = 'flex';
+  if(SKIN_DATA[currentSkin].type === "Active") {
+      let reqLvl = activeSkillLevel[currentSkin] || 1;
+      // 해당 스킬의 필요 레벨보다 내 레벨이 높거나 같아야 버튼이 보임
+      if (skinLvl >= reqLvl) abilityBtn.style.display = 'flex';
+      else abilityBtn.style.display = 'none';
+  } // <--- 여기에 닫는 중괄호를 꼭 넣어주세요!
 
   document.getElementById("lifeText").innerText = life;
   document.getElementById("faithText").innerText = faith;
@@ -1259,6 +1276,11 @@ function triggerJunSkill() {
   function useAbility(e) {
     if(e) e.stopPropagation();
     if(!running || abilityCD > 0) return;
+    let reqLvl = activeSkillLevel[currentSkin] || 1;
+    if (skinLvl < reqLvl) {
+        showFloatText("🔒 스킬 미개방 (Lv." + reqLvl + ")");
+        return;
+    }
     const s = SKIN_DATA[currentSkin];
     
     if(currentSkin === 'noel') {
@@ -1554,15 +1576,18 @@ function triggerJunSkill() {
         }
 
         if(currentSkin === 'jeonchan' && running) {
-            jeonchanTimer += safeDelta;
+          if (skinLvl >= 1) {  
+          jeonchanTimer += safeDelta;
             if(jeonchanTimer >= 15.0) {
                 triggerJeonchanLightning();
                 jeonchanTimer = 0;
             }
         }
+          }
 
         if(currentSkin === 'jieun' && running) {
-            if(activeEffects.summon <= 0) { 
+          if (skinLvl >= 2) {  
+          if(activeEffects.summon <= 0) { 
                 jieunNoelTimer += safeDelta;
                 if(jieunNoelTimer >= 40.0) {
                     activateJieunBuff(); 
@@ -1570,9 +1595,11 @@ function triggerJunSkill() {
                 }
             }
         }
+          }
 
         if(currentSkin === 'haeun' && running && !isBossBattle) {
-            if(!haeunShieldActive) {
+          if (skinLvl >= 1) {  
+          if(!haeunShieldActive) {
                 haeunShieldTimer += safeDelta;
                 if(haeunShieldTimer >= 10.0) {
                     haeunShieldActive = true;
@@ -1592,24 +1619,30 @@ function triggerJunSkill() {
                 }
             }
         }
+          }
 
         if(currentSkin === 'jihye' && running) {
-            jihyePassiveTimer += safeDelta;
+          if (skinLvl >= 1) {  
+          jihyePassiveTimer += safeDelta;
             if(jihyePassiveTimer >= 25.0) {
                 triggerJihyeHeal();
                 jihyePassiveTimer = 0;
             }
         }
+          }
 
         if(currentSkin === 'jun' && running && !isJunTimeTravel) {
+          if (skinLvl >= 1) {
             junLambTimer += safeDelta;
             if(junLambTimer >= 30.0) {
                 spawnLamb();
                 junLambTimer = 0;
             }
         }
+          }
 
         if(currentSkin === 'noel' && running) {
+          if (skinLvl >= 1) {
             noelGiantTimer += safeDelta;
             if(noelGiantTimer >= 30.0) {
                 showFloatText("⚡ 초 거대화!");
@@ -1621,8 +1654,10 @@ function triggerJunSkill() {
                 noelGiantTimer = 0;
             }
         }
+          }
 
         if(currentSkin === 'hahwi' && running) {
+          if (skinLvl >= 1) {
             hahwiStoneTimer += safeDelta;
             if(hahwiStoneTimer >= 30.0) {
                 showFloatText("💎 인피니티 스톤!");
@@ -1647,25 +1682,32 @@ function triggerJunSkill() {
                 hahwiStoneTimer = 0;
             }
         }
+          }
+          
         
         if(currentSkin === 'ganghui' && running) {
-            if(funnels.length === 0 && ganghuiPanelTimer === 0) spawnFunnel();
+          if (skinLvl >= 1) {  
+          if(funnels.length === 0 && ganghuiPanelTimer === 0) spawnFunnel();
             ganghuiPanelTimer += safeDelta;
             if(ganghuiPanelTimer >= 10.0) {
                 spawnFunnel();
                 ganghuiPanelTimer = 0;
             }
         }
+          }
         
         if(currentSkin === 'yejun' && running) {
+          if (skinLvl >= 2) {
             yejunCloneTimer += safeDelta;
             if(yejunCloneTimer >= 50.0) {
                 triggerYejunClones();
                 yejunCloneTimer = 0;
             }
         }
+          }
         
         if(currentSkin === 'stephanie' && running) {
+          if (skinLvl >= 1) {
             stephanieHeartTimer += safeDelta;
             if(stephanieHeartTimer >= 30.0) {
                 if(life < maxLife) {
@@ -1681,6 +1723,7 @@ function triggerJunSkill() {
                 stephanieHeartTimer = 0;
             }
         }
+          }
         
         if(activeEffects.noelLaser > 0) {
             const beam = document.getElementById('noelBeam');
@@ -3046,6 +3089,7 @@ function triggerJunSkill() {
 
   function damageLife() {
     if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
+      if (skinLvl >= 2) {
         jaegukRevivedOnce = true;
         life = maxLife;
         document.getElementById("lifeText").innerText = life;
@@ -3060,6 +3104,7 @@ function triggerJunSkill() {
         activeEffects.invincible = 3; 
         return;
     }
+      }
 
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
     if(activeEffects.turbo>0 && !isFeverTime) return; 
