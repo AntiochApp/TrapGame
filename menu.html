@@ -490,7 +490,7 @@
         headers: { "Content-Type": "text/plain" },
         redirect: 'follow',
         body: JSON.stringify({ 
-          type: "save", // [수정됨] saveGameData -> save (서버와 일치시킴)
+          type: "save", 
           id: id,
           saveData: saveData
         })
@@ -540,7 +540,6 @@
   // [수정] 공지사항 (타입 이름 및 삭제 로직 보완)
   // ==========================================
   
-  // 비밀번호 인증을 위한 상태 변수
   let authAction = null; // 'write' or 'delete'
   let pendingDeleteIndex = null;
 
@@ -555,7 +554,6 @@
         method: "POST", 
         headers: { "Content-Type": "text/plain" },
         redirect: 'follow',
-        // [수정됨] getNotices -> getNotice (서버와 일치시킴)
         body: JSON.stringify({ type: "getNotice" }) 
       });
       const txt = await res.text();
@@ -573,7 +571,6 @@
 
       let html = "";
       notices.forEach((n, index) => {
-        // [수정됨] 삭제 시 rowIndex가 없으면 목록 순서(index)를 사용하도록 안전장치 추가
         const delIdx = (n.rowIndex !== undefined) ? n.rowIndex : index + 2; 
         
         html += `
@@ -595,20 +592,17 @@
     }
   }
 
-  // 글쓰기 시도 (커스텀 모달 호출)
   function tryWrite() {
     authAction = 'write';
     openPasswordModal();
   }
 
-  // 삭제 시도 (커스텀 모달 호출)
   function requestDelete(rowIndex) {
     authAction = 'delete';
     pendingDeleteIndex = rowIndex;
     openPasswordModal();
   }
 
-  // ---- 비밀번호 커스텀 모달 관련 함수 ----
   function openPasswordModal() {
     document.getElementById("passwordModal").style.display = "flex";
     document.getElementById("adminPasswordInput").value = "";
@@ -622,21 +616,17 @@
     pendingDeleteIndex = null;
   }
 
+  // === [수정된 부분] checkPassword 함수 문법 오류 해결 ===
   function checkPassword() {
-    function checkPassword() {
     const input = document.getElementById("adminPasswordInput").value;
     
     if (input === ADMIN_PW) {
-      // [수정] 동작을 먼저 실행하고, 나중에 창을 닫아야 합니다.
       if (authAction === 'write') {
         showWriteForm();
       } else if (authAction === 'delete') {
         executeDelete(pendingDeleteIndex);
       }
-      
-      // 동작 수행 후 비밀번호 창 닫기 (이때 authAction이 초기화됨)
-      closePasswordModal(); 
-      
+      closePasswordModal();
     } else {
       alert("비밀번호가 틀렸습니다.");
       document.getElementById("adminPasswordInput").value = "";
