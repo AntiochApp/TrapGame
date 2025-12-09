@@ -915,7 +915,7 @@
   }
 
   // [수정 4, 8] 준 액티브: 진입/퇴장 좌표 정밀 제어 (낙하 버그 수정 및 애니메이션 개선)
-  function triggerJunSkill() {
+function triggerJunSkill() {
       if(isJunTimeTravel) return;
       isJunTimeTravel = true;
       showFloatText("⏳ 차원문 개방!");
@@ -923,27 +923,28 @@
       const portal = document.createElement('div');
       portal.className = 'real-portal portal-opening';
        
-      // 현재 플레이어의 Y 좌표 저장 (나올 때 사용)
+      // 진입 당시 Y좌표 저장 (혹시 모를 오류 방지용)
       junPortalEntryY = playerObj.y; 
 
-      // 플레이어 중앙에 포탈 생성
-      const playerCenterX = playerObj.x + (playerObj.w / 2);
-      // 화면 중앙 높이 + 플레이어 높이 절반 고려
-      const playerCenterY = window.innerHeight - playerObj.y - (playerObj.h / 2);
+      // [핵심 수정] 플레이어의 물리적 크기(playerObj)가 아닌
+      // 실제 눈에 보이는 CSS 크기(60px)를 기준으로 정중앙 좌표를 다시 계산합니다.
+      const visualSize = 60; 
+      const playerCenterX = playerObj.x + (visualSize / 2); // 50 + 30 = 80
+      const playerCenterY = window.innerHeight - playerObj.y - (visualSize / 2); // 화면바닥 보정된 중앙값
 
       portal.style.left = playerCenterX + 'px';
       portal.style.top = playerCenterY + 'px';
       gameArea.appendChild(portal);
 
-      // 플레이어 애니메이션: 현재 위치에서 즉시 포탈 중심으로 축소
+      // 플레이어 애니메이션: 정확한 포탈 중앙점으로 빨려들어가도록 수정
       setTimeout(() => {
           player.style.transition = "transform 0.5s, top 0.5s, left 0.5s";
-          // bottom을 unset하여 top으로 애니메이션 제어
-          player.style.bottom = "auto";
+          player.style.bottom = "auto"; // top 제어를 위해 bottom 해제
           player.style.left = playerCenterX + 'px';
           player.style.top = playerCenterY + 'px';
+          // 정확히 포탈 가운데로 축소
           player.style.transform = "translate(-50%, -50%) scale(0)"; 
-      }, 100);
+      }, 50);
 
       setTimeout(() => {
           timeTunnelBg.style.display = 'block';
@@ -961,21 +962,22 @@
               }, 3000);
           }, 500);
 
-      }, 1200);
+      }, 600); // 포탈 진입 후 대기 시간 단축 (속도감 향상)
   }
 
   function finishJunMiniGame(portal) {
       document.getElementById('junMiniGameUI').style.display = 'none';
       junMiniGameActive = false;
        
-      // 화면 중앙으로 포탈 이동
+      // 1. 포탈을 화면 정중앙(50%)으로 이동
       portal.style.left = '50%'; 
       portal.style.top = '50%';
        
-      // 플레이어도 화면 중앙으로 이동 (보이지 않지만 좌표 동기화)
+      // 2. 플레이어도 화면 정중앙 좌표로 이동 (아직 안보임)
       player.style.transition = 'none';
       player.style.left = '50%';
       player.style.top = '50%';
+      player.style.transform = 'translate(-50%, -50%) scale(0)';
        
       timeTunnelBg.style.opacity = '0';
       setTimeout(() => timeTunnelBg.style.display = 'none', 500);
@@ -984,39 +986,38 @@
       document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
       showFloatText(`📍 +${junWarpDist}m 이동!`);
 
+      // 3. 플레이어 등장 (Pop!)
       setTimeout(() => {
-          player.style.transition = "transform 0.5s ease-out";
-          // 중앙에서 튀어나오기
+          // 쫀득한 등장 효과 (cubic-bezier)
+          player.style.transition = "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
           player.style.transform = 'translate(-50%, -50%) scale(1)';
            
-          // [수정 4] 퇴장 시 포탈 중앙 높이(공중)에서 시작하도록 Y좌표 설정
-          playerObj.y = window.innerHeight / 2; 
-           
-          setTimeout(() => {
-               // 복귀 애니메이션 (X축만 이동하여 원래 자리 50px로)
-               player.style.transition = "left 0.5s";
-               player.style.left = "50px"; 
-          }, 100);
+          // [핵심 로직] 물리 엔진 좌표(playerObj.y)를 시각적 중앙(CSS 50%)과 정확히 동기화
+          // 화면 높이 절반 - 플레이어 절반 크기(30px) = 바닥에서의 높이
+          playerObj.y = (window.innerHeight / 2) - 30;
+          velocity = 0; // 공중 정지 상태로 시작
 
-          velocity = 0;
-           
-          running = true; 
-          lastTime = performance.now();
-          requestAnimationFrame(gameLoop);
-           
+          // 4. 등장 직후 즉시 조작 활성화 (딜레이 최소화)
           setTimeout(() => {
-              player.style.transition = 'none';
-              player.style.top = ""; // Top 속성 제거 (물리엔진 복귀)
-              // bottom 값은 updatePhysics에서 즉시 적용됨
-              player.style.transform = "none";
-          }, 600);
-           
-          setTimeout(() => {
-              portal.classList.remove('portal-opening');
-              portal.classList.add('portal-closing');
-              setTimeout(() => { portal.remove(); isJunTimeTravel = false; }, 500);
-          }, 500);
-      }, 500);
+               // CSS Top 제어를 끄고 물리엔진(Bottom) 제어로 전환
+               player.style.transition = "left 0.8s ease-out"; // X축 복귀는 천천히 부드럽게
+               player.style.top = ""; 
+               player.style.bottom = playerObj.y + "px"; // 계산된 물리 좌표 즉시 적용
+               player.style.transform = "none"; // 중앙 정렬 해제 (이제 좌측 하단 기준)
+               
+               // 원래 위치(50px)로 돌아가지만, 이 동안에도 점프 가능
+               player.style.left = "50px"; 
+               
+               running = true; // [중요] 게임 재개 (점프 가능)
+               lastTime = performance.now();
+               requestAnimationFrame(gameLoop);
+               
+               // 포탈 닫기
+               portal.classList.remove('portal-opening');
+               portal.classList.add('portal-closing');
+               setTimeout(() => { portal.remove(); isJunTimeTravel = false; }, 500);
+          }, 400); // Pop 애니메이션 시간(0.4s)과 동일하게 맞춤
+      }, 100);
   }
 
   // [수정 6, 7] Lamb 등장 위치(오른쪽) 및 이미지명(Lam.png) 수정
