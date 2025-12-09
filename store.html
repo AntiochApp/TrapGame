@@ -413,19 +413,19 @@
     up_slow: { name:"감속시간", price: 40, max: 20, key: "up_slow" }
   };
 
-  const SKIN_LIST = [
-    { code: "noel", name: "노엘", type: "Active", desc: "패시브: 거대화 / 액티브: 에너지파" },
-    { code: "jeonchan", name: "전찬", type: "Active", desc: "패시브: 번개 / 액티브: 해머 소환" },
-    { code: "haeun", name: "하은", type: "Passive", desc: "패시브: 보호막 / 힐" },
-    { code: "jaeguk", name: "재국", type: "Active", desc: "패시브: 1회 부활 / 액티브: 버블티 소환" },
-    { code: "hahwi", name: "하휘", type: "Active", desc: "패시브: 인피니티 스톤 / 액티브: 모래폭풍" },
-    { code: "jihye", name: "지혜", type: "Active", desc: "패시브: 힐 / 액티브: 발키리 소환" },
-    { code: "jun", name: "준", type: "Active", desc: "패시브: 힐 / 액티브: 차원문" },
-    { code: "stephanie", name: "스테파니", type: "Active", desc: "패시브: 힐 / 액티브: 케이크월드" },
-    { code: "yejun", name: "예준", type: "Active", desc: "패시브: 분신 / 액티브: 자유비행" },
-    { code: "ganghui", name: "강희", type: "Active", desc: "패시브: 판넬 소환 / 액티브: 건담모드" },
-    { code: "jieun", name: "지은", type: "Active", desc: "패시브: 노엘 소환 / 액티브: 뮤직웨이브" }
-  ];
+const SKIN_LIST = [
+    { code: "noel", name: "노엘", type: "Active", skill1: "패시브: 거대화", skill2: "액티브: 에너지파" },
+    { code: "jeonchan", name: "전찬", type: "Active", skill1: "패시브: 번개 소환", skill2: "액티브: 해머 소환" },
+    { code: "haeun", name: "하은", type: "Passive", skill1: "패시브: 보호막", skill2: "패시브: 체력 회복" },
+    { code: "jaeguk", name: "재국", type: "Active", skill1: "액티브: 버블티 소환", skill2: "패시브: 1회 부활" },
+    { code: "hahwi", name: "하휘", type: "Active", skill1: "패시브: 인피니티 스톤", skill2: "액티브: 모래폭풍" },
+    { code: "jihye", name: "지혜", type: "Active", skill1: "패시브: 천사 힐", skill2: "액티브: 발키리 변신" },
+    { code: "jun", name: "준", type: "Active", skill1: "패시브: 어린양 소환", skill2: "액티브: 차원문 개방" },
+    { code: "stephanie", name: "스테파니", type: "Active", skill1: "패시브: 하트 힐", skill2: "액티브: 케이크 월드" },
+    { code: "yejun", name: "예준", type: "Active", skill1: "액티브: 자유 비행", skill2: "패시브: 도플갱어" },
+    { code: "ganghui", name: "강희", type: "Active", skill1: "패시브: 판넬 소환", skill2: "액티브: 건담 모드" },
+    { code: "jieun", name: "지은", type: "Active", skill1: "액티브: 뮤직 웨이브", skill2: "패시브: 노엘 소환" }
+];
   
   // 스토리 및 Lore 추가
   const HIDDEN_SKINS = [
@@ -471,6 +471,8 @@
         
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
+        if(loaded.skinLevels) saveData.skinLevels = { ...saveData.skinLevels, ...loaded.skinLevels };
+else if(!saveData.skinLevels) saveData.skinLevels = {};
         if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
         if(loaded.mileage) saveData.mileage = loaded.mileage;
         
@@ -543,24 +545,50 @@
   }
 
   function renderSingleSkinItem(skin, container) {
-      const isOwned = saveData.ownedSkins.includes(skin.code);
-      const isEquipped = (saveData.equippedSkin === skin.code);
-      const tagColor = (skin.type === 'Active') ? '#d32f2f' : (skin.type === 'Hidden' ? '#9C27B0' : '#1976D2'); 
+    const isOwned = saveData.ownedSkins.includes(skin.code);
+    const isEquipped = (saveData.equippedSkin === skin.code);
+    const tagColor = (skin.type === 'Active') ? '#d32f2f' : (skin.type === 'Hidden' ? '#9C27B0' : '#1976D2');
+    
+    // 현재 스킨 레벨 가져오기 (없으면 0)
+    const currentLevel = (saveData.skinLevels && saveData.skinLevels[skin.code]) || 0;
 
-      let btnHtml = "";
-      if (isEquipped) {
-        btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
-      } else if (isOwned) {
-        btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
-      } else {
-        // 히든 스킨은 구매 버튼 없음
+    let btnHtml = "";
+    let statusDesc = "";
+    
+    if (!isOwned) {
+        // 미보유: 구매 버튼
         if(skin.type === 'Hidden') return; 
-        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
-      }
-      
-      const imgName = `skin_${skin.code}`;
-      container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, skin.desc, btnHtml);
-  }
+        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">스킨 구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
+        statusDesc = `<span style="color:#999">구매 후 스킬 해금 가능</span>`;
+    } else {
+        // 보유 중: 레벨에 따른 업그레이드 또는 장착 버튼
+        if (currentLevel < 1) {
+             btnHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 1)">Lv.1 스킬 개방 (10,000 F)</button>`;
+             statusDesc = `<span style="color:#aaa">🔒 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
+        } else if (currentLevel < 2) {
+             btnHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 2)">Lv.2 스킬 개방 (10,000 F)</button>`;
+             statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
+        } else {
+             // Max 레벨
+             statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#d32f2f; font-weight:bold;">🔓 2차: ${skin.skill2}</span>`;
+             if (isEquipped) {
+                 btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중 (MAX)</button>`;
+             } else {
+                 btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
+             }
+        }
+    }
+
+    // 히든 스킨 예외 처리
+    if(skin.type === 'Hidden') {
+        statusDesc = skin.desc;
+        if(isOwned && !isEquipped) btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
+        else if(isEquipped) btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
+    }
+
+    const imgName = `skin_${skin.code}`;
+    container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, statusDesc, btnHtml);
+}
 
   function createSkinHTML(imgName, name, type, color, desc, btn) {
     const imgSrc = (imgName === 'disciple') ? 'disciple.png' : `${imgName}.png`;
@@ -750,14 +778,39 @@
   function buySkin(code) {
     if (saveData.faith < SKIN_PRICE) return alert(`Faith가 부족합니다! (${SKIN_PRICE.toLocaleString()} 필요)`);
     
-    if(confirm(`${SKIN_PRICE.toLocaleString()} Faith를 사용하여 구매하시겠습니까?`)) {
-      saveData.faith -= SKIN_PRICE;
-      saveData.ownedSkins.push(code);
-      alert("구매 완료! 장착해보세요.");
-      updateUI();
-      saveProgress();
+    if(confirm(`${SKIN_PRICE.toLocaleString()} Faith를 사용하여 구매하시겠습니까?\n(구매 시 Lv.0 상태로 시작합니다)`)) {
+        saveData.faith -= SKIN_PRICE;
+        saveData.ownedSkins.push(code);
+        
+        // 스킨 레벨 초기화 (Lv.0)
+        if(!saveData.skinLevels) saveData.skinLevels = {};
+        saveData.skinLevels[code] = 0;
+
+        alert("구매 완료! 이제 스킬을 업그레이드하세요.");
+        updateUI();
+        saveProgress();
     }
-  }
+}
+
+function upgradeSkin(code, targetLevel) {
+    const COST = 10000;
+    if (saveData.faith < COST) return alert(`Faith가 부족합니다! (${COST.toLocaleString()} 필요)`);
+
+    let skillName = "";
+    const skinInfo = SKIN_LIST.find(s => s.code === code);
+    if(targetLevel === 1) skillName = skinInfo.skill1;
+    else skillName = skinInfo.skill2;
+
+    if(confirm(`10,000 Faith를 사용하여 [${skillName}] 스킬을 개방하시겠습니까?`)) {
+        saveData.faith -= COST;
+        if(!saveData.skinLevels) saveData.skinLevels = {};
+        saveData.skinLevels[code] = targetLevel;
+
+        alert(`업그레이드 완료! [${skillName}] 사용 가능!`);
+        updateUI();
+        saveProgress();
+    }
+}
 
   function equipSkin(code) {
     saveData.equippedSkin = code;
