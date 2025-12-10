@@ -288,9 +288,9 @@
 
   <div id="tab-upgrade" class="tab-content active">
     <div class="item">
-      <h2>⚡ 민첩성 +1 <span class="lvl-badge" id="lvl-agility">Lv.0</span></h2>
-      <p>점프력이 상승합니다. (Max 45)</p>
-      <button class="buy-btn" id="btn-agility" onclick="buyItem('agility')">구매</button>
+      <h2>🚀 미사일 강화 <span class="lvl-badge" id="lvl-missile">Lv.0</span></h2>
+      <p>미사일 파워가 상승합니다.<br>장애물 파괴 필요 타격 수: <b id="missileDesc">11회</b></p>
+      <button class="buy-btn" id="btn-missile" onclick="buyItem('missile')">구매</button>
     </div>
 
     <div class="item">
@@ -391,7 +391,8 @@
   
   // 데이터 초기화
   saveData.faith = saveData.faith || 0;
-  saveData.agility = saveData.agility || 0;
+  // 민첩성(agility) 삭제되고 미사일(missile) 추가
+  saveData.missile = saveData.missile || 0;
   saveData.extraLife = saveData.extraLife || 0;
   saveData.up_invincible = saveData.up_invincible || 0;
   saveData.up_turbo = saveData.up_turbo || 0;
@@ -406,7 +407,8 @@
 
   // 설정값
   const CONFIG = {
-    agility: { name:"민첩성", price: 30, max: 45, key: "agility" },
+    // 민첩성 대신 미사일 (비용 1000, Max 10)
+    missile: { name:"미사일", price: 1000, max: 10, key: "missile" },
     life: { name:"라이프", price: 200, max: 9999, key: "extraLife" }, 
     up_invincible: { name:"무적시간", price: 40, max: 20, key: "up_invincible" },
     up_turbo: { name:"터보시간", price: 40, max: 20, key: "up_turbo" },
@@ -472,7 +474,7 @@ const SKIN_LIST = [
         if(loaded.ownedSkins) saveData.ownedSkins = loaded.ownedSkins;
         if(loaded.equippedSkin) saveData.equippedSkin = loaded.equippedSkin;
         if(loaded.skinLevels) saveData.skinLevels = { ...saveData.skinLevels, ...loaded.skinLevels };
-else if(!saveData.skinLevels) saveData.skinLevels = {};
+        else if(!saveData.skinLevels) saveData.skinLevels = {};
         if(loaded.fragments) saveData.fragments = { ...saveData.fragments, ...loaded.fragments };
         if(loaded.mileage) saveData.mileage = loaded.mileage;
         
@@ -502,6 +504,15 @@ else if(!saveData.skinLevels) saveData.skinLevels = {};
           btn.innerText = `구매 (${conf.price.toLocaleString()} F)`;
           btn.disabled = false;
         }
+      }
+
+      // 미사일 설명 텍스트 업데이트 (파괴 필요 횟수)
+      if(type === 'missile') {
+          const descEl = document.getElementById('missileDesc');
+          if(descEl) {
+              const hitsNeeded = Math.max(1, 11 - currentLvl);
+              descEl.innerText = `${hitsNeeded}회`;
+          }
       }
     });
 
@@ -552,42 +563,49 @@ else if(!saveData.skinLevels) saveData.skinLevels = {};
     // 현재 스킨 레벨 가져오기 (없으면 0)
     const currentLevel = (saveData.skinLevels && saveData.skinLevels[skin.code]) || 0;
 
-    let btnHtml = "";
+    let finalBtnHtml = "";
     let statusDesc = "";
     
     if (!isOwned) {
         // 미보유: 구매 버튼
         if(skin.type === 'Hidden') return; 
-        btnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">스킨 구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
+        finalBtnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">스킨 구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
         statusDesc = `<span style="color:#999">구매 후 스킬 해금 가능</span>`;
     } else {
-        // 보유 중: 레벨에 따른 업그레이드 또는 장착 버튼
-        if (currentLevel < 1) {
-             btnHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 1)">Lv.1 스킬 개방 (10,000 F)</button>`;
-             statusDesc = `<span style="color:#aaa">🔒 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
-        } else if (currentLevel < 2) {
-             btnHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 2)">Lv.2 스킬 개방 (10,000 F)</button>`;
-             statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
-        } else {
-             // Max 레벨
-             statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#d32f2f; font-weight:bold;">🔓 2차: ${skin.skill2}</span>`;
-             if (isEquipped) {
-                 btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중 (MAX)</button>`;
-             } else {
-                 btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
-             }
-        }
-    }
+        // [수정됨] 보유 중: 업그레이드 버튼과 장착 버튼을 분리해서 표시
+        
+        let upgradeHtml = "";
+        let equipHtml = "";
 
-    // 히든 스킨 예외 처리
-    if(skin.type === 'Hidden') {
-        statusDesc = skin.desc;
-        if(isOwned && !isEquipped) btnHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
-        else if(isEquipped) btnHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
+        // 1. 업그레이드 버튼 생성 (일반 스킨만)
+        if (skin.type !== 'Hidden') {
+            if (currentLevel < 1) {
+                 upgradeHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 1)">Lv.1 스킬 개방 (10,000 F)</button>`;
+                 statusDesc = `<span style="color:#aaa">🔒 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
+            } else if (currentLevel < 2) {
+                 upgradeHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 2)">Lv.2 스킬 개방 (10,000 F)</button>`;
+                 statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
+            } else {
+                 // Max 레벨
+                 statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#d32f2f; font-weight:bold;">🔓 2차: ${skin.skill2}</span>`;
+            }
+        } else {
+            // 히든 스킨 설명
+            statusDesc = skin.desc;
+        }
+
+        // 2. 장착 버튼 생성 (항상 표시)
+        if (isEquipped) {
+            equipHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
+        } else {
+            equipHtml = `<button class="buy-btn btn-equip" onclick="equipSkin('${skin.code}')">장착하기</button>`;
+        }
+
+        finalBtnHtml = upgradeHtml + equipHtml;
     }
 
     const imgName = `skin_${skin.code}`;
-    container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, statusDesc, btnHtml);
+    container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, statusDesc, finalBtnHtml);
 }
 
   function createSkinHTML(imgName, name, type, color, desc, btn) {
@@ -786,7 +804,7 @@ else if(!saveData.skinLevels) saveData.skinLevels = {};
         if(!saveData.skinLevels) saveData.skinLevels = {};
         saveData.skinLevels[code] = 0;
 
-        alert("구매 완료! 이제 스킬을 업그레이드하세요.");
+        alert("구매 완료! 이제 스킬을 업그레이드하거나 장착할 수 있습니다.");
         updateUI();
         saveProgress();
     }
@@ -895,17 +913,13 @@ function upgradeSkin(code, targetLevel) {
       fragmentInfo = `[조각] ${targetSkin.name} (${qty}개)`;
       isRare = true; // 폭죽 효과 트리거
     }
-    // 2. 능력치 - 민첩성 (5 ~ 47%)
+    // 2. 능력치 - 미사일 (5 ~ 47%) -> 기존 민첩성 대체
     else if (r < 47) {
-      if(saveData.agility < CONFIG.agility.max) { 
-        const increase = getRandomInt(1, 3);
-        const finalInc = (saveData.agility + increase > CONFIG.agility.max) ? (CONFIG.agility.max - saveData.agility) : increase;
-        
-        saveData.agility += finalInc;
-        if(finalInc > 0) prizeText = `⚡ 민첩성 +${finalInc} 상승!`;
-        else { saveData.faith += 200; prizeText = "💰 민첩 Max 보상: 200 Faith"; }
+      if(saveData.missile < CONFIG.missile.max) { 
+        saveData.missile += 1;
+        prizeText = `🚀 미사일 파워 +1 상승!`;
       } else {
-        saveData.faith += 200; prizeText = "💰 민첩 Max 보상: 200 Faith";
+        saveData.faith += 200; prizeText = "💰 미사일 Max 보상: 200 Faith";
       }
     }
     // 3. 능력치 - 생명력 (47 ~ 89%)
