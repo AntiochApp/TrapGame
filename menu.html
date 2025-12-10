@@ -215,25 +215,16 @@
     padding: 15px; height: 100px;
   }
 
-  /* [추가] 공성전 버튼 스타일 */
+  /* [수정] 공성전 버튼 스타일 */
   .btn-siege {
     background: #d32f2f; /* 붉은색 */
     box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #b71c1c, 4px 4px 0 2px #000;
     padding: 15px; height: 100px;
   }
-  .btn-siege.locked {
-    background: #757575; /* 회색 */
-    color: #bdbdbd;
-    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.2), 4px 4px 0 #424242, 4px 4px 0 2px #000;
-    cursor: default;
-  }
   .btn-siege .btn-label {
-    font-size: 16px; 
-    line-height: 1.4;
-  }
-  .btn-siege.locked .btn-label {
-    font-size: 14px;
-    color: #e0e0e0;
+    font-size: 18px; 
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
   }
 
   .version { margin-top: 24px; font-size: 14px; color: #a1887f; opacity: 0.8; }
@@ -313,6 +304,29 @@
     font-size: 16px; background: #fff;
   }
   textarea.input-field { height: 80px; resize: none; }
+
+  /* [추가] 월드맵 모달 스타일 */
+  #mapViewModal {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: #000;
+    z-index: 2000; flex-direction: column;
+  }
+  .map-header {
+    height: 50px; background: rgba(62, 39, 35, 0.95);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px; border-bottom: 4px solid #3e2723;
+  }
+  .map-msg {
+    color: #ffca28; font-size: clamp(10px, 4vw, 14px);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; margin-right: 10px; font-weight: bold;
+  }
+  .btn-close-map {
+    background: #d32f2f; color: white; border: 2px solid #fff;
+    font-family: 'DungGeunMo'; padding: 6px 12px; cursor: pointer;
+    font-size: 16px; box-shadow: 2px 2px 0 #000;
+  }
+  .btn-close-map:active { transform: translate(2px, 2px); box-shadow: none; }
 </style>
 </head>
 
@@ -366,9 +380,9 @@
         <span>공지사항</span>
       </button>
       
-      <button id="siegeBtn" class="pixel-btn btn-siege locked" onclick="enterSiegeMode()">
+      <button id="siegeBtn" class="pixel-btn btn-siege" onclick="openMapModal()">
         <div class="btn-icon">🏰</div>
-        <span class="btn-label" id="siegeLabel">로딩중...</span>
+        <span class="btn-label">공성전</span>
       </button>
     </div>
 
@@ -423,6 +437,14 @@
   </div>
 </div>
 
+<div id="mapViewModal">
+  <div class="map-header">
+    <div class="map-msg">4000m를 달성시 당신도 전쟁에 참여 할 수 있습니다.</div>
+    <button class="btn-close-map" onclick="closeMapModal()">X</button>
+  </div>
+  <iframe id="mapIframe" src="" style="width:100%; height:100%; border:none; background:#2c2c2c;"></iframe>
+</div>
+
 <script>
   // [보안] F12 및 개발자 도구 단축키 차단
   document.addEventListener('keydown', function(e) {
@@ -449,71 +471,30 @@
   document.getElementById("playerName").innerText = name || "Guest";
 
   // ==========================================
-  // [추가] 공성전 버튼 활성화 로직
+  // [수정] 공성전 관련 로직
   // ==========================================
-  let canEnterSiege = false;
+  
+  // 입장 조건 변경 (10000 -> 4000)
+  const SIEGE_THRESHOLD = 4000;
 
-  async function checkSiegeAccess() {
-    const btn = document.getElementById("siegeBtn");
-    const label = document.getElementById("siegeLabel");
-
-    // 로딩 표시
-    label.innerHTML = "자격 확인 중...";
+  // 공성전 버튼 클릭 시 맵 모달 열기
+  function openMapModal() {
+    const modal = document.getElementById("mapViewModal");
+    const iframe = document.getElementById("mapIframe");
     
-    // 서버에서 랭킹(최고 기록)을 가져와서 내 기록 확인
-    try {
-      const res = await fetch(API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain" }, 
-        redirect: 'follow', 
-        body: JSON.stringify({ type: "getRanking" }) 
-      });
-      const txt = await res.text();
-      
-      if (!txt || txt.trim() === "fail") {
-          label.innerHTML = "통신 오류";
-          return;
-      }
-      
-      const list = JSON.parse(txt);
-      
-      // 내 기록 찾기 (없으면 0)
-      let myRecord = 0;
-      const myData = list.find(user => user.id == id);
-      if (myData) myRecord = myData.distance || 0;
-
-      // 10,000m 체크
-      if (myRecord >= 10000) {
-          canEnterSiege = true;
-          btn.classList.remove("locked");
-          // 클래스 제거 후 배경색 등 스타일 적용을 위해 인라인 스타일 초기화
-          btn.style.background = "#d32f2f"; 
-          btn.style.color = "#fff";
-          btn.style.cursor = "pointer";
-          
-          label.innerHTML = `공성전 입장<br><span style='font-size:12px; color:#ffcc80'>[${name} 용사여 환영합니다]</span>`;
-      } else {
-          canEnterSiege = false;
-          // locked 클래스는 CSS에 정의됨
-          label.innerHTML = `공성전 (잠김)<br><span style='font-size:12px'>[진입조건: 1만m 정복]</span>`;
-      }
-
-    } catch (e) {
-      console.error(e);
-      label.innerHTML = "확인 실패";
-    }
+    // 맵 URL 로드
+    iframe.src = "/TrapGame/map.html";
+    modal.style.display = "flex";
   }
 
-  function enterSiegeMode() {
-    if (canEnterSiege) {
-        window.location.href = "/TrapGame/map.html";
-    } else {
-        alert("🚨 출입 불가!\n게임(Game Start)에서 10,000m를 돌파하여\n자격을 증명하고 오십시오!");
-    }
+  // 맵 모달 닫기
+  function closeMapModal() {
+    const modal = document.getElementById("mapViewModal");
+    const iframe = document.getElementById("mapIframe");
+    
+    modal.style.display = "none";
+    iframe.src = ""; // 리소스 해제
   }
-
-  // 페이지 로드 시 체크 시작
-  checkSiegeAccess();
 
 
   // ==========================================
@@ -626,7 +607,7 @@
 
 
   // ==========================================
-  // [수정] 공지사항 (타입 이름 및 삭제 로직 보완)
+  // 공지사항 (타입 이름 및 삭제 로직 보완)
   // ==========================================
   
   let authAction = null; // 'write' or 'delete'
@@ -705,7 +686,6 @@
     pendingDeleteIndex = null;
   }
 
-  // === [수정된 부분] checkPassword 함수 문법 오류 해결 ===
   function checkPassword() {
     const input = document.getElementById("adminPasswordInput").value;
     
