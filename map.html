@@ -19,29 +19,40 @@
     width: 100vw; height: 100vh;
     background-color: #2c2c2c;
     font-family: 'DungGeunMo', sans-serif;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: hidden; /* 바디 스크롤 막고 내부 뷰포트에서 스크롤 */
   }
 
-  /* 맵 컨테이너: 이미지 비율 유지 (5:6) */
+  /* 1. 뷰포트: 화면 전체를 차지하며 스크롤 가능한 영역 */
+  #viewport {
+    width: 100%; height: 100%;
+    overflow: auto; /* 스크롤 허용 */
+    cursor: grab; /* 마우스 커서 모양 */
+    /* 모바일 터치 스크롤 부드럽게 */
+    -webkit-overflow-scrolling: touch; 
+    position: relative;
+  }
+  #viewport:active { cursor: grabbing; }
+
+  /* 2. 맵 컨테이너: 고정된 큰 사이즈 (폰에서 드래그해서 볼 수 있게) */
   #mapContainer {
     position: relative;
-    width: 100%;
-    max-width: 800px; 
-    aspect-ratio: 5 / 6; 
+    /* 모바일에서도 잘 보이도록 강제로 크게 잡음 */
+    width: 1000px; 
+    /* 원본 비율 5:6 유지 (1000px : 1200px) */
+    height: 1200px; 
     background-image: url('WorldMap.png'); 
     background-size: cover;
     background-position: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    margin: 0 auto; /* 가로 중앙 정렬 시도 */
   }
 
-  /* 상단 UI */
+  /* 상단 UI (스크롤과 무관하게 화면에 고정) */
   .top-ui {
-    position: absolute; top: 10px; left: 10px; right: 10px;
+    position: fixed; top: 10px; left: 10px; right: 10px;
     display: flex; justify-content: space-between;
-    z-index: 100;
+    z-index: 1000;
+    pointer-events: none; /* UI 배경 터치 무시 */
   }
   .ui-btn {
     background: #5d4037; color: #fff;
@@ -50,56 +61,75 @@
     font-family: 'DungGeunMo', sans-serif;
     font-size: 16px; cursor: pointer;
     box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    pointer-events: auto; /* 버튼만 터치 가능 */
   }
   .ui-btn:active { transform: translate(2px, 2px); box-shadow: none; }
 
-  /* 성 버튼 */
-  .castle-btn {
+  /* 성 위치 잡는 컨테이너 (클릭 영역 아님, 위치만 잡음) */
+  .castle-spot {
     position: absolute;
-    width: 12%; height: 10%;
-    background: transparent; 
-    cursor: pointer;
-    z-index: 10;
-    transform: translate(-50%, -50%);
-  }
-  .castle-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
+    width: 0; height: 0;
+    /* 좌표 기준점 */
   }
 
-  /* 성 정보 라벨 */
-  .castle-label {
+  /* 3. [수정] 성 정보 박스 자체가 버튼이 됨 */
+  .castle-card {
     position: absolute;
-    bottom: 100%; left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.85);
+    /* 위치는 spot 기준 중앙 정렬 */
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9); /* 배경 더 진하게 */
     color: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 2px solid #bcaaa4;
-    white-space: nowrap;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 3px solid #bcaaa4; /* 테두리 강조 */
     text-align: center;
-    font-size: 12px;
-    pointer-events: none;
-    margin-bottom: 5px;
-    text-shadow: 1px 1px 0 #000;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 6px 10px rgba(0,0,0,0.6);
+    transition: transform 0.1s, border-color 0.2s;
+    
+    /* 텍스트 줄바꿈 방지 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
   }
-  
-  /* 아이콘 크기 조정 (보스 이미지가 잘 보이도록) */
+
+  /* 눌렀을 때 효과 (임팩트) */
+  .castle-card:active {
+    transform: translate(-50%, -45%) scale(0.95);
+    border-color: #ff9800;
+    background: rgba(50, 30, 20, 0.95);
+  }
+
+  /* 보스 아이콘 */
   .lord-icon {
-    display: block; width: 40px; height: 40px; margin: 0 auto 4px;
+    width: 50px; height: 50px; 
+    margin-bottom: 6px;
     background-size: contain; background-repeat: no-repeat;
     background-position: center;
     image-rendering: pixelated;
+    border: 2px solid #5d4037;
+    border-radius: 4px;
+    background-color: #3e2723;
   }
 
-  .castle-name { color: #ffd700; font-weight: bold; display: block; margin-bottom: 2px; font-size: 13px; }
-  .lord-name { color: #00e5ff; font-size: 11px; }
+  .castle-name { 
+    color: #ffd700; 
+    font-weight: bold; 
+    font-size: 15px; 
+    margin-bottom: 2px; 
+    text-shadow: 2px 2px 0 #000;
+  }
+  .lord-name { 
+    color: #00e5ff; 
+    font-size: 13px; 
+    text-shadow: 1px 1px 0 #000;
+  }
 
   /* 로딩 화면 */
   #loading {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
     color: white; 
     display: flex; 
@@ -107,7 +137,7 @@
     justify-content: center; 
     align-items: center;
     font-size: 20px; 
-    z-index: 999;
+    z-index: 2000;
     backdrop-filter: blur(5px);
   }
   .loading-spinner {
@@ -120,25 +150,26 @@
 </head>
 <body oncontextmenu="return false" onselectstart="return false">
 
-  <div id="mapContainer">
-    <div class="top-ui">
-      <button class="ui-btn" onclick="location.href='menu.html'">← 메뉴</button>
-      <div class="ui-btn" style="background:#333;">🏰 월드맵 (공성전)</div>
-    </div>
+  <div class="top-ui">
+    <button class="ui-btn" onclick="location.href='menu.html'">← 메뉴</button>
+    <div class="ui-btn" style="background:#333;">🏰 월드맵</div>
+  </div>
 
-    <div id="loading">
-      <div class="loading-spinner"></div>
-      <div>성주 정보를 수신 중...</div>
-    </div>
+  <div id="loading">
+    <div class="loading-spinner"></div>
+    <div>성주 정보를 수신 중...</div>
+  </div>
 
-    <div id="castlesLayer"></div>
+  <div id="viewport">
+    <div id="mapContainer">
+      <div id="castlesLayer"></div>
+    </div>
   </div>
 
 <script>
-  // 1. Google Apps Script URL (본인 URL 유지)
   const API_URL = "https://script.google.com/macros/s/AKfycbzA10H2TuXRDXBXcttvHHR0Q1sOu8zGpYmrdGhfH-wBsl623k2ydwUkwL7wR8F90mC5Pg/exec";
 
-  // 2. 성 위치 데이터
+  // 성 위치 데이터 (좌표는 기존 유지하되, 큰 맵 비율에 맞게 배치됨)
   const CASTLES = [
     { id: 1, name: "베드로 성", top: 18, left: 18 },
     { id: 2, name: "안드레 성", top: 15, left: 51 },
@@ -156,7 +187,6 @@
 
   async function loadMapData() {
     try {
-      // 1. 서버에 데이터 요청
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
@@ -164,20 +194,19 @@
         body: JSON.stringify({ type: "getAllCastles" })
       });
       const castleData = await res.json();
-      
-      // 2. 데이터가 오면 성 그리기
       renderCastles(castleData);
-      
     } catch (e) {
       console.error(e);
       alert("성 정보를 불러오는데 실패했습니다.");
-      renderCastles([]); // 실패 시 빈 상태로라도 표시
+      renderCastles([]);
     } finally {
-      // 3. 로딩 화면 제거
       const loadingEl = document.getElementById("loading");
       loadingEl.style.transition = "opacity 0.5s";
       loadingEl.style.opacity = "0";
       setTimeout(() => loadingEl.style.display = "none", 500);
+      
+      // [중요] 로딩이 끝나면 맵의 중앙으로 스크롤 이동
+      centerMap();
     }
   }
 
@@ -186,49 +215,95 @@
     layer.innerHTML = "";
 
     CASTLES.forEach(c => {
-      // 해당 성의 성주 정보 찾기
       const info = serverData ? serverData.find(d => d.id == c.id) : null;
       
       let ownerName = "NPC 수호자";
-      // [수정 포인트] 기본값일 때 C_boss + 성ID 사용 (예: C_boss1, C_boss12)
       let ownerSkin = "C_boss" + c.id; 
       
-      // 성주가 있으면 정보 갱신
       if (info && info.ownerName) {
         ownerName = `👑 ${info.ownerName}`;
         ownerSkin = `skin_${info.skin}`;
       }
 
-      const btn = document.createElement("div");
-      btn.className = "castle-btn";
-      btn.style.top = c.top + "%";
-      btn.style.left = c.left + "%";
-      btn.onclick = () => enterCastle(c.id);
+      // 위치 잡는 스팟
+      const spot = document.createElement("div");
+      spot.className = "castle-spot";
+      spot.style.top = c.top + "%";
+      spot.style.left = c.left + "%";
 
-      const label = document.createElement("div");
-      label.className = "castle-label";
-      
-      // 이미지 경로 생성 (예: C_boss1.png 또는 skin_noel.png)
+      // [수정] 실제 클릭 가능한 카드 버튼
+      const card = document.createElement("div");
+      card.className = "castle-card";
+      card.onclick = () => enterCastle(c.id); // 카드 자체를 눌러야 입장
+
       const skinUrl = `${ownerSkin}.png`;
-      const fallbackUrl = "disciple.png"; // 이미지 없을 때 기본값
+      const fallbackUrl = "disciple.png";
 
-      label.innerHTML = `
+      card.innerHTML = `
         <div class="lord-icon" style="background-image:url('${skinUrl}'), url('${fallbackUrl}')"></div>
-        <span class="castle-name">${c.name}</span>
-        <span class="lord-name">${ownerName}</span>
+        <div class="castle-name">${c.name}</div>
+        <div class="lord-name">${ownerName}</div>
       `;
       
-      btn.appendChild(label);
-      layer.appendChild(btn);
+      spot.appendChild(card);
+      layer.appendChild(spot);
     });
   }
 
   function enterCastle(id) {
-    // 공성전 페이지로 이동
     window.location.href = `Siege.html?castle=${id}`;
   }
 
-  // 시작
+  // 맵 중앙으로 스크롤 이동시키는 함수
+  function centerMap() {
+    const viewport = document.getElementById('viewport');
+    const map = document.getElementById('mapContainer');
+    
+    // (맵 너비 - 화면 너비) / 2
+    const scrollLeft = (map.offsetWidth - viewport.offsetWidth) / 2;
+    const scrollTop = (map.offsetHeight - viewport.offsetHeight) / 2;
+
+    viewport.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'smooth' });
+  }
+
+  // [PC용] 마우스 드래그로 스크롤 기능 추가 (모바일은 기본 터치 스크롤 됨)
+  const viewport = document.getElementById('viewport');
+  let isDown = false;
+  let startX;
+  let startY;
+  let scrollLeft;
+  let scrollTop;
+
+  viewport.addEventListener('mousedown', (e) => {
+    isDown = true;
+    viewport.style.cursor = 'grabbing';
+    startX = e.pageX - viewport.offsetLeft;
+    startY = e.pageY - viewport.offsetTop;
+    scrollLeft = viewport.scrollLeft;
+    scrollTop = viewport.scrollTop;
+  });
+
+  viewport.addEventListener('mouseleave', () => {
+    isDown = false;
+    viewport.style.cursor = 'grab';
+  });
+
+  viewport.addEventListener('mouseup', () => {
+    isDown = false;
+    viewport.style.cursor = 'grab';
+  });
+
+  viewport.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - viewport.offsetLeft;
+    const y = e.pageY - viewport.offsetTop;
+    const walkX = (x - startX) * 1.5; // 드래그 속도 조절
+    const walkY = (y - startY) * 1.5;
+    viewport.scrollLeft = scrollLeft - walkX;
+    viewport.scrollTop = scrollTop - walkY;
+  });
+
   loadMapData();
 </script>
 
