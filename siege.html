@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Disciple Run – Siege Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <style>
+    :root { --hud-bg: rgba(0, 0, 0, 0.7); --hud-border: #ffd700; --accent: #d32f2f; --panel-bg: #222; }
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
+    
+    #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #333; transition: filter 0.5s; }
+    
+    /* [공성전 전용] 보스 스킬 효과용 클래스 */
+    #gameArea.effect-darkness { filter: brightness(0.2); } /* 6번 어둠 */
+    #gameArea.effect-sand { filter: sepia(0.8) blur(1px); } /* 4번 사막 */
+    #gameArea.effect-water { filter: hue-rotate(180deg) blur(1px); } /* 5번 물 */
+    #gameArea.effect-light { filter: brightness(2.0) contrast(0.5); } /* 12번 빛 */
+    #gameArea.effect-ice { filter: hue-rotate(90deg) brightness(1.2); } /* 1번 얼음 */
+
+    /* 배경 레이어 */
+    .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-repeat: repeat-x; }
+    #bgLayer1 { z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
+    #bgLayer2 { z-index: 2; background-size: auto 60%; background-position: 0 bottom; }
+    #bgLayer3 { z-index: 3; background-size: auto 40%; background-position: 0 bottom; }
+
+    #player { position: absolute; z-index: 50; left: 50px; bottom: 40px; width: 60px; height: 60px; background-image: url("disciple.png"); background-position: center; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; transition: opacity 0.2s, transform 0.3s; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.5)); }
+    
+    /* 적 & 보스 */
+    .enemy { position: absolute; z-index: 48; width: 60px; height: 60px; background-position: center; background-size: contain; background-repeat: no-repeat; }
+    .obstacle { position: absolute; z-index: 40; background-size: 8px 8px; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); }
+    
+    /* 보스 컨테이너 */
+    #bossContainer { position: absolute; right: -250px; top: 50%; width: 150px; height: 150px; z-index: 55; display: none; transition: right 1s ease-out; }
+    #bossBody { width: 100%; height: 100%; background-repeat: no-repeat; background-position: center; background-size: contain; image-rendering: pixelated; filter: drop-shadow(0 0 15px red); animation: bossFloat 2s ease-in-out infinite; }
+    #bossHpBar { position: absolute; top: -20px; left: 0; width: 100%; height: 10px; background: #333; border: 2px solid #fff; border-radius: 5px; overflow: hidden; }
+    #bossHpFill { width: 100%; height: 100%; background: #d32f2f; transition: width 0.2s; }
+    @keyframes bossFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+    /* 투사체 및 이펙트 */
+    .projectile { position: absolute; z-index: 60; width: 30px; height: 30px; border-radius: 50%; transition: opacity 0.2s; }
+    .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle, #fff, #f00); box-shadow: 0 0 10px #f00; border: 2px solid #fff; }
+    .player-missile { position: absolute; width: 50px; height: 24px; background: linear-gradient(90deg, #00ffff, #0099ff); border-radius: 12px; box-shadow: 0 0 15px cyan; z-index: 65; border: 2px solid #fff; }
+    
+    /* 특수 투사체 스타일 (보스별) */
+    .proj-ice { background: radial-gradient(circle, #fff, #00ffff); box-shadow: 0 0 15px #00ffff; }
+    .proj-fire { background: radial-gradient(circle, #ffeb3b, #ff0000); box-shadow: 0 0 15px #ff0000; }
+    .proj-dark { background: #000; border: 2px solid #800080; box-shadow: 0 0 15px #800080; }
+    .proj-stone { background: #795548; border: 2px solid #3e2723; border-radius: 5px; }
+    .proj-light { background: #fff; box-shadow: 0 0 20px #fff, 0 0 40px #ffd700; }
+
+    #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
+    .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
+    @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+
+    /* HUD */
+    #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #fff; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 2px solid var(--hud-border); text-shadow: 1px 1px 0 #000; }
+    #castleTitle { position: fixed; top: 12px; right: 12px; color: #ffd700; font-size: 20px; font-weight: 900; z-index: 900; text-shadow: 2px 2px 0 #000; }
+
+    #subActionBtn { position: fixed; bottom: 50px; left: 20px; width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fff; color: white; font-weight: 900; font-size: 20px; text-align: center; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); background-color: #D32F2F; }
+    #subActionBtn:active { transform: scale(0.9); }
+    
+    #bossWarning { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; color: #d32f2f; text-shadow: 3px 3px 0 #000; display: none; z-index: 2000; animation: blink 0.5s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* 결과 모달 */
+    .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+    .modal-box { width: 90%; max-width: 400px; background: #fff; padding: 20px; border-radius: 10px; text-align: center; border: 4px solid #333; }
+    .modal-btn { padding: 10px 20px; background: #d32f2f; color: #fff; border: none; font-size: 18px; cursor: pointer; margin-top: 10px; }
+  </style>
+</head>
+
+<body oncontextmenu="return false" onselectstart="return false">
+
+<div id="gameArea">
+  <div id="bgLayer1" class="bg-layer"></div>
+  <div id="bgLayer2" class="bg-layer"></div>
+  <div id="bgLayer3" class="bg-layer"></div>
+
+  <div id="ground"></div> 
+  <div id="player"></div>
+  <div id="flashEffect"></div>
+
+  <div id="bossContainer">
+    <div id="bossHpBar"><div id="bossHpFill"></div></div>
+    <div id="bossBody"></div>
+  </div>
+
+  <div id="hud">
+    ❤️ <span id="lifeText">3</span> | 📏 <span id="distanceText">0m</span>
+  </div>
+  <div id="castleTitle"></div>
+  <div id="bossWarning">⚠️ BOSS WARNING!</div>
+
+  <div id="subActionBtn" ontouchstart="handleAttack(event)" onclick="handleAttack(event)">ATTACK</div>
+</div>
+
+<div id="resultModal" class="modal-bg">
+  <div class="modal-box">
+    <h2 id="resultTitle">GAME OVER</h2>
+    <p id="resultDesc">...</p>
+    <button class="modal-btn" onclick="location.href='Map.html'">지도(Map)로 돌아가기</button>
+    <button class="modal-btn" style="background:#555;" onclick="location.reload()">다시 도전</button>
+  </div>
+</div>
+
+<script>
+  // ====================================================
+  // 1. 설정 및 데이터 로드
+  // ====================================================
+  
+  // URL에서 Castle ID 가져오기 (기본값 1)
+  const urlParams = new URLSearchParams(window.location.search);
+  const castleId = parseInt(urlParams.get('castle')) || 1;
+
+  const CASTLE_NAMES = [
+    "", "베드로 성", "안드레 성", "야고보 성", "요한 성", "빌립 성", "바돌로매 성",
+    "도마 성", "마태 성", "알패오 성", "다대오 성", "시몬 성", "맛디아 성"
+  ];
+  const CASTLE_THEMES = [
+    "", "Ice", "Fire", "Wood", "Sand", "Water", "Darkness", "Stone", "Space", "Defense", "Sword", "Necro", "Light"
+  ];
+
+  document.getElementById("castleTitle").innerText = `🏰 ${CASTLE_NAMES[castleId]} (${CASTLE_THEMES[castleId]})`;
+
+  // 배경 이미지 동적 할당
+  document.getElementById("bgLayer1").style.backgroundImage = `url('${castleId}bg_sky.png')`;
+  document.getElementById("bgLayer2").style.backgroundImage = `url('${castleId}bg_mountain.png')`;
+  document.getElementById("bgLayer3").style.backgroundImage = `url('${castleId}bg_forest.png')`;
+
+  // 유저 정보 로드 (스킨 적용용)
+  let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
+  let mySkin = saveData.equippedSkin || "default";
+  const player = document.getElementById("player");
+  if(mySkin !== 'default') player.style.backgroundImage = `url('skin_${mySkin}.png')`;
+
+  // ====================================================
+  // 2. 게임 변수
+  // ====================================================
+  let running = true;
+  let distance = 0;
+  let life = 3 + (saveData.extraLife || 0); // 라이프 보너스 적용
+  document.getElementById("lifeText").innerText = life;
+
+  let playerObj = { x: 50, y: 40, w: 40, h: 50 };
+  let velocity = 0;
+  const gravity = -0.6;
+  const jumpPower = 12;
+
+  let obstacles = [];
+  let enemies = [];
+  let projectiles = [];
+  let playerMissiles = [];
+
+  // 타이머들
+  let obstacleTimer = 0;
+  let enemyTimer = 0;
+  let nextObsTime = 2.0;
+
+  // 보스전 관련
+  let isBossBattle = false;
+  let boss = { hp: 50, maxHp: 50, x: 0, y: 50, vy: 0, state: 'idle', skillTimer: 0 };
+  const BOSS_APPEAR_DIST = 10000; // 1만 미터에서 등장
+
+  // ====================================================
+  // 3. 게임 루프
+  // ====================================================
+  let lastTime = performance.now();
+
+  function gameLoop(now) {
+    if(!running) return;
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
+    const safeDt = Math.min(dt, 0.05);
+
+    // 거리 증가 (보스전 아닐때)
+    if (!isBossBattle) {
+      distance += safeDt * 150; // 속도
+      document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
+      
+      // 배경 스크롤
+      const bg1 = document.getElementById("bgLayer1");
+      const bg2 = document.getElementById("bgLayer2");
+      const bg3 = document.getElementById("bgLayer3");
+      bg1.style.backgroundPosition = `-${distance * 0.1}px 0`;
+      bg2.style.backgroundPosition = `-${distance * 0.3}px bottom`;
+      bg3.style.backgroundPosition = `-${distance * 0.5}px bottom`;
+
+      // 보스 출현 체크
+      if(distance >= BOSS_APPEAR_DIST) startBossBattle();
+
+      // 장애물 & 적 스폰 (보스전엔 중단)
+      obstacleTimer += safeDt;
+      if(obstacleTimer > nextObsTime) {
+         spawnObstacle();
+         obstacleTimer = 0;
+         nextObsTime = Math.random() * 1.5 + 1.0;
+      }
+      
+      enemyTimer += safeDt;
+      if(enemyTimer > 3.0) {
+         spawnEnemy();
+         enemyTimer = 0;
+      }
+    } else {
+      updateBoss(safeDt);
+    }
+
+    // 물리 업데이트
+    updatePhysics(safeDt);
+    updateEntities(safeDt);
+    
+    // 공격 버튼 활성화 (200m 이상)
+    if(distance > 200) document.getElementById("subActionBtn").style.display = "flex";
+
+    requestAnimationFrame(gameLoop);
+  }
+  requestAnimationFrame(gameLoop);
+
+  // ====================================================
+  // 4. 물리 및 엔티티 처리
+  // ====================================================
+  function updatePhysics(dt) {
+    velocity += gravity;
+    playerObj.y += velocity;
+    
+    if(playerObj.y < 0) { playerObj.y = 0; velocity = 0; }
+    if(playerObj.y > window.innerHeight - 60) playerObj.y = window.innerHeight - 60;
+    
+    player.style.bottom = playerObj.y + "px";
+  }
+
+  function updateEntities(dt) {
+    // 1. 장애물
+    for(let i=obstacles.length-1; i>=0; i--) {
+       let o = obstacles[i];
+       o.x -= 300 * dt; // 이동 속도
+       o.style.left = o.x + "px";
+       
+       if(o.x < -100) { o.remove(); obstacles.splice(i,1); continue; }
+       
+       // 충돌 체크
+       if(checkCollision(playerObj, {x:o.x, y:0, w:60, h:o.h})) {
+          damageLife();
+          o.remove(); obstacles.splice(i,1);
+       }
+    }
+
+    // 2. 적 (Enemies)
+    for(let i=enemies.length-1; i>=0; i--) {
+       let e = enemies[i];
+       // 네크로맨서 소환몹 등은 패턴이 다를 수 있음
+       e.x -= (e.speed || 200) * dt; 
+       e.style.left = e.x + "px";
+       
+       if(e.x < -100) { e.remove(); enemies.splice(i,1); continue; }
+       
+       // 플레이어 충돌
+       if(checkCollision(playerObj, {x:e.x, y:e.y, w:e.w, h:e.h})) {
+          damageLife();
+          e.remove(); enemies.splice(i,1);
+       }
+    }
+
+    // 3. 아군 미사일
+    for(let i=playerMissiles.length-1; i>=0; i--) {
+       let m = playerMissiles[i];
+       m.x += 600 * dt;
+       m.style.left = m.x + "px";
+       
+       if(m.x > window.innerWidth) { m.remove(); playerMissiles.splice(i,1); continue; }
+       
+       // 적 충돌
+       let hit = false;
+       for(let j=enemies.length-1; j>=0; j--) {
+          let e = enemies[j];
+          if(checkCollision({x:m.x, y:m.y, w:50, h:24}, {x:e.x, y:e.y, w:e.w, h:e.h})) {
+             e.hp--;
+             if(e.hp<=0) { spawnExplosion(e.x, e.y); e.remove(); enemies.splice(j,1); }
+             m.remove(); playerMissiles.splice(i,1);
+             hit = true; break;
+          }
+       }
+       if(hit) continue;
+
+       // 보스 충돌
+       if(isBossBattle && boss.hp > 0) {
+          // 보스 히트박스 (대략적)
+          if(m.x > window.innerWidth - 250 && Math.abs(m.y - boss.y - 50) < 80) {
+             boss.hp--;
+             updateBossHp();
+             spawnExplosion(m.x, m.y);
+             m.remove(); playerMissiles.splice(i,1);
+             if(boss.hp <= 0) gameClear();
+          }
+       }
+    }
+
+    // 4. 적 투사체 (보스 스킬 등)
+    for(let i=projectiles.length-1; i>=0; i--) {
+       let p = projectiles[i];
+       p.x += p.vx * dt;
+       p.y += p.vy * dt;
+       p.style.left = p.x + "px";
+       p.style.bottom = p.y + "px"; // CSS top 대신 bottom 사용 주의
+       
+       if(p.x < -50 || p.x > window.innerWidth) { p.remove(); projectiles.splice(i,1); continue; }
+       
+       if(checkCollision(playerObj, {x:p.x, y:p.y, w:30, h:30})) {
+          damageLife();
+          p.remove(); projectiles.splice(i,1);
+       }
+    }
+  }
+
+  // ====================================================
+  // 5. 스폰 로직 (성 ID 반영)
+  // ====================================================
+  function spawnObstacle() {
+     // 나무성(3)은 장애물 더 자주 나옴
+     if(castleId === 3 && Math.random() < 0.3) {
+        // 추가 로직 가능
+     }
+     const obs = document.createElement("div");
+     obs.className = "obstacle obs-log";
+     obs.h = Math.random() * 100 + 50;
+     obs.style.height = obs.h + "px";
+     obs.x = window.innerWidth + 50;
+     obs.style.left = obs.x + "px";
+     obs.style.bottom = "0px";
+     
+     // 장애물 이미지도 성 테마에 맞출 수 있으나 일단 기본 사용
+     document.getElementById("gameArea").appendChild(obs);
+     obstacles.push(obs);
+  }
+
+  function spawnEnemy() {
+     const isMidBoss = (Math.random() < 0.2); // 20% 확률로 중간보스
+     const e = document.createElement("div");
+     e.className = "enemy";
+     
+     if (isMidBoss) {
+        // 1B_Enemy01 ~ 08
+        const type = Math.ceil(Math.random() * 8);
+        e.style.backgroundImage = `url('${castleId}B_Enemy0${type}.png')`;
+        e.style.width = "90px"; e.style.height = "90px";
+        e.hp = 3; e.w = 90; e.h = 90;
+     } else {
+        // 1enemy1 ~ 5
+        const type = Math.ceil(Math.random() * 5);
+        e.style.backgroundImage = `url('${castleId}enemy${type}.png')`;
+        e.hp = 1; e.w = 60; e.h = 60;
+     }
+     
+     e.x = window.innerWidth + 50;
+     e.y = Math.random() * (window.innerHeight - 150) + 50;
+     e.style.left = e.x + "px";
+     e.style.top = (window.innerHeight - e.y - e.h) + "px"; // CSS top 계산
+     e.speed = 200 + (distance * 0.01); // 갈수록 빨라짐
+
+     document.getElementById("gameArea").appendChild(e);
+     enemies.push(e);
+  }
+
+  // ====================================================
+  // 6. 보스전 및 스킬 구현 (핵심!)
+  // ====================================================
+  function startBossBattle() {
+     isBossBattle = true;
+     // 보스 스탯 설정
+     boss.hp = 50 + (castleId * 5); // 뒷번호 성일수록 체력 높음
+     boss.maxHp = boss.hp;
+     updateBossHp();
+
+     const container = document.getElementById("bossContainer");
+     const body = document.getElementById("bossBody");
+     
+     // F_boss{id}.png 사용
+     body.style.backgroundImage = `url('F_boss${castleId}.png')`;
+     
+     container.style.display = "block";
+     document.getElementById("bossWarning").style.display = "block";
+     setTimeout(() => document.getElementById("bossWarning").style.display = "none", 3000);
+     
+     // 등장 애니메이션
+     setTimeout(() => container.style.right = "20px", 100);
+     
+     // 잡몹 제거
+     enemies.forEach(e => e.remove()); enemies = [];
+     obstacles.forEach(o => o.remove()); obstacles = [];
+  }
+
+  function updateBoss(dt) {
+     if(boss.hp <= 0) return;
+
+     // 기본 움직임: 위아래 둥둥 (CSS animation으로 처리됨)
+     // 보스 스킬 타이머
+     boss.skillTimer += dt;
+     
+     // 3초마다 스킬 사용
+     if(boss.skillTimer > 3.0) {
+        useBossSkill();
+        boss.skillTimer = 0;
+     }
+  }
+
+  function useBossSkill() {
+     // 성 ID(1~12)에 따른 스킬 분기
+     switch(castleId) {
+        case 1: // 얼음 (Ice Shard)
+           spawnProjectile("proj-ice", 0, 0, -400, 0); // 직사
+           spawnProjectile("proj-ice", 0, 50, -350, -50); // 위쪽 대각
+           document.getElementById("gameArea").classList.add("effect-ice");
+           setTimeout(()=>document.getElementById("gameArea").classList.remove("effect-ice"), 500);
+           break;
+        
+        case 2: // 불 (Rapid Fire)
+           for(let i=0; i<3; i++) {
+              setTimeout(() => spawnProjectile("proj-fire", 0, Math.random()*200-100, -500, 0), i*200);
+           }
+           break;
+           
+        case 3: // 나무 (Root Obstacle - 바닥 장애물 소환)
+           const root = document.createElement("div");
+           root.className = "obstacle";
+           root.style.width = "40px"; root.style.height = "100px"; root.style.backgroundColor = "#5d4037"; // 나무색
+           root.x = window.innerWidth; root.h = 100;
+           root.style.left = root.x + "px"; root.style.bottom = "0px";
+           document.getElementById("gameArea").appendChild(root);
+           obstacles.push(root); // 장애물 배열에 넣어 플레이어쪽으로 오게 함
+           break;
+           
+        case 4: // 사막 (Sandstorm - 화면 흐림)
+           document.getElementById("gameArea").classList.add("effect-sand");
+           setTimeout(()=>document.getElementById("gameArea").classList.remove("effect-sand"), 2000); // 2초 지속
+           spawnProjectile("boss-missile", 0, 0, -300, 0);
+           break;
+           
+        case 5: // 물 (Wave - 넓은 투사체)
+           const wave = spawnProjectile("boss-missile", 0, 0, -250, 0);
+           wave.style.height = "100px"; // 세로로 길게
+           wave.style.borderRadius = "10px";
+           document.getElementById("gameArea").classList.add("effect-water");
+           setTimeout(()=>document.getElementById("gameArea").classList.remove("effect-water"), 500);
+           break;
+           
+        case 6: // 어둠 (Darkness - 시야 차단)
+           document.getElementById("gameArea").classList.add("effect-darkness");
+           setTimeout(()=>document.getElementById("gameArea").classList.remove("effect-darkness"), 2500);
+           spawnProjectile("proj-dark", 0, 0, -400, 0);
+           break;
+           
+        case 7: // 돌 (Falling Rock - 위에서 떨어짐)
+           const rock = document.createElement("div");
+           rock.className = "projectile proj-stone";
+           rock.x = playerObj.x; // 플레이어 머리 위
+           rock.y = window.innerHeight;
+           rock.vx = 0; rock.vy = -400; // 아래로 떨어짐
+           rock.style.left = rock.x + "px"; rock.style.bottom = rock.y + "px";
+           document.getElementById("gameArea").appendChild(rock);
+           projectiles.push(rock);
+           break;
+           
+        case 8: // 공간 (Teleport - 보스 위치 변경)
+           const container = document.getElementById("bossContainer");
+           container.style.top = (20 + Math.random() * 60) + "%"; // 20~80% 사이 랜덤 이동
+           spawnProjectile("boss-missile", 0, 0, -400, 0);
+           break;
+           
+        case 9: // 방어 (Shield - 투사체 막기?) 
+           // 여기선 그냥 탄막을 많이 뿌리는 걸로 구현 (방어 대신 공격으로 압박)
+           spawnProjectile("boss-missile", 0, 100, -300, 0);
+           spawnProjectile("boss-missile", 0, -100, -300, 0);
+           break;
+           
+        case 10: // 검 (Slash - 빠른 수평 베기)
+           const slash = spawnProjectile("boss-missile", 0, 0, -800, 0); // 매우 빠름
+           slash.style.width = "100px"; slash.style.height = "10px"; // 가로로 김
+           break;
+           
+        case 11: // 네크로맨서 (Summon Minion)
+           spawnEnemy(); // 잡몹 하나 소환
+           break;
+           
+        case 12: // 빛 (Blind - 화면 하얗게)
+           const flash = document.getElementById("flashEffect");
+           flash.style.opacity = 1;
+           setTimeout(()=>flash.style.opacity=0, 1000);
+           spawnProjectile("proj-light", 0, 0, -350, 0);
+           break;
+           
+        default: // 기본
+           spawnProjectile("boss-missile", 0, 0, -300, 0);
+     }
+  }
+
+  function spawnProjectile(cls, offX, offY, vx, vy) {
+     const p = document.createElement("div");
+     p.className = "projectile " + cls;
+     // 보스 위치 기준 발사
+     const bRect = document.getElementById("bossContainer").getBoundingClientRect();
+     p.x = bRect.left + offX;
+     p.y = (window.innerHeight - bRect.bottom) + 75 + offY; // 대략 중앙
+     p.vx = vx; p.vy = vy;
+     
+     p.style.left = p.x + "px";
+     p.style.bottom = p.y + "px";
+     
+     document.getElementById("gameArea").appendChild(p);
+     projectiles.push(p);
+     return p;
+  }
+
+  // ====================================================
+  // 7. 플레이어 조작 및 공통 함수
+  // ====================================================
+  function jump() {
+    if(velocity === 0 && playerObj.y <= 0) { // 바닥에 있을 때만 점프
+       velocity = jumpPower;
+       playSound('jump');
+    }
+  }
+
+  function handleAttack(e) {
+    if(e) e.stopPropagation();
+    // 쿨타임 로직 간단 구현
+    if(document.getElementById("subActionBtn").style.opacity === "0.5") return;
+    
+    // 플레이어 미사일 발사
+    const m = document.createElement("div");
+    m.className = "player-missile";
+    m.x = playerObj.x + 50; m.y = playerObj.y + 20;
+    m.style.left = m.x + "px"; m.style.bottom = m.y + "px"; // CSS top/bottom 통일 필요. 여기선 bottom 물리 사용
+    document.getElementById("gameArea").appendChild(m);
+    playerMissiles.push(m);
+    
+    // 버튼 쿨타임 UI
+    const btn = document.getElementById("subActionBtn");
+    btn.style.opacity = "0.5";
+    setTimeout(() => btn.style.opacity = "1", 500); // 0.5초 쿨타임
+  }
+
+  function damageLife() {
+    // 무적 시간 등 로직 생략 (순수하게 피격)
+    life--;
+    document.getElementById("lifeText").innerText = life;
+    
+    const flash = document.getElementById("flashEffect");
+    flash.style.background = "red"; flash.style.opacity = 0.5;
+    setTimeout(()=> { flash.style.opacity = 0; flash.style.background="white"; }, 200);
+    
+    if(life <= 0) gameOver();
+  }
+
+  function checkCollision(r1, r2) {
+     // r1: player (bottom 기준 y), r2: enemy (top 기준 y일수도 있음 -> 변환 필요)
+     // 여기서는 모든 엔티티의 x, y, w, h를 통일해서 쓴다고 가정
+     // 다만 enemies 등은 top 기준으로 그려졌으므로, y값을 바닥 기준으로 변환해야 함
+     // 간단히 히트박스 중심 거리로 체크
+     const c1 = { x: r1.x + 30, y: r1.y + 30 }; // 플레이어 중심
+     
+     // 적 y좌표가 top 기준이라면: (windowHeight - top - h)
+     let y2 = r2.y; 
+     if(r2.y > 1000) {/* 뭔가 잘못됨 */} // 그냥 화면상 좌표(left, top)을 getBoundingClientRect로 비교하는게 제일 정확함
+     
+     // 간단 충돌: x축이 겹치고 y축이 비슷하면
+     return (r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && Math.abs(r1.y - (window.innerHeight - parseFloat(document.getElementById("gameArea").style.height || 0) - r2.y)) < 60); 
+     // -> 위 방식은 복잡하니, DOM rect 충돌로 대체
+  }
+  
+  // DOM Rect 기반 충돌 감지 (가장 확실)
+  function checkCollision(objA, rectB) { 
+     // objA는 데이터 객체, rectB는 x,y,w,h 데이터.
+     // 하지만 우리는 DOM 요소끼리 비교하는게 아님 (데이터 기반 이동이므로)
+     // 간단 거리법 사용
+     const dist = Math.hypot((playerObj.x+30) - (rectB.x+rectB.w/2), (playerObj.y+30) - (rectB.y)); // rectB.y는 적의 경우 '화면 위에서부터'일 수 있음.
+     // 적 생성 시 e.y는 '화면 위에서부터'로 설정했음. playerObj.y는 '바닥에서부터'.
+     
+     // 변환: 적의 바닥 높이
+     // e.style.top = (winH - e.y - e.h) ... 아까 spawnEnemy에서 e.y를 랜덤(50~...)으로 잡고 top을 설정함.
+     // 사실상 e.y는 '바닥에서 떨어진 높이'로 의도했음 (spawnEnemy 코드 참조)
+     
+     // 따라서 둘다 '바닥 높이' 기준이라면:
+     return (playerObj.x < rectB.x + rectB.w && playerObj.x + playerObj.w > rectB.x &&
+             Math.abs(playerObj.y - rectB.y) < 50);
+  }
+
+  function gameOver() {
+    running = false;
+    document.getElementById("resultTitle").innerText = "패배...";
+    document.getElementById("resultDesc").innerText = `${Math.floor(distance)}m 이동 후 전사`;
+    document.getElementById("resultModal").style.display = "flex";
+  }
+
+  function gameClear() {
+    running = false;
+    document.getElementById("resultTitle").innerText = "승리! 🎉";
+    document.getElementById("resultDesc").innerText = `${CASTLE_NAMES[castleId]}을(를) 점령했습니다!`;
+    document.getElementById("resultModal").style.display = "flex";
+    
+    // 점령 정보 전송 로직은 여기서 호출 (기존 코드 참고)
+    sendConquerData();
+  }
+
+  function sendConquerData() {
+     // GAS로 점령 정보 전송
+     fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        redirect: "follow",
+        body: JSON.stringify({
+           type: "conquerCastle",
+           castleId: castleId,
+           userId: localStorage.getItem("run_id"),
+           userName: localStorage.getItem("run_name"),
+           skin: mySkin,
+           stats: { hp: life }
+        })
+     });
+  }
+
+  function updateBossHp() {
+     const p = (boss.hp / boss.maxHp) * 100;
+     document.getElementById("bossHpFill").style.width = p + "%";
+  }
+
+  function spawnExplosion(x, y) {
+     const ex = document.createElement('div');
+     ex.className = 'obstacle-explosion';
+     ex.style.left = x + 'px'; ex.style.bottom = y + 'px';
+     document.getElementById("gameArea").appendChild(ex);
+     setTimeout(()=>ex.remove(), 400);
+  }
+
+  function playSound(type) { /* 효과음 로직 (파일 필요) */ }
+
+  // 입력 리스너
+  document.addEventListener("keydown", e => { if(e.code==="Space") jump(); if(e.code==="KeyA") handleAttack(); });
+  document.addEventListener("touchstart", e => { 
+     if(!e.target.closest("#subActionBtn")) jump(); 
+  }, {passive:false});
+  document.addEventListener("mousedown", e => { 
+     if(!e.target.closest("#subActionBtn")) jump(); 
+  });
+
+</script>
+</body>
+</html>
