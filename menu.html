@@ -215,6 +215,27 @@
     padding: 15px; height: 100px;
   }
 
+  /* [추가] 공성전 버튼 스타일 */
+  .btn-siege {
+    background: #d32f2f; /* 붉은색 */
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #b71c1c, 4px 4px 0 2px #000;
+    padding: 15px; height: 100px;
+  }
+  .btn-siege.locked {
+    background: #757575; /* 회색 */
+    color: #bdbdbd;
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.2), 4px 4px 0 #424242, 4px 4px 0 2px #000;
+    cursor: default;
+  }
+  .btn-siege .btn-label {
+    font-size: 16px; 
+    line-height: 1.4;
+  }
+  .btn-siege.locked .btn-label {
+    font-size: 14px;
+    color: #e0e0e0;
+  }
+
   .version { margin-top: 24px; font-size: 14px; color: #a1887f; opacity: 0.8; }
 
   /* 모달 공통 */
@@ -345,13 +366,13 @@
         <span>공지사항</span>
       </button>
       
-      <button class="pixel-btn" style="background:#bcaaa4; cursor:default; box-shadow:none; border-color:#8d6e63;">
-        <div class="btn-icon">🔒</div>
-        <span>준비중</span>
+      <button id="siegeBtn" class="pixel-btn btn-siege locked" onclick="enterSiegeMode()">
+        <div class="btn-icon">🏰</div>
+        <span class="btn-label" id="siegeLabel">로딩중...</span>
       </button>
     </div>
 
-    <div class="version">v2.1 · Antioch Youth (Remastered)</div>
+    <div class="version">v2.5 · Antioch Youth (Siege Mode)</div>
   </div>
 </div>
 
@@ -426,6 +447,74 @@
   }
 
   document.getElementById("playerName").innerText = name || "Guest";
+
+  // ==========================================
+  // [추가] 공성전 버튼 활성화 로직
+  // ==========================================
+  let canEnterSiege = false;
+
+  async function checkSiegeAccess() {
+    const btn = document.getElementById("siegeBtn");
+    const label = document.getElementById("siegeLabel");
+
+    // 로딩 표시
+    label.innerHTML = "자격 확인 중...";
+    
+    // 서버에서 랭킹(최고 기록)을 가져와서 내 기록 확인
+    try {
+      const res = await fetch(API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain" }, 
+        redirect: 'follow', 
+        body: JSON.stringify({ type: "getRanking" }) 
+      });
+      const txt = await res.text();
+      
+      if (!txt || txt.trim() === "fail") {
+          label.innerHTML = "통신 오류";
+          return;
+      }
+      
+      const list = JSON.parse(txt);
+      
+      // 내 기록 찾기 (없으면 0)
+      let myRecord = 0;
+      const myData = list.find(user => user.id === id);
+      if (myData) myRecord = myData.distance || 0;
+
+      // 10,000m 체크
+      if (myRecord >= 10000) {
+          canEnterSiege = true;
+          btn.classList.remove("locked");
+          // 클래스 제거 후 배경색 등 스타일 적용을 위해 인라인 스타일 초기화
+          btn.style.background = "#d32f2f"; 
+          btn.style.color = "#fff";
+          btn.style.cursor = "pointer";
+          
+          label.innerHTML = `공성전 입장<br><span style='font-size:12px; color:#ffcc80'>[${name} 용사여 환영합니다]</span>`;
+      } else {
+          canEnterSiege = false;
+          // locked 클래스는 CSS에 정의됨
+          label.innerHTML = `공성전 (잠김)<br><span style='font-size:12px'>[진입조건: 1만m 정복]</span>`;
+      }
+
+    } catch (e) {
+      console.error(e);
+      label.innerHTML = "확인 실패";
+    }
+  }
+
+  function enterSiegeMode() {
+    if (canEnterSiege) {
+        window.location.href = "/TrapGame/Map.html";
+    } else {
+        alert("🚨 출입 불가!\n게임(Game Start)에서 10,000m를 돌파하여\n자격을 증명하고 오십시오!");
+    }
+  }
+
+  // 페이지 로드 시 체크 시작
+  checkSiegeAccess();
+
 
   // ==========================================
   // 출석체크 로직
@@ -520,10 +609,10 @@
       if(logs && logs.length > 0) {
         let html = "";
         logs.forEach(l => {
-           let msg = l.reward;
-           if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
-           if(msg.includes("QT Book")) msg = "QT책 당첨!";
-           html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
+            let msg = l.reward;
+            if(msg.includes("Starbucks")) msg = "스타벅스 쿠폰 당첨!";
+            if(msg.includes("QT Book")) msg = "QT책 당첨!";
+            html += `<span class="ticker-item">🎉 [${l.name}]님이 ${msg} 획득!</span>`;
         });
         area.innerHTML += html;
       }
