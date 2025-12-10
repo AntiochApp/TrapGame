@@ -479,7 +479,7 @@
       
       // 내 기록 찾기 (없으면 0)
       let myRecord = 0;
-      const myData = list.find(user => user.id === id);
+      const myData = list.find(user => user.id == id);
       if (myData) myRecord = myData.distance || 0;
 
       // 10,000m 체크
