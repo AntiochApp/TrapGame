@@ -647,14 +647,14 @@
   function activateJieunBuff() {
       const noelFly = document.createElement('div');
       noelFly.className = 'flying-noel';
-      noelFly.style.left = (window.innerWidth + 100) + 'px';
+      noelFly.style.left = (gameArea.offsetWidth + 100) + 'px';
       noelFly.style.top = '-50px';
       gameArea.appendChild(noelFly);
 
       const pRect = { left: playerObj.x, top: gameArea.offsetHeight - playerObj.y - playerObj.h }; 
 
       noelFly.animate([
-         { left: (window.innerWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
+         { left: (gameArea.offsetWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
          { left: '120px', top: (gameArea.offsetHeight - playerObj.y - 60) + 'px', transform: 'rotate(0deg)' }
       ], { duration: 800, easing: 'ease-out', fill: 'forwards' }).onfinish = () => {
           noelFly.remove();
@@ -694,7 +694,7 @@
 
       noel.animate([
           { left: '120px', top: (gameArea.offsetHeight - playerObj.y - 60) + 'px' },
-          { left: (window.innerWidth + 200) + 'px', top: '-200px' }
+          { left: (gameArea.offsetWidth + 200) + 'px', top: '-200px' }
       ], { duration: 800, easing: 'ease-in', fill: 'forwards' }).onfinish = () => noel.remove();
   }
 
@@ -897,7 +897,7 @@ window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
               unit.x = -100; unit.y = randBetween(50, gameArea.offsetHeight/2);
               unit.style.left = unit.x + 'px';
               unit.style.top = unit.y + 'px';
-              unit.tx = (window.innerWidth / 2) + randBetween(-100, 100);
+              unit.tx = (gameArea.offsetWidth / 2) + randBetween(-100, 100);
               unit.ty = (gameArea.offsetHeight / 2) + randBetween(-200, 0);
               unit.moveTimer = 0;
               unit.fireTimer = 0;
@@ -950,7 +950,7 @@ window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
           showFloatText("💖 천사의 치유 (+2)");
           playSound('item');
            
-          healer.style.left = (window.innerWidth + 100) + 'px';
+          healer.style.left = (gameArea.offsetWidth + 100) + 'px';
           healer.style.top = '-200px';
           setTimeout(() => {
               healer.remove(); 
@@ -1070,7 +1070,7 @@ function triggerJunSkill() {
       const lamb = document.createElement('div');
       lamb.className = 'lamb-unit';
       // 오른쪽 화면 밖
-      lamb.x = window.innerWidth + 150; 
+      lamb.x = gameArea.offsetWidth + 150; 
       lamb.y = 50;
       lamb.style.left = lamb.x + 'px';
       lamb.style.top = lamb.y + 'px'; 
@@ -1139,7 +1139,7 @@ function triggerJunSkill() {
           // 오른쪽으로 퇴장
           lamb.el.x += 400 * dt; 
           lamb.el.style.left = lamb.el.x + 'px';
-          if(lamb.el.x > window.innerWidth + 150) {
+          if(lamb.el.x > gameArea.offsetWidth + 150) {
               lamb.el.remove();
               activeLamb = null;
           }
@@ -1159,7 +1159,7 @@ function triggerJunSkill() {
       hammerObj.y = 50;   // 상단
        
       // 화면 전체 너비 + 해머 너비 + 여유분을 20초 동안 이동
-      const totalDist = window.innerWidth + 800; 
+      const totalDist = gameArea.offsetWidth + 800; 
       hammerObj.vx = totalDist / 20; // 20초 지속 속도 계산
 
       hammerObj.style.left = hammerObj.x + 'px';
@@ -1180,12 +1180,12 @@ function triggerJunSkill() {
           const svgNS = "http://www.w3.org/2000/svg";
           const svg = document.createElementNS(svgNS, "svg");
           svg.classList.add('zigzag-lightning');
-          svg.setAttribute("width", window.innerWidth);
+          svg.setAttribute("width", gameArea.offsetWidth);
           svg.setAttribute("height", gameArea.offsetHeight);
           svg.style.left = '0';
           svg.style.top = '0';
 
-          const startX = randBetween(0, window.innerWidth);
+          const startX = randBetween(0, gameArea.offsetWidth);
           const startY = 0;
           let points = `${startX},${startY}`;
            
@@ -1214,7 +1214,7 @@ function triggerJunSkill() {
 
       // 화면 내 모든 적/장애물 파괴
       obstacles.forEach(o => {
-          if(!o.destroyed && o.x < window.innerWidth) {
+          if(!o.destroyed && o.x < gameArea.offsetWidth) {
               o.destroyed = true;
               spawnExplosionEffect(o.x, gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - 50);
               spawnFaithCoins(o.x, gameArea.offsetHeight - 150, 3, false, true);
@@ -1222,7 +1222,7 @@ function triggerJunSkill() {
           }
       });
       enemies.forEach(e => {
-          if(!e.isDead && e.x < window.innerWidth) {
+          if(!e.isDead && e.x < gameArea.offsetWidth) {
               e.isDead = true;
               spawnExplosionEffect(e.x, e.y);
               spawnFaithCoins(e.x, e.y, 5, false, true);
@@ -1293,7 +1293,7 @@ function triggerJunSkill() {
       f.x = -50; f.y = randBetween(50, gameArea.offsetHeight-100);
       f.style.left = f.x + 'px';
       f.style.top = f.y + 'px';
-      f.tx = randBetween(100, window.innerWidth-100);
+      f.tx = randBetween(100, gameArea.offsetWidth-100);
       f.ty = randBetween(50, gameArea.offsetHeight-100);
       f.timer = 0;
       f.fireCD = Math.random() * 4;
@@ -1574,14 +1574,14 @@ function triggerJunSkill() {
                  setTimeout(() => spark.remove(), 300);
             }
 
-            if(hammerObj.x > window.innerWidth + 400) { 
+            if(hammerObj.x > gameArea.offsetWidth + 400) { 
                 hammerObj.remove();
                 hammerObj = null;
                 gameArea.classList.remove('gentle-shake');
             } else {
                 const hRect = { left: hammerObj.x + 50, right: hammerObj.x + 350, top: hammerObj.y + 50, bottom: hammerObj.y + 350 };
                 obstacles.forEach(o => {
-                    if(!o.destroyed && o.x < window.innerWidth) {
+                    if(!o.destroyed && o.x < gameArea.offsetWidth) {
                         const oRect = o.getBoundingClientRect();
                         if(hRect.right > oRect.left && hRect.left < oRect.right) {
                             o.destroyed = true;
@@ -1591,7 +1591,7 @@ function triggerJunSkill() {
                     }
                 });
                 enemies.forEach(e => {
-                    if(!e.isDead && e.x < window.innerWidth) {
+                    if(!e.isDead && e.x < gameArea.offsetWidth) {
                         const eRect = e.getBoundingClientRect();
                         if(hRect.right > eRect.left && hRect.left < eRect.right) {
                             e.isDead = true;
@@ -1762,7 +1762,7 @@ function triggerJunSkill() {
             jihyeUnits.forEach(u => {
                 u.moveTimer += safeDelta;
                 if(u.moveTimer > 1.0) {
-                    u.tx = (window.innerWidth / 2) + randBetween(-200, 200);
+                    u.tx = (gameArea.offsetWidth / 2) + randBetween(-200, 200);
                     u.ty = (gameArea.offsetHeight / 2) + randBetween(-200, 200);
                     u.moveTimer = 0;
                 }
@@ -1811,7 +1811,7 @@ function triggerJunSkill() {
 
                     let found = null;
                     for(let k=0; k<obstacles.length; k++){
-                        if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
+                        if(!obstacles[k].destroyed && obstacles[k].x < gameArea.offsetWidth && !obstacles[k].isTargeted){
                             found = obstacles[k]; break;
                         }
                     }
@@ -1867,7 +1867,7 @@ function triggerJunSkill() {
                     
                     let found = null;
                       for(let k=0; k<obstacles.length; k++){
-                        if(!obstacles[k].destroyed && obstacles[k].x < window.innerWidth && !obstacles[k].isTargeted){
+                        if(!obstacles[k].destroyed && obstacles[k].x < gameArea.offsetWidth && !obstacles[k].isTargeted){
                             found = obstacles[k]; break;
                         }
                     }
@@ -1914,7 +1914,7 @@ function triggerJunSkill() {
             f.style.top = f.y + 'px';
 
             if(Math.abs(f.tx - f.x) < 20) {
-                f.tx = randBetween(50, window.innerWidth-50);
+                f.tx = randBetween(50, gameArea.offsetWidth-50);
                 f.ty = randBetween(50, gameArea.offsetHeight-50);
             }
             
@@ -1963,7 +1963,7 @@ function triggerJunSkill() {
                 obstacles.forEach(o => {
                     const oTop = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                     const oBottom = gameArea.offsetHeight - parseFloat(o.style.bottom || 0);
-                    if(!hit && oTop < f.y+60 && oBottom > f.y-20 && !o.destroyed && o.x < window.innerWidth) {
+                    if(!hit && oTop < f.y+60 && oBottom > f.y-20 && !o.destroyed && o.x < gameArea.offsetWidth) {
                         o.destroyed = true;
                         spawnExplosionEffect(o.x, oTop);
                         o.remove();
@@ -1987,7 +1987,7 @@ function triggerJunSkill() {
             c.el.x += c.vx; 
             c.el.y += c.vy;
 
-            if(c.el.x < 0 || c.el.x > window.innerWidth) c.vx *= -1;
+            if(c.el.x < 0 || c.el.x > gameArea.offsetWidth) c.vx *= -1;
             if(c.el.y < 20 || c.el.y > gameArea.offsetHeight) c.vy *= -1;
 
             c.el.style.left = c.el.x + 'px';
@@ -2033,7 +2033,7 @@ function triggerJunSkill() {
                 c.className = 'cake-item';
                 c.style.backgroundImage = `url('Cake${Math.ceil(Math.random()*3)}.png')`;
                 c.y = -60;
-                c.x = randBetween(50, window.innerWidth-50);
+                c.x = randBetween(50, gameArea.offsetWidth-50);
                 c.style.left = c.x + 'px';
                 c.style.top = c.y + 'px';
                 c.w = 60; c.h = 60;
@@ -2087,7 +2087,7 @@ function triggerJunSkill() {
             const n = musicNotes[i];
             n.x += 400 * safeDelta;
             n.style.left = n.x + 'px';
-            if(n.x > window.innerWidth) { n.remove(); musicNotes.splice(i,1); continue; }
+            if(n.x > gameArea.offsetWidth) { n.remove(); musicNotes.splice(i,1); continue; }
             
             const nRect = {x: n.x, y: n.y, w: 40, h: 40};
             let hit = false;
@@ -2129,7 +2129,7 @@ function triggerJunSkill() {
                 m.style.left = m.x + 'px';
                 m.style.top = m.y + 'px';
                 
-                if(m.x > window.innerWidth || m.x < -50 || m.y < -50 || m.y > gameArea.offsetHeight + 50) {
+                if(m.x > gameArea.offsetWidth || m.x < -50 || m.y < -50 || m.y > gameArea.offsetHeight + 50) {
                     m.remove();
                     jihyeMissiles.splice(i, 1);
                     continue;
@@ -2349,7 +2349,7 @@ function triggerJunSkill() {
   e.style.backgroundColor = 'transparent'; 
   e.type = type; e.timer = 0; e.state = 'enter'; 
 
-  // [핵심 수정] window.innerWidth 대신 gameArea.offsetWidth 사용
+  // [핵심 수정] gameArea.offsetWidth 대신 gameArea.offsetWidth 사용
   e.x = gameArea.offsetWidth + 50; 
   e.y = randBetween(50, gameArea.offsetHeight - 150);
 
@@ -2366,21 +2366,21 @@ function triggerJunSkill() {
         if(e.laserBeam) { e.laserBeam.style.width = e.x + "px"; e.laserBeam.style.top = (e.y + 15) + "px"; }
 
         // 노엘 레이저 피격
-        if (activeEffects.noelLaser > 0 && e.x < window.innerWidth) {
+        if (activeEffects.noelLaser > 0 && e.x < gameArea.offsetWidth) {
             destroyEnemy(e, i); continue;
         }
 
         // 피버 모드 피격
         if (isFeverTime) {
            if (!e.feverTimer) e.feverTimer = 0;
-           if (e.x < window.innerWidth) e.feverTimer += dt;
+           if (e.x < gameArea.offsetWidth) e.feverTimer += dt;
            if (e.feverTimer > 1.0) { destroyEnemy(e, i); continue; }
         }
 
         // 이동 및 공격 패턴 로직
         if(e.state === 'enter') {
             e.x -= 100 * dt;
-            if (e.x < window.innerWidth - 150) { 
+            if (e.x < gameArea.offsetWidth - 150) { 
                 e.state = 'attack'; 
                 e.timer = 1.1; 
             }
@@ -2753,7 +2753,7 @@ function triggerJunSkill() {
         
         // 돌진 애니메이션
         bossContainer.style.transition = "right 0.3s ease-in"; 
-        bossContainer.style.right = (window.innerWidth - 50) + "px"; 
+        bossContainer.style.right = (gameArea.offsetWidth - 50) + "px"; 
         
         // 피격 판정 타이밍
         setTimeout(() => { 
@@ -2836,11 +2836,11 @@ function triggerJunSkill() {
 
     // 플레이어 미사일 업데이트
     for (let i = playerMissiles.length - 1; i >= 0; i--) {
-        let m = playerMissiles[i];
-        let mx = parseFloat(m.style.left);
-        mx += 600 * delta; 
-        m.style.left = mx + "px";
-        if (mx > window.innerWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
+    let m = playerMissiles[i];
+    let mx = parseFloat(m.style.left);
+    mx += 600 * delta; 
+    m.style.left = mx + "px";
+        if (mx > gameArea.offsetWidth) { m.remove(); playerMissiles.splice(i, 1); continue; }
         
         const mRect = {x: mx, y: parseFloat(m.style.top), w: 50, h: 24};
         
@@ -2881,7 +2881,7 @@ function triggerJunSkill() {
 
     // 적/보스 투사체 업데이트
     for (let i = projectiles.length - 1; i >= 0; i--) {
-        let p = projectiles[i];
+    let p = projectiles[i];
         
         if (p.owner && p.owner.isDead) {
             p.style.opacity = (parseFloat(p.style.opacity) || 1) - 0.05; 
@@ -2919,7 +2919,7 @@ function triggerJunSkill() {
             p.style.left = p.x + "px"; p.style.top = p.y + "px";
         }
 
-        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > gameArea.offsetHeight + 100) { 
+        if (p.x < -100 || p.x > gameArea.offsetWidth + 100 || p.y < -100 || p.y > gameArea.offsetHeight + 100) { 
             p.remove(); projectiles.splice(i, 1); continue; 
         }
         
@@ -2998,7 +2998,7 @@ function triggerJunSkill() {
         if (activeEffects.noelLaser > 0 && !o.destroyed) {
             const beam = document.getElementById('noelBeam');
             if (beam) {
-                const bRect = {x: 170, y: gameArea.offsetHeight - playerObj.y - 120, w: window.innerWidth, h: 100};
+                const bRect = {x: 170, y: gameArea.offsetHeight - playerObj.y - 120, w: gameArea.offsetWidth, h: 100};
                 if (isColliding(bRect, oRect)) {
                     o.destroyed = true;
                     spawnExplosionEffect(o.x + 30, oY);
