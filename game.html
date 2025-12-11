@@ -234,7 +234,14 @@
     .start-btn, .choice-btn, .action-btn { width: 100%; padding: 14px; margin: 8px 0; background: var(--accent); border: 0; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; box-shadow: 0 4px 0 var(--accent-dark); cursor: pointer; }
     .choice-btn:active, .action-btn:active, .start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark); }
     .action-btn:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
-    .modal-input { width: 85%; max-width: 320px; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #b8a792; margin: 8px auto 18px; display: block; }
+    .modal-input { 
+        width: 85%; max-width: 320px; padding: 12px; font-size: 16px; 
+        border-radius: 8px; border: 2px solid #b8a792; margin: 8px auto 18px; display: block;
+        touch-action: auto !important; /* 터치 허용 */
+        user-select: text !important;  /* 텍스트 선택 허용 */
+        -webkit-user-select: text !important;
+        cursor: text;
+    }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
 
     /* [수정 6, 7] Lamb.png -> Lam.png */
@@ -370,25 +377,35 @@
             const baseHeight = 800; // 기준 높이
             
             // 화면 높이에 맞춰서 확대 비율 계산
-            const scale = height / baseHeight;
+            let scale = height / baseHeight;
+            
+            // 가로 모드일 경우 너무 크게 확대되면 잘리므로 조금 줄임
+            if(isLandscapeMobile) scale *= 0.9;
             
             // PC에서는 크기를 고정하고 확대함
             gameArea.style.width = baseWidth + 'px';
             gameArea.style.height = baseHeight + 'px';
             gameArea.style.transform = `scale(${scale})`;
+            gameArea.style.margin = "0 auto"; // 중앙 정렬 확실하게
             
-            window.gameScale = scale; // 스케일 저장
-        } 
+            window.gameScale = scale; 
+        }
         // 화면이 좁으면 스마트폰으로 간주 -> 꽉 채우기 모드
         else {
             gameArea.style.width = '100%';
             gameArea.style.height = '100%';
-            gameArea.style.transform = 'none'; // 확대 없음
-            window.gameScale = 1; // 스케일 1
+            gameArea.style.transform = 'none';
+            gameArea.style.margin = "0";
+            window.gameScale = 1; 
         }
     }
 
-    window.addEventListener('resize', resizeGame);
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(resizeGame, 100);
+    });
+    
+    // 초기 실행
     setTimeout(resizeGame, 0);
     
   function isColliding(a, b) {
