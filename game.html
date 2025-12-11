@@ -10,7 +10,18 @@
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
     
-    #gameArea { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); transition: filter 0.5s; }
+    body { background-color: #222; }
+#gameArea { 
+    position: relative; 
+    width: 100%; 
+    max-width: 500px; /* 여기가 핵심! PC에서 500px 너비로 고정 */
+    height: 100vh; 
+    margin: 0 auto;   /* 화면 중앙으로 정렬 */
+    overflow: hidden; 
+    background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); 
+    transition: filter 0.5s; 
+    box-shadow: 0 0 30px rgba(0,0,0,0.5); /* 예쁜 그림자 추가 */
+}
     
     /* [수정 2] 하휘 스킬 배경: 움직임을 위해 repeat-x 설정 */
     #gameArea.sand-bg { 
@@ -171,7 +182,8 @@
     .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
     @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
-    #hud { position: fixed; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
+    #hud { position: absolute; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
+    #pauseBtn, #abilityBtn, #subActionBtn, #dailyMissionBox, #buffArea, #junMiniGameUI, #bossWarning, .modal-bg, #loadingQuiz, #speedLines, #timeTunnelBg { position: absolute !important; }
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
@@ -2305,25 +2317,29 @@ function triggerJunSkill() {
   }
 
   function spawnEnemy(type) {
-      const e = document.createElement("div"); e.classList.add("enemy");
-      
-      // 이미지 매핑
-      if (type >= 11 && type <= 15) {
-          e.style.backgroundImage = `url('B_Enemy0${type - 10}.png')`;
-          e.style.width = "90px"; e.style.height = "90px"; // 중형 적 크기
-          e.hp = 3; // 중형 적 체력
-      } else {
-          e.style.backgroundImage = `url('enemy${type}.png')`; 
-          e.style.width = "60px"; e.style.height = "60px";
-          e.hp = 1;
-      }
-      
-      e.style.backgroundColor = 'transparent'; 
-      e.type = type; e.timer = 0; e.state = 'enter'; 
-      e.x = window.innerWidth + 50; e.y = randBetween(50, window.innerHeight - 150);
-      e.style.left = e.x + "px"; e.style.top = e.y + "px";
-      gameArea.appendChild(e); enemies.push(e);
+  const e = document.createElement("div"); e.classList.add("enemy");
+
+  // 이미지 매핑
+  if (type >= 11 && type <= 15) {
+      e.style.backgroundImage = `url('B_Enemy0${type - 10}.png')`;
+      e.style.width = "90px"; e.style.height = "90px";
+      e.hp = 3;
+  } else {
+      e.style.backgroundImage = `url('enemy${type}.png')`; 
+      e.style.width = "60px"; e.style.height = "60px";
+      e.hp = 1;
   }
+
+  e.style.backgroundColor = 'transparent'; 
+  e.type = type; e.timer = 0; e.state = 'enter'; 
+
+  // [핵심 수정] window.innerWidth 대신 gameArea.offsetWidth 사용
+  e.x = gameArea.offsetWidth + 50; 
+  e.y = randBetween(50, window.innerHeight - 150);
+
+  e.style.left = e.x + "px"; e.style.top = e.y + "px";
+  gameArea.appendChild(e); enemies.push(e);
+}
 
   function updateEnemies(dt) {
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -2469,11 +2485,14 @@ function triggerJunSkill() {
     const images = { 'invincible': 'url("item_cross.png")', 'turbo': 'url("item_wings.png")', 'slow': 'url("item_wind.png")', 'faith': 'url("item_bible.png")' };
     const item = document.createElement("div"); const type = types[Math.floor(Math.random() * types.length)];
     item.classList.add("item"); item.dataset.type = type; item.style.backgroundImage = images[type]; 
-    item.x = window.innerWidth + 50; 
+
+    // [핵심 수정] 아이템 생성 위치 보정
+    item.x = gameArea.offsetWidth + 50; 
+
     item.y = randBetween(100, window.innerHeight - 150);
     item.style.left = item.x + "px"; item.style.top = item.y + "px";
     document.getElementById("gameArea").appendChild(item); items.push(item);
-  }
+}
 
   function activateItem(type) {
     if(type === 'invincible') { activeEffects.invincible = 10; showFloatText("🛡️ 무적!"); }
@@ -3044,10 +3063,11 @@ function triggerJunSkill() {
     if(activeEffects.turbo > 0 && !isFeverTime) return;
 
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
+    const gameWidth = gameArea.offsetWidth; // [핵심] 게임 화면 너비 가져오기
 
     if (distance < 50) {
         const type = (Math.random() < 0.5) ? 'obs-log' : 'obs-rock';
-        const sx = window.innerWidth + 80;
+        const sx = gameWidth + 80; // 수정됨
         const b = document.createElement("div");
         b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height = randi(130, 360) + "px"; 
@@ -3061,9 +3081,10 @@ function triggerJunSkill() {
         let cnt = (Math.random()<0.3)?2:1;
         for(let k=0; k<cnt; k++) {
             const b = document.createElement("div"); b.classList.add("obstacle", "obs-long");
-            b.x = window.innerWidth+80; b.style.left = b.x+"px";
+            b.x = gameWidth + 80; // 수정됨
+            b.style.left = b.x+"px";
             b.style.height = "35px";
-            
+
             let sh = window.innerHeight;
             if(cnt===2) { if(k===0) b.style.bottom=randBetween(30, sh*0.35)+"px"; else b.style.bottom=randBetween(sh*0.55, sh*0.85)+"px"; }
             else { let r=Math.random(); if(r<0.2) b.style.bottom="0px"; else if(r<0.4) b.style.top="0px"; else b.style.bottom=randBetween(50, sh-120)+"px"; }
@@ -3071,29 +3092,26 @@ function triggerJunSkill() {
         }
         return;
     }
+
     const type = (Math.random()<0.5)?'obs-log':'obs-rock';
-    const sx = window.innerWidth+80;
-    
+    const sx = gameWidth + 80; // 수정됨
+
     if(Math.random()<0.5) {
-        // 바닥 장애물 하나만 생성
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=randi(90,220)+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(b); obstacles.push(b);
     } else {
-        // [수정됨] 천장(t)과 바닥(b) 장애물 생성
         let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, window.innerHeight-th-gap);
-        
         const t = document.createElement("div"); t.classList.add("obstacle", "obs-cap", "obs-ceil", type);
         t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
-        
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=bh+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
-        
-        // ▼▼▼ [여기가 수정되었습니다] ▼▼▼
-        gameArea.appendChild(t); obstacles.push(t); // 기존에 obstacles.push(b)라고 되어있던 것을 t로 수정
+
+        // [버그 수정 완료] 아래 두 줄이 수정되었습니다.
+        gameArea.appendChild(t); obstacles.push(t); 
         gameArea.appendChild(b); obstacles.push(b);
     }
-  }
+}
 
   function damageLife() {
     if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
