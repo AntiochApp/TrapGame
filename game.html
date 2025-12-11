@@ -2783,7 +2783,7 @@ function triggerJunSkill() {
     if (boss.hp <= 0) {
         bossContainer.style.transition = "top 1s ease-in"; 
         bossContainer.style.top = "120%"; 
-        spawnParticles(window.innerWidth-100, gameArea.offsetHeight-100, 'dust');
+        spawnParticles(gameArea.offsetWidth-100, gameArea.offsetHeight-100, 'dust');
         
         setTimeout(() => { 
             bossContainer.style.display = 'none'; 
