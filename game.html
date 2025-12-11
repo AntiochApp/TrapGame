@@ -3073,17 +3073,25 @@ function triggerJunSkill() {
     }
     const type = (Math.random()<0.5)?'obs-log':'obs-rock';
     const sx = window.innerWidth+80;
+    
     if(Math.random()<0.5) {
+        // 바닥 장애물 하나만 생성
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=randi(90,220)+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(b); obstacles.push(b);
     } else {
+        // [수정됨] 천장(t)과 바닥(b) 장애물 생성
         let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, window.innerHeight-th-gap);
+        
         const t = document.createElement("div"); t.classList.add("obstacle", "obs-cap", "obs-ceil", type);
         t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
+        
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
         b.style.height=bh+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
-        gameArea.appendChild(t); obstacles.push(b); gameArea.appendChild(b); obstacles.push(b);
+        
+        // ▼▼▼ [여기가 수정되었습니다] ▼▼▼
+        gameArea.appendChild(t); obstacles.push(t); // 기존에 obstacles.push(b)라고 되어있던 것을 t로 수정
+        gameArea.appendChild(b); obstacles.push(b);
     }
   }
 
