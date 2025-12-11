@@ -215,7 +215,7 @@
     padding: 15px; height: 100px;
   }
 
-  /* [수정] 공성전 버튼 스타일 */
+  /* 공성전 버튼 스타일 */
   .btn-siege {
     background: #d32f2f; /* 붉은색 */
     box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #b71c1c, 4px 4px 0 2px #000;
@@ -305,7 +305,7 @@
   }
   textarea.input-field { height: 80px; resize: none; }
 
-  /* [추가] 월드맵 모달 스타일 */
+  /* [수정] 월드맵 모달 스타일 (X버튼 제거 및 티커 적용) */
   #mapViewModal {
     display: none; position: fixed; top: 0; left: 0;
     width: 100%; height: 100%; background: #000;
@@ -313,20 +313,30 @@
   }
   .map-header {
     height: 50px; background: rgba(62, 39, 35, 0.95);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 10px; border-bottom: 4px solid #3e2723;
+    display: flex; align-items: center;
+    padding: 0; /* padding 제거하여 티커 꽉 차게 */
+    border-bottom: 4px solid #3e2723;
+    overflow: hidden; /* 티커 넘침 방지 */
+  }
+  /* 상단 메시지 티커 */
+  .map-ticker-wrap {
+    width: 100%; overflow: hidden; white-space: nowrap;
+  }
+  .map-ticker-content {
+    display: inline-block;
+    padding-left: 100%;
+    animation: mapTickerScroll 15s linear infinite;
   }
   .map-msg {
-    color: #ffca28; font-size: clamp(10px, 4vw, 14px);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    flex: 1; margin-right: 10px; font-weight: bold;
+    color: #ffca28; font-size: 16px; font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
   }
-  .btn-close-map {
-    background: #d32f2f; color: white; border: 2px solid #fff;
-    font-family: 'DungGeunMo'; padding: 6px 12px; cursor: pointer;
-    font-size: 16px; box-shadow: 2px 2px 0 #000;
+  @keyframes mapTickerScroll {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
   }
-  .btn-close-map:active { transform: translate(2px, 2px); box-shadow: none; }
+  
+  /* X버튼 스타일 제거됨 (사용 안함) */
 </style>
 </head>
 
@@ -379,7 +389,7 @@
         <div class="btn-icon">📢</div>
         <span>공지사항</span>
       </button>
-      
+       
       <button id="siegeBtn" class="pixel-btn btn-siege" onclick="openMapModal()">
         <div class="btn-icon">🏰</div>
         <span class="btn-label">공성전</span>
@@ -439,9 +449,12 @@
 
 <div id="mapViewModal">
   <div class="map-header">
-    <div class="map-msg">4000m를 달성시 당신도 전쟁에 참여 할 수 있습니다.</div>
-    <button class="btn-close-map" onclick="closeMapModal()">X</button>
-  </div>
+    <div class="map-ticker-wrap">
+      <div class="map-ticker-content">
+        <span class="map-msg">🚧 4000m를 달성해야 전쟁에 참여할 수 있습니다! 열심히 달려서 자격을 증명하세요! 🚧 &nbsp;&nbsp;&nbsp;&nbsp; 🏰 점령전 진행중...</span>
+      </div>
+    </div>
+    </div>
   <iframe id="mapIframe" src="" style="width:100%; height:100%; border:none; background:#2c2c2c;"></iframe>
 </div>
 
