@@ -10,35 +10,37 @@
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
     
+    /* [수정] 배경은 어둡게, 중앙 정렬 */
     body { 
-    background-color: #222; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-}
+        background-color: #222; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+    }
 
-#gameArea { 
-    position: relative; 
-    width: 100%;
-    max-width: 56.25vh; /* 16:9 비율 유지를 위한 너비 제한 (높이의 0.56배) */
-    height: 100vh;
-    max-height: 100vh;  /* 화면 꽉 채우기 */
+    /* [핵심 수정] 게임 화면의 "실제 크기"를 모바일 해상도로 강제 고정 */
+    #gameArea { 
+        position: relative; 
+        width: 450px;   /* 핸드폰 너비 고정 */
+        height: 800px;  /* 핸드폰 높이 고정 */
+        /* 화면 중앙에 배치를 위해 JS로 transform: scale()을 먹일 예정 */
+        transform-origin: center center;
+        
+        overflow: hidden; 
+        background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); 
+        transition: filter 0.5s; 
+        box-shadow: 0 0 50px rgba(0,0,0,0.5); /* 그림자 */
+        border: 4px solid #333;
+    }
     
-    /* 핵심: 모바일 비율(9:16) 강제 고정 */
-    aspect-ratio: 9/16; 
+    /* 나머지 CSS는 기존과 동일하게 유지하되, 일부 gameArea 의존적인 부분은 자동 해결됨 */
     
-    overflow: hidden; 
-    background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); 
-    transition: filter 0.5s; 
-    box-shadow: 0 0 30px rgba(0,0,0,0.5); 
-}
-    
-    /* [수정 2] 하휘 스킬 배경: 움직임을 위해 repeat-x 설정 */
+    /* [수정 2] 하휘 스킬 배경 */
     #gameArea.sand-bg { 
         background-image: url('Sand.png') !important; 
         background-repeat: repeat-x !important; 
         background-size: auto 100% !important; 
-        background-position: 0 0; /* JS로 제어됨 */
+        background-position: 0 0; 
     }
     #gameArea.sand-bg .bg-layer { opacity: 0; transition: opacity 0.5s; }
 
@@ -46,11 +48,9 @@
     #gameArea.fever-mode { filter: sepia(40%) saturate(180%) hue-rotate(-5deg); }
     #gameArea.sandstorm-mode { filter: sepia(80%) brightness(0.9); }
     
-    /* 일반 쉐이크 */
     #gameArea.shake-screen { animation: screenShake 0.2s infinite; }
     @keyframes screenShake { 0% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } 100% { transform: translate(0, 0); } }
 
-    /* [수정 1] 전찬 액티브: 적당한 지진 효과 (눈 안 아프게 조정됨) */
     #gameArea.gentle-shake { animation: gentleShake 0.15s infinite; }
     @keyframes gentleShake { 
         0% { transform: translate(0, 0); } 
@@ -60,74 +60,62 @@
         100% { transform: translate(0, 0); } 
     }
 
-    #flashEffect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
+    #flashEffect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.1s; }
 
-    /* 전찬 패시브: 지그재그 번개 (SVG 활용) */
     .zigzag-lightning { position: absolute; z-index: 89; pointer-events: none; filter: drop-shadow(0 0 10px yellow); stroke: #fff; stroke-width: 4; fill: none; opacity: 0; animation: flashLightning 0.3s forwards; }
     @keyframes flashLightning { 0% { opacity: 1; } 50% { opacity: 1; } 100% { opacity: 0; } }
 
-    /* [수정 1] 전찬 해머 */
     .hammer-skill { position: absolute; width: 400px; height: 400px; background: url('Hammer.png') no-repeat center/contain; z-index: 45; pointer-events: none; filter: drop-shadow(0 0 20px gold); }
 
-    /* 지은: 음계 및 배경 */
     .music-note { position: absolute; font-size: 40px; font-weight: bold; z-index: 65; pointer-events: none; text-shadow: 2px 2px 0 #fff; animation: noteFloat 1s infinite ease-in-out alternate; }
     @keyframes noteFloat { from { transform: translateY(0); } to { transform: translateY(-15px); } }
     .jieun-wave-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(255,0,150,0.2), rgba(0,204,255,0.2)); z-index: 4; pointer-events: none; opacity: 0; transition: opacity 1s; }
 
-    /* 노엘: 오로라 */
     .noel-aura { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,0,0.4), transparent 70%); box-shadow: 0 0 50px gold; z-index: 49; pointer-events: none; animation: auraPulse 0.5s infinite alternate; }
     @keyframes auraPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } }
 
-    /* 지혜: 힐러 및 기둥 */
     .jihye-healer { position: absolute; width: 70px; height: 70px; background-image: url('Skill_JHA.png'); background-size: contain; background-repeat: no-repeat; z-index: 60; pointer-events: none; transition: left 1.5s ease-out, top 1.5s ease-out; filter: drop-shadow(0 0 15px gold); }
     .holy-light-pillar { position: absolute; width: 100px; height: 100vh; background: linear-gradient(to bottom, transparent, rgba(255, 255, 200, 0.6), transparent); bottom: 0; transform: translateX(-50%); z-index: 59; pointer-events: none; animation: lightPillar 2.0s ease-out forwards; }
     @keyframes lightPillar { 0% { opacity: 0; width: 0; } 20% { opacity: 1; width: 120px; } 80% { opacity: 1; width: 120px; } 100% { opacity: 0; width: 0; } }
 
-    /* 하휘: 인피니티 스톤 & 모래폭풍 */
     .infinity-stone { position: absolute; width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 15px currentColor; z-index: 65; pointer-events: none; border: 2px solid white; }
-    .sandstorm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('noise.png'); background-color: rgba(194, 178, 128, 0.3); z-index: 85; pointer-events: none; opacity: 0; transition: opacity 0.5s; animation: sandMove 0.2s infinite linear; }
+    .sandstorm-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('noise.png'); background-color: rgba(194, 178, 128, 0.3); z-index: 85; pointer-events: none; opacity: 0; transition: opacity 0.5s; animation: sandMove 0.2s infinite linear; }
     @keyframes sandMove { 0% { background-position: 0 0; } 100% { background-position: 100px 50px; } }
     .dust-effect { position: absolute; width: 60px; height: 60px; background: radial-gradient(circle, #d2b48c, transparent); opacity: 0.8; border-radius: 50%; z-index: 80; animation: turnToDust 0.6s ease-out forwards; }
     @keyframes turnToDust { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2) translateY(-20px); opacity: 0; } }
 
-    /* 준: 포탈 & 미니게임 */
     .real-portal { position: absolute; width: 160px; height: 160px; background: radial-gradient(circle, #000, #4b0082, #00ffff); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 40px #00ffff, inset 0 0 60px #000; z-index: 45; transform: translate(-50%, -50%) scale(0); }
     .portal-opening { animation: pOpen 0.5s forwards; }
     .portal-closing { animation: pClose 0.5s forwards; }
     @keyframes pOpen { 0% { transform: translate(-50%, -50%) scale(0); } 100% { transform: translate(-50%, -50%) scale(1); } }
     @keyframes pClose { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(0); } }
 
-    #timeTunnelBg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2900; pointer-events: none; opacity: 0; transition: opacity 0.5s; display: none; }
+    #timeTunnelBg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2900; pointer-events: none; opacity: 0; transition: opacity 0.5s; display: none; }
     .tunnel-star { position: absolute; width: 100px; height: 2px; background: #fff; box-shadow: 0 0 10px #fff; animation: warpSpeed 0.5s linear infinite; }
     @keyframes warpSpeed { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
 
-    #junMiniGameUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
+    #junMiniGameUI { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; color: #fff; text-align: center; }
     .warp-btn { width: 120px; height: 120px; border-radius: 50%; background: #00ffff; color: #000; font-weight: 900; font-size: 24px; border: 5px solid #fff; box-shadow: 0 0 20px #00ffff; margin-top: 30px; display: flex; justify-content: center; align-items: center; animation: pulseBtn 0.2s infinite alternate; cursor: pointer; }
     @keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-    /* 강희: 판넬 */
     .funnel-unit { position: absolute; width: 40px; height: 40px; background: url('Panel.png') no-repeat center/contain; z-index: 60; pointer-events: none; }
     .funnel-laser { position: absolute; height: 6px; background: #ff00ff; box-shadow: 0 0 10px #ff00ff; z-index: 58; transform-origin: left center; opacity: 0; pointer-events: none; }
     .gundam-aura { position: absolute; width: 140px; height: 140px; background: radial-gradient(circle, rgba(0,100,255,0.9), rgba(0,255,255,0.4), transparent 70%); border-radius: 50%; box-shadow: 0 0 50px #0000ff, inset 0 0 20px #fff; z-index: 65; pointer-events: none; transform: translate(-50%, -50%); mix-blend-mode: screen; animation: gundamPulse 0.5s infinite alternate; opacity: 0.9; }
     @keyframes gundamPulse { from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
 
-    /* 예준: 도플갱어 & 날개 */
     .yejun-clone { position: absolute; width: 50px; height: 50px; background-image: url('skin_yejun.png'); background-size: contain; background-repeat: no-repeat; opacity: 0.8; z-index: 49; filter: hue-rotate(180deg) brightness(1.2); }
     .yejun-wing { position: absolute; width: 100px; height: 100px; background: url('Wings.png') no-repeat center/contain; left: -20px; top: -20px; opacity: 0.8; mix-blend-mode: screen; pointer-events: none; }
 
-    /* 스테파니: 케이크 */
     .cake-item { position: absolute; width: 60px; height: 60px; background-size: contain; background-repeat: no-repeat; z-index: 88; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
     .heart-emit { position: absolute; font-size: 30px; color: #ff69b4; font-weight: bold; animation: heartFloat 1s forwards; z-index: 99; }
     @keyframes heartFloat { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
     .cake-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('CakeBack.png') repeat; opacity: 0; pointer-events: none; z-index: 5; transition: opacity 1s; }
 
-    /* 지혜 스킨 변신 */
     .jihye-transform-sphere { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle at center, #fff 20%, #ffd700 80%); box-shadow: 0 0 30px #ffd700, 0 0 60px #fff, inset 0 0 20px #fff; z-index: 52; transform: translate(-50%, -50%); animation: sphereCharge 2s ease-in forwards; mix-blend-mode: screen; }
     @keyframes sphereCharge { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; filter: brightness(2); } 100% { transform: translate(-50%, -50%) scale(3); opacity: 0; } }
     .jihye-unit { position: absolute; width: 50px; height: 50px; background-size: contain; background-repeat: no-repeat; z-index: 55; filter: drop-shadow(0 0 10px cyan); }
     .jihye-missile { position: absolute; width: 24px; height: 24px; background: radial-gradient(circle, #fff, #00b0ff); border-radius: 50%; box-shadow: 0 0 10px #00b0ff; z-index: 66; }
 
-    /* 배경 레이어 */
     .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-repeat: repeat-x; }
     #bgLayer1 { background-image: url("bg_sky.png"); z-index: 1; background-size: auto 100%; background-position: 0 bottom; }
     #bgLayer2 { background-image: url("bg_mountain.png"); z-index: 2; background-size: auto 60%; background-position: 0 bottom; }
@@ -174,7 +162,6 @@
     .enemy-missile { background: radial-gradient(circle, #ff0000, #800000); box-shadow: 0 0 8px #ff0000; }
     .boss-missile { width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff5722); animation: spinMeteor 1s linear infinite; }
     
-    /* 블랙홀 미사일 (Devil5) */
     .black-hole-missile { width: 50px; height: 50px; background: #000; border: 2px solid #800080; box-shadow: 0 0 20px #800080; opacity: 0.5; }
     .black-hole-active { opacity: 1; transform: scale(1.5); background: radial-gradient(circle, #000, #330033); box-shadow: 0 0 30px #000, 0 0 10px #ff00ff; animation: blackHolePulse 0.5s infinite alternate; }
     @keyframes blackHolePulse { from { transform: scale(1.5); } to { transform: scale(1.7); } }
@@ -263,112 +250,134 @@
 
 <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
 <div id="gameArea">
-  <div id="startGuide" class="modal-bg" style="display:flex;">
-    <div class="modal-box">
-      <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법</div>
-      <div style="text-align:left; font-size:15px; line-height:1.6;">
-        • <b>점프:</b> 화면 터치 / Space<br>
-        • <b>스킬:</b> A키 / SKILL 버튼<br>
-        • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
-        [게임안내]<br>
-        ⚔️ <b>200m까지는 초보자 구간입니다<br>
-        🛡️ <b>200m 이후부터 적들이 등장합니다<br>
-        👿 <b>500m마다 강력한 보스가 등장합니다!<br>
-        🌪️ <b>거리가 멀어질수록 속도와 난이도는 증가합니다</b>
+    <div id="startGuide" class="modal-bg" style="display:flex;">
+      <div class="modal-box">
+        <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법</div>
+        <div style="text-align:left; font-size:15px; line-height:1.6;">
+          • <b>점프:</b> 화면 터치 / Space<br>
+          • <b>스킬:</b> A키 / SKILL 버튼<br>
+          • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
+          [게임안내]<br>
+          ⚔️ <b>200m까지는 초보자 구간입니다<br>
+          🛡️ <b>200m 이후부터 적들이 등장합니다<br>
+          👿 <b>500m마다 강력한 보스가 등장합니다!<br>
+          🌪️ <b>거리가 멀어질수록 속도와 난이도는 증가합니다</b>
+        </div>
+        <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
       </div>
-      <button class="start-btn" onclick="startGameNow()">▶ 시작하기 / Start</button>
     </div>
-  </div>
-
-  <div id="bgLayer1" class="bg-layer"></div>
-  <div id="bgLayer2" class="bg-layer"></div>
-  <div id="bgLayer3" class="bg-layer"></div>
-  <div id="speedLines"></div> 
-  <div id="jieunWaveBg" class="jieun-wave-bg"></div>
-  <div id="cakeBg" class="cake-bg"></div>
-  <div id="sandstormOverlay" class="sandstorm-overlay"></div>
   
-  <div id="timeTunnelBg">
-      <div class="tunnel-star" style="top:10%"></div>
-      <div class="tunnel-star" style="top:30%; animation-duration:0.3s"></div>
-      <div class="tunnel-star" style="top:50%; animation-duration:0.7s"></div>
-      <div class="tunnel-star" style="top:70%; animation-duration:0.4s"></div>
-      <div class="tunnel-star" style="top:90%"></div>
-  </div> 
-  <div id="junMiniGameUI">
-    <div style="font-size:30px; font-weight:900; color:#00ffff; margin-bottom:10px;">시공간 초월 중!</div>
-    <div style="font-size:16px; margin-bottom:20px;">화면을 연타하여 거리를 늘리세요!</div>
-    <div style="font-size:50px; font-weight:bold;"><span id="warpDistance">0</span>m</div>
-    <div style="font-size:20px; color:#aaa;">(Max 50m)</div>
-    <div class="warp-btn" ontouchstart="junWarpTap(event)" onclick="junWarpTap(event)">TAP!</div>
-    <div style="margin-top:20px; font-size:14px;">PC: SpaceBar / Mobile: Tap</div>
-  </div>
-
-  <div id="ground"></div> <div id="player"></div>
-
-  <div id="flashEffect"></div>
-
-  <div id="bossContainer">
-    <div id="bossHpBar"><div id="bossHpFill"></div></div>
-    <div id="bossBody"></div>
-  </div>
-  <div id="bossLaser" class="boss-laser"></div>
-
-  <div id="hud">
-    ❤️ <span id="lifeText"></span> 
-    📏 <span id="distanceText">0m</span> 
-    ✝ <span id="faithText"></span>
-    <div style="display:flex; align-items:center; margin-top:4px;">
-        <span style="font-size:14px;">🔥</span>
-        <div id="feverContainer"><div id="feverFill"></div></div>
+    <div id="bgLayer1" class="bg-layer"></div>
+    <div id="bgLayer2" class="bg-layer"></div>
+    <div id="bgLayer3" class="bg-layer"></div>
+    <div id="speedLines"></div> 
+    <div id="jieunWaveBg" class="jieun-wave-bg"></div>
+    <div id="cakeBg" class="cake-bg"></div>
+    <div id="sandstormOverlay" class="sandstorm-overlay"></div>
+    
+    <div id="timeTunnelBg">
+        <div class="tunnel-star" style="top:10%"></div>
+        <div class="tunnel-star" style="top:30%; animation-duration:0.3s"></div>
+        <div class="tunnel-star" style="top:50%; animation-duration:0.7s"></div>
+        <div class="tunnel-star" style="top:70%; animation-duration:0.4s"></div>
+        <div class="tunnel-star" style="top:90%"></div>
+    </div> 
+    <div id="junMiniGameUI">
+      <div style="font-size:30px; font-weight:900; color:#00ffff; margin-bottom:10px;">시공간 초월 중!</div>
+      <div style="font-size:16px; margin-bottom:20px;">화면을 연타하여 거리를 늘리세요!</div>
+      <div style="font-size:50px; font-weight:bold;"><span id="warpDistance">0</span>m</div>
+      <div style="font-size:20px; color:#aaa;">(Max 50m)</div>
+      <div class="warp-btn" ontouchstart="junWarpTap(event)" onclick="junWarpTap(event)">TAP!</div>
+      <div style="margin-top:20px; font-size:14px;">PC: SpaceBar / Mobile: Tap</div>
+    </div>
+  
+    <div id="ground"></div> <div id="player"></div>
+  
+    <div id="flashEffect"></div>
+  
+    <div id="bossContainer">
+      <div id="bossHpBar"><div id="bossHpFill"></div></div>
+      <div id="bossBody"></div>
+    </div>
+    <div id="bossLaser" class="boss-laser"></div>
+  
+    <div id="hud">
+      ❤️ <span id="lifeText"></span> 
+      📏 <span id="distanceText">0m</span> 
+      ✝ <span id="faithText"></span>
+      <div style="display:flex; align-items:center; margin-top:4px;">
+          <span style="font-size:14px;">🔥</span>
+          <div id="feverContainer"><div id="feverFill"></div></div>
+      </div>
+    </div>
+      
+    <div id="pauseBtn" onclick="togglePause()">⏸️</div>
+  
+    <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
+    <div id="dailyMissionBox"></div>
+      
+    <div id="subActionBtn" ontouchstart="handleSubAction(event)" onclick="handleSubAction(event)">
     </div>
   </div>
+  
+  <div id="buffArea"></div>
+  <div id="bossWarning">⚠️ BOSS WARNING!</div>
+  <div id="comboEffect">COMBO +1!</div>
+  <div id="correctEffect">+5 Faith!</div>
+  
+  <div id="pauseModal" class="modal-bg">
+    <div class="modal-box">
+      <div style="font-size:28px; font-weight:800; margin-bottom:15px;">일시정지</div>
+      <button class="action-btn" onclick="resumeGame()">▶ 계속하기</button>
+      <button class="action-btn" style="background:#5d4037;" onclick="exitToMenu()">🏠 메뉴로 나가기</button>
+    </div>
+  </div>
+  
+  <div id="quizModal" class="modal-bg">
+    <div class="modal-box">
+      <div style="font-size:28px; font-weight:800;">성경 퀴즈</div>
+      <div id="quizQuestion" style="margin:20px 0; font-size:18px;"></div>
+      <button class="choice-btn" onclick="answerQuiz('A')" id="btnA"></button>
+      <button class="choice-btn" onclick="answerQuiz('B')" id="btnB"></button>
+      <button class="choice-btn" onclick="answerQuiz('C')" id="btnC"></button>
+    </div>
+  </div>
+  
+  <div id="gameOverModal" class="modal-bg">
+    <div class="modal-box">
+      <div style="font-size:28px; font-weight:800;">GAME OVER</div>
+      <div style="margin:20px 0;"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
+      <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
+      <button class="action-btn" style="background:#5d4037;" onclick="location.reload()">🔄 다시하기</button>
+      <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
+    </div>
+  </div>
+  
+  <div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
+  
+  <script>
+    // [중요] 스케일링 함수 추가
+    function resizeGame() {
+    const gameArea = document.getElementById('gameArea');
+    const targetRatio = 450 / 800; // 목표 비율 (9:16)
+    const windowRatio = window.innerWidth / window.innerHeight;
     
-  <div id="pauseBtn" onclick="togglePause()">⏸️</div>
-
-  <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
-  <div id="dailyMissionBox"></div>
+    let scale;
+    if (windowRatio > targetRatio) {
+        // 화면이 더 넓음 (PC) -> 높이에 맞춤
+        scale = window.innerHeight / 800;
+    } else {
+        // 화면이 더 좁음 (모바일) -> 너비에 맞춤
+        scale = window.innerWidth / 450;
+    }
     
-  <div id="subActionBtn" ontouchstart="handleSubAction(event)" onclick="handleSubAction(event)">
-  </div>
-</div>
+    gameArea.style.transform = `scale(${scale})`;
+    window.gameScale = scale; // 스케일 값 저장
+}
 
-<div id="buffArea"></div>
-<div id="bossWarning">⚠️ BOSS WARNING!</div>
-<div id="comboEffect">COMBO +1!</div>
-<div id="correctEffect">+5 Faith!</div>
-
-<div id="pauseModal" class="modal-bg">
-  <div class="modal-box">
-    <div style="font-size:28px; font-weight:800; margin-bottom:15px;">일시정지</div>
-    <button class="action-btn" onclick="resumeGame()">▶ 계속하기</button>
-    <button class="action-btn" style="background:#5d4037;" onclick="exitToMenu()">🏠 메뉴로 나가기</button>
-  </div>
-</div>
-
-<div id="quizModal" class="modal-bg">
-  <div class="modal-box">
-    <div style="font-size:28px; font-weight:800;">성경 퀴즈</div>
-    <div id="quizQuestion" style="margin:20px 0; font-size:18px;"></div>
-    <button class="choice-btn" onclick="answerQuiz('A')" id="btnA"></button>
-    <button class="choice-btn" onclick="answerQuiz('B')" id="btnB"></button>
-    <button class="choice-btn" onclick="answerQuiz('C')" id="btnC"></button>
-  </div>
-</div>
-
-<div id="gameOverModal" class="modal-bg">
-  <div class="modal-box">
-    <div style="font-size:28px; font-weight:800;">GAME OVER</div>
-    <div style="margin:20px 0;"><b><span id="finalDist"></span>m</b> 달렸습니다!</div>
-    <input id="rankMsg" class="modal-input" type="text" placeholder="소감 입력(선택)" />
-    <button class="action-btn" style="background:#5d4037;" onclick="location.reload()">🔄 다시하기</button>
-    <button class="action-btn" onclick="confirmRanking()">[순위등록]</button>
-  </div>
-</div>
-
-<div id="loadingQuiz">⏳ 성경 문제를 불러오는 중...</div>
-
-<script>
+window.addEventListener('resize', resizeGame);
+setTimeout(resizeGame, 0); // 시작하자마자 실행
+    
   function isColliding(a, b) {
     return (a.x < b.x + b.w && a.x + a.w > b.x &&
             a.y < b.y + b.h && a.y + a.h > b.y);
@@ -748,14 +757,20 @@
   });
     
   function updateInputY(clientY) {
+    const gameArea = document.getElementById("gameArea");
     const rect = gameArea.getBoundingClientRect();
-    // 게임 화면 상단에서부터의 거리 계산
-    targetY = gameArea.offsetHeight - (clientY - rect.top);
+    const scale = window.gameScale || 1;
+    
+    // 마우스 위치가 게임 화면 위에서 몇 픽셀인지 계산 (스케일 역보정)
+    let relativeY = (clientY - rect.top) / scale;
+    
+    // 게임 좌표계 (바닥이 0)로 변환: 전체높이(800) - 위에서부터의 거리
+    targetY = 800 - relativeY;
 }
 
 window.addEventListener('mousemove', e => updateInputY(e.clientY));
 window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
-
+    
   function togglePause() {
       if(!running && !junMiniGameActive) return; 
       running = false;
@@ -2674,10 +2689,12 @@ function triggerJunSkill() {
       const m = document.createElement("div"); 
       m.classList.add("projectile", "black-hole-missile");
       
-      // 투명화된 미사일로 시작 (CSS에서 opacity 처리됨)
-      const rect = bossContainer.getBoundingClientRect();
-      m.x = rect.left; 
-      m.y = rect.top + 40;
+      // [수정] 화면 절대 좌표(rect) 대신 게임 내 상대 좌표 사용
+      // 보스는 오른쪽 끝에서 20px 떨어져 있고 너비가 120px임. 중앙점은 대략 offsetWidth - 80
+      m.x = gameArea.offsetWidth - 80; 
+      // 보스 높이는 퍼센트로 관리됨 (boss.y) -> 픽셀로 변환
+      m.y = (boss.y / 100 * gameArea.offsetHeight) + 40;
+
       m.style.left = m.x + "px"; 
       m.style.top = m.y + "px";
       
@@ -2694,20 +2711,21 @@ function triggerJunSkill() {
       m.vy = (dy / dist) * speed;
       
       m.isBlackHole = true;
-      m.state = 'travel'; // flying state
+      m.state = 'travel'; 
       m.timer = 0;
 
       gameArea.appendChild(m); 
       projectiles.push(m);
   }
 
-  // 기본 미사일 생성 헬퍼
+  // [수정됨] 기본 미사일 생성 헬퍼 (좌표 계산 보정)
   function createBossMissile(speedMult, angleOffset = 0, isAbsAngle = false) {
       const m = document.createElement("div"); 
       m.classList.add("projectile", "boss-missile");
-      const rect = bossContainer.getBoundingClientRect();
-      const startX = rect.left; 
-      const startY = rect.top + 40; 
+      
+      // [수정] 화면 절대 좌표 대신 게임 내 상대 좌표 사용
+      const startX = gameArea.offsetWidth - 80; 
+      const startY = (boss.y / 100 * gameArea.offsetHeight) + 40;
       
       m.x = startX; m.y = startY; 
       m.style.left = startX + "px"; m.style.top = startY + "px";
