@@ -64,6 +64,12 @@
     pointer-events: auto; /* 버튼만 터치 가능 */
   }
   .ui-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  
+  /* [추가] 성주 현황판 버튼 스타일 */
+  .btn-owner-board {
+    background: #FFD700; color: #3e2723;
+    font-weight: bold; border-color: #FF6F00;
+  }
 
   /* 성 위치 잡는 컨테이너 (클릭 영역 아님, 위치만 잡음) */
   .castle-spot {
@@ -72,7 +78,7 @@
     /* 좌표 기준점 */
   }
 
-  /* 3. [수정] 성 정보 박스 자체가 버튼이 됨 */
+  /* 성 정보 박스 자체가 버튼이 됨 */
   .castle-card {
     position: absolute;
     /* 위치는 spot 기준 중앙 정렬 */
@@ -146,13 +152,53 @@
     animation: spin 1s linear infinite; margin-bottom: 15px;
   }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  
+  /* [추가] 성주 현황판 모달 */
+  #ownerBoardModal {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+    z-index: 3000; justify-content: center; align-items: center;
+    backdrop-filter: blur(5px);
+  }
+  .board-box {
+    width: 90%; max-width: 400px; background: #fdf6e3;
+    border: 4px solid #5d4037; border-radius: 8px;
+    padding: 20px; text-align: center;
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.5);
+    max-height: 80vh; overflow-y: auto;
+  }
+  .board-title {
+    font-size: 24px; font-weight: bold; color: #3e2723;
+    margin-bottom: 15px; border-bottom: 3px dashed #8d6e63;
+    padding-bottom: 10px;
+  }
+  .owner-list-item {
+    display: flex; align-items: center;
+    background: #fff; margin-bottom: 8px;
+    padding: 8px; border: 2px solid #d7ccc8;
+    border-radius: 4px; box-shadow: 2px 2px 0 #eee;
+  }
+  .owner-list-icon {
+    width: 40px; height: 40px; border-radius: 4px;
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+    border: 1px solid #000; margin-right: 10px; background-color: #333;
+  }
+  .owner-list-info { flex: 1; text-align: left; }
+  .owner-castle-title { font-size: 14px; font-weight: bold; color: #ff9800; }
+  .owner-player-name { font-size: 16px; color: #333; font-weight: bold; }
+  .btn-close-board {
+    margin-top: 15px; padding: 10px 20px; background: #ef5350;
+    color: white; border: 2px solid #b71c1c; font-family: 'DungGeunMo';
+    cursor: pointer; font-size: 16px; box-shadow: 3px 3px 0 #b71c1c;
+  }
+  .btn-close-board:active { transform: translate(3px, 3px); box-shadow: none; }
 </style>
 </head>
 <body oncontextmenu="return false" onselectstart="return false">
 
   <div class="top-ui">
     <button class="ui-btn" onclick="location.href='menu.html'">← 메뉴</button>
-    <div class="ui-btn" style="background:#333;">🏰 월드맵</div>
+    <button class="ui-btn btn-owner-board" onclick="openOwnerBoard()">👑 성주 현황</button>
   </div>
 
   <div id="loading">
@@ -163,6 +209,15 @@
   <div id="viewport">
     <div id="mapContainer">
       <div id="castlesLayer"></div>
+    </div>
+  </div>
+
+  <div id="ownerBoardModal">
+    <div class="board-box">
+      <div class="board-title">🏰 성주 현황판</div>
+      <div id="ownerListContainer">
+        </div>
+      <button class="btn-close-board" onclick="closeOwnerBoard()">닫기</button>
     </div>
   </div>
 
@@ -185,6 +240,9 @@
     { id: 12, name: "맛디아 성", top: 75, left: 85 }
   ];
 
+  // [추가] 서버에서 가져온 성 데이터를 저장할 변수
+  let cachedCastleData = [];
+
   async function loadMapData() {
     try {
       const res = await fetch(API_URL, {
@@ -194,6 +252,7 @@
         body: JSON.stringify({ type: "getAllCastles" })
       });
       const castleData = await res.json();
+      cachedCastleData = castleData; // 데이터 캐싱 (현황판용)
       renderCastles(castleData);
     } catch (e) {
       console.error(e);
@@ -231,10 +290,10 @@
       spot.style.top = c.top + "%";
       spot.style.left = c.left + "%";
 
-      // [수정] 실제 클릭 가능한 카드 버튼
+      // 실제 클릭 가능한 카드 버튼
       const card = document.createElement("div");
       card.className = "castle-card";
-      card.onclick = () => enterCastle(c.id); // 카드 자체를 눌러야 입장
+      card.onclick = () => enterCastle(c.id); // [수정] 클릭 시 권한 체크 함수 실행
 
       const skinUrl = `${ownerSkin}.png`;
       const fallbackUrl = "disciple.png";
@@ -250,8 +309,71 @@
     });
   }
 
+  // [수정] 입장 시 4000m 달성 여부 체크
   function enterCastle(id) {
+    // 로컬 스토리지에서 저장된 데이터 가져오기
+    const saveStr = localStorage.getItem("run_save");
+    let bestDistance = 0;
+
+    if (saveStr) {
+      try {
+        const saveData = JSON.parse(saveStr);
+        // 저장된 데이터 구조에 따라 키값 조정 (보통 highScore 또는 maxDistance 사용)
+        // 여기서는 안전하게 highScore가 없으면 0으로 처리
+        bestDistance = saveData.highScore || 0; 
+      } catch (e) {
+        console.warn("데이터 파싱 실패", e);
+      }
+    }
+
+    if (bestDistance < 4000) {
+      alert("🚫 [입장 불가]\n\n최고 기록 4000m를 달성해야\n공성전에 참여할 수 있습니다!\n\n(현재 기록: " + Math.floor(bestDistance) + "m)");
+      return;
+    }
+
+    // 조건 충족 시 입장
     window.location.href = `Siege.html?castle=${id}`;
+  }
+
+  // [추가] 성주 현황판 로직
+  function openOwnerBoard() {
+    const modal = document.getElementById("ownerBoardModal");
+    const container = document.getElementById("ownerListContainer");
+    
+    let html = "";
+    CASTLES.forEach(c => {
+        const info = cachedCastleData ? cachedCastleData.find(d => d.id == c.id) : null;
+        
+        let ownerName = "NPC 수호자";
+        let ownerSkin = "C_boss" + c.id;
+        let styleClass = "color:#666;";
+
+        if (info && info.ownerName) {
+            ownerName = `👑 ${info.ownerName}`;
+            ownerSkin = `skin_${info.skin}`;
+            styleClass = "color:#d32f2f;";
+        }
+        
+        const skinUrl = `${ownerSkin}.png`;
+        const fallbackUrl = "disciple.png"; // 스킨 없을시 기본 이미지
+
+        html += `
+          <div class="owner-list-item">
+             <div class="owner-list-icon" style="background-image:url('${skinUrl}'), url('${fallbackUrl}')"></div>
+             <div class="owner-list-info">
+               <div class="owner-castle-title">${c.name}</div>
+               <div class="owner-player-name" style="${styleClass}">${ownerName}</div>
+             </div>
+          </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    modal.style.display = "flex";
+  }
+
+  function closeOwnerBoard() {
+    document.getElementById("ownerBoardModal").style.display = "none";
   }
 
   // 맵 중앙으로 스크롤 이동시키는 함수
