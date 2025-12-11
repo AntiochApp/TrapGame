@@ -10,17 +10,27 @@
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; touch-action: none; font-family: "Pretendard", sans-serif; }
     
-    body { background-color: #222; }
+    body { 
+    background-color: #222; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+}
+
 #gameArea { 
     position: relative; 
-    width: 100%; 
-    max-width: 500px; /* 여기가 핵심! PC에서 500px 너비로 고정 */
-    height: 100vh; 
-    margin: 0 auto;   /* 화면 중앙으로 정렬 */
+    width: 100%;
+    max-width: 56.25vh; /* 16:9 비율 유지를 위한 너비 제한 (높이의 0.56배) */
+    height: 100vh;
+    max-height: 100vh;  /* 화면 꽉 채우기 */
+    
+    /* 핵심: 모바일 비율(9:16) 강제 고정 */
+    aspect-ratio: 9/16; 
+    
     overflow: hidden; 
     background: linear-gradient(#88c6ff 0%, #b7e3ff 45%, #f7f0d9 45%, #f0e0b0 100%); 
     transition: filter 0.5s; 
-    box-shadow: 0 0 30px rgba(0,0,0,0.5); /* 예쁜 그림자 추가 */
+    box-shadow: 0 0 30px rgba(0,0,0,0.5); 
 }
     
     /* [수정 2] 하휘 스킬 배경: 움직임을 위해 repeat-x 설정 */
@@ -641,11 +651,11 @@
       noelFly.style.top = '-50px';
       gameArea.appendChild(noelFly);
 
-      const pRect = { left: playerObj.x, top: window.innerHeight - playerObj.y - playerObj.h }; 
+      const pRect = { left: playerObj.x, top: gameArea.offsetHeight - playerObj.y - playerObj.h }; 
 
       noelFly.animate([
          { left: (window.innerWidth + 100) + 'px', top: '-50px', transform: 'rotate(20deg)' },
-         { left: '120px', top: (window.innerHeight - playerObj.y - 60) + 'px', transform: 'rotate(0deg)' }
+         { left: '120px', top: (gameArea.offsetHeight - playerObj.y - 60) + 'px', transform: 'rotate(0deg)' }
       ], { duration: 800, easing: 'ease-out', fill: 'forwards' }).onfinish = () => {
           noelFly.remove();
            
@@ -679,11 +689,11 @@
       const noel = document.createElement('div');
       noel.className = 'flying-noel';
       noel.style.left = '120px';
-      noel.style.top = (window.innerHeight - playerObj.y - 60) + 'px';
+      noel.style.top = (gameArea.offsetHeight - playerObj.y - 60) + 'px';
       gameArea.appendChild(noel);
 
       noel.animate([
-          { left: '120px', top: (window.innerHeight - playerObj.y - 60) + 'px' },
+          { left: '120px', top: (gameArea.offsetHeight - playerObj.y - 60) + 'px' },
           { left: (window.innerWidth + 200) + 'px', top: '-200px' }
       ], { duration: 800, easing: 'ease-in', fill: 'forwards' }).onfinish = () => noel.remove();
   }
@@ -737,8 +747,14 @@
     if (e.code === "KeyS") handleSubAction(); 
   });
     
-  window.addEventListener('mousemove', e => targetY = window.innerHeight - e.clientY);
-  window.addEventListener('touchmove', e => targetY = window.innerHeight - e.touches[0].clientY);
+  function updateInputY(clientY) {
+    const rect = gameArea.getBoundingClientRect();
+    // 게임 화면 상단에서부터의 거리 계산
+    targetY = gameArea.offsetHeight - (clientY - rect.top);
+}
+
+window.addEventListener('mousemove', e => updateInputY(e.clientY));
+window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
 
   function togglePause() {
       if(!running && !junMiniGameActive) return; 
@@ -787,7 +803,7 @@
 
     projectiles.forEach(p => {
         if (p.isBossMissile && !p.isReflected && !p.isBlackHole) {
-            const dist = Math.hypot(p.x - playerObj.x, p.y - (window.innerHeight - playerObj.y - 30));
+            const dist = Math.hypot(p.x - playerObj.x, p.y - (gameArea.offsetHeight - playerObj.y - 30));
             if (dist < 150) {
                 p.isReflected = true;
                 p.classList.remove('boss-missile');
@@ -815,7 +831,7 @@
   function playerShoot() {
       const m = document.createElement("div"); m.classList.add("player-missile");
       const startX = playerObj.x + 50;
-      const startY = (window.innerHeight - playerObj.y - 40);
+      const startY = (gameArea.offsetHeight - playerObj.y - 40);
       m.style.left = startX + "px"; m.style.top = startY + "px"; 
       gameArea.appendChild(m); playerMissiles.push(m);
       playSound('jump');
@@ -878,11 +894,11 @@
               const unit = document.createElement('div');
               unit.className = 'jihye-unit';
               unit.style.backgroundImage = `url('Skill_JH${i}.png')`;
-              unit.x = -100; unit.y = randBetween(50, window.innerHeight/2);
+              unit.x = -100; unit.y = randBetween(50, gameArea.offsetHeight/2);
               unit.style.left = unit.x + 'px';
               unit.style.top = unit.y + 'px';
               unit.tx = (window.innerWidth / 2) + randBetween(-100, 100);
-              unit.ty = (window.innerHeight / 2) + randBetween(-200, 0);
+              unit.ty = (gameArea.offsetHeight / 2) + randBetween(-200, 0);
               unit.moveTimer = 0;
               unit.fireTimer = 0;
               gameArea.appendChild(unit);
@@ -895,7 +911,7 @@
       const sphere = document.createElement('div');
       sphere.className = 'jihye-transform-sphere';
       sphere.style.left = (playerObj.x + 30) + 'px';
-      sphere.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+      sphere.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
       gameArea.appendChild(sphere);
        
       jihyeEndSphereEl = sphere;
@@ -925,7 +941,7 @@
       gameArea.appendChild(pillar);
 
       healer.style.left = (playerObj.x + 10) + 'px';
-      healer.style.top = (window.innerHeight - playerObj.y - 80) + 'px';
+      healer.style.top = (gameArea.offsetHeight - playerObj.y - 80) + 'px';
       pillar.style.left = (playerObj.x + 30) + 'px';
 
       setTimeout(() => {
@@ -959,7 +975,7 @@ function triggerJunSkill() {
       // 실제 눈에 보이는 CSS 크기(60px)를 기준으로 정중앙 좌표를 다시 계산합니다.
       const visualSize = 60; 
       const playerCenterX = playerObj.x + (visualSize / 2); // 50 + 30 = 80
-      const playerCenterY = window.innerHeight - playerObj.y - (visualSize / 2); // 화면바닥 보정된 중앙값
+      const playerCenterY = gameArea.offsetHeight - playerObj.y - (visualSize / 2); // 화면바닥 보정된 중앙값
 
       portal.style.left = playerCenterX + 'px';
       portal.style.top = playerCenterY + 'px';
@@ -1023,7 +1039,7 @@ function triggerJunSkill() {
            
           // [핵심 로직] 물리 엔진 좌표(playerObj.y)를 시각적 중앙(CSS 50%)과 정확히 동기화
           // 화면 높이 절반 - 플레이어 절반 크기(30px) = 바닥에서의 높이
-          playerObj.y = (window.innerHeight / 2) - 30;
+          playerObj.y = (gameArea.offsetHeight / 2) - 30;
           velocity = 0; // 공중 정지 상태로 시작
 
           // 4. 등장 직후 즉시 조작 활성화 (딜레이 최소화)
@@ -1077,7 +1093,7 @@ function triggerJunSkill() {
   function updateLamb(dt) {
       if(!activeLamb) return;
       const lamb = activeLamb;
-      const pRect = { x: playerObj.x, y: window.innerHeight - playerObj.y - 60 };
+      const pRect = { x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - 60 };
        
       if(lamb.state === 'approach') {
           const targetX = pRect.x - 50; 
@@ -1165,7 +1181,7 @@ function triggerJunSkill() {
           const svg = document.createElementNS(svgNS, "svg");
           svg.classList.add('zigzag-lightning');
           svg.setAttribute("width", window.innerWidth);
-          svg.setAttribute("height", window.innerHeight);
+          svg.setAttribute("height", gameArea.offsetHeight);
           svg.style.left = '0';
           svg.style.top = '0';
 
@@ -1177,7 +1193,7 @@ function triggerJunSkill() {
           let currentY = startY;
            
           // 지그재그 경로 생성
-          while(currentY < window.innerHeight) {
+          while(currentY < gameArea.offsetHeight) {
               currentY += randBetween(20, 50);
               currentX += randBetween(-40, 40);
               points += ` ${currentX},${currentY}`;
@@ -1200,8 +1216,8 @@ function triggerJunSkill() {
       obstacles.forEach(o => {
           if(!o.destroyed && o.x < window.innerWidth) {
               o.destroyed = true;
-              spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
-              spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
+              spawnExplosionEffect(o.x, gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - 50);
+              spawnFaithCoins(o.x, gameArea.offsetHeight - 150, 3, false, true);
               o.remove();
           }
       });
@@ -1274,11 +1290,11 @@ function triggerJunSkill() {
       if(funnels.length >= 8) return;
       const f = document.createElement('div');
       f.className = 'funnel-unit';
-      f.x = -50; f.y = randBetween(50, window.innerHeight-100);
+      f.x = -50; f.y = randBetween(50, gameArea.offsetHeight-100);
       f.style.left = f.x + 'px';
       f.style.top = f.y + 'px';
       f.tx = randBetween(100, window.innerWidth-100);
-      f.ty = randBetween(50, window.innerHeight-100);
+      f.ty = randBetween(50, gameArea.offsetHeight-100);
       f.timer = 0;
       f.fireCD = Math.random() * 4;
       gameArea.appendChild(f);
@@ -1369,7 +1385,7 @@ function triggerJunSkill() {
                 endAura.className = 'gundam-aura';
                 endAura.style.animation = "obsExplode 0.5s ease-out forwards"; 
                 endAura.style.left = (playerObj.x + 30) + 'px';
-                endAura.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+                endAura.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
                 gameArea.appendChild(endAura);
                 setTimeout(() => endAura.remove(), 500);
             }
@@ -1530,16 +1546,16 @@ function triggerJunSkill() {
 
         if(jihyeSphereActive && jihyeSphereEl) {
             jihyeSphereEl.style.left = (playerObj.x + 30) + 'px';
-            jihyeSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+            jihyeSphereEl.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
         }
         if(jihyeEndSphereEl) {
             jihyeEndSphereEl.style.left = (playerObj.x + 30) + 'px';
-            jihyeEndSphereEl.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+            jihyeEndSphereEl.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
         }
 
         if(gundamAura) {
              gundamAura.style.left = (playerObj.x + 30) + 'px';
-             gundamAura.style.top = (window.innerHeight - playerObj.y - 30) + 'px';
+             gundamAura.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
         }
 
         updateLamb(safeDelta);
@@ -1569,7 +1585,7 @@ function triggerJunSkill() {
                         const oRect = o.getBoundingClientRect();
                         if(hRect.right > oRect.left && hRect.left < oRect.right) {
                             o.destroyed = true;
-                            spawnExplosionEffect(o.x, window.innerHeight - parseFloat(o.style.bottom || 0) - 50);
+                            spawnExplosionEffect(o.x, gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - 50);
                             o.remove();
                         }
                     }
@@ -1685,7 +1701,7 @@ function triggerJunSkill() {
                     
                     stone.lifeTime = 10.0; // [추가] 수명 10초 설정
                     
-                    const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+                    const px = playerObj.x + 30; const py = gameArea.offsetHeight - playerObj.y - 30;
                     stone.style.left = px + 'px';
                     stone.style.top = py + 'px';
                     gameArea.appendChild(stone);
@@ -1729,7 +1745,7 @@ function triggerJunSkill() {
                 }
                 const heart = document.createElement('div');
                 heart.className = 'heart-emit'; heart.innerText = "❤️힐링";
-                heart.style.left = (playerObj.x+15)+'px'; heart.style.top = (window.innerHeight - playerObj.y - 40)+'px';
+                heart.style.left = (playerObj.x+15)+'px'; heart.style.top = (gameArea.offsetHeight - playerObj.y - 40)+'px';
                 gameArea.appendChild(heart);
                 setTimeout(()=>heart.remove(), 1000);
                 stephanieHeartTimer = 0;
@@ -1747,7 +1763,7 @@ function triggerJunSkill() {
                 u.moveTimer += safeDelta;
                 if(u.moveTimer > 1.0) {
                     u.tx = (window.innerWidth / 2) + randBetween(-200, 200);
-                    u.ty = (window.innerHeight / 2) + randBetween(-200, 200);
+                    u.ty = (gameArea.offsetHeight / 2) + randBetween(-200, 200);
                     u.moveTimer = 0;
                 }
                 u.x += (u.tx - u.x) * 0.05;
@@ -1768,7 +1784,7 @@ function triggerJunSkill() {
         }
         
         if(infinityStones.length > 0) {
-            const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+            const px = playerObj.x + 30; const py = gameArea.offsetHeight - playerObj.y - 30;
             for(let i=infinityStones.length-1; i>=0; i--) {
                 const s = infinityStones[i];
 
@@ -1812,7 +1828,7 @@ function triggerJunSkill() {
                     if(!s.target || s.target.destroyed || s.target.isDead) { s.state = 'return'; }
                     else {
                         const tx = s.target.x + 30;
-                        const ty = s.target.y || (window.innerHeight - parseFloat(s.target.style.bottom || 0) - 50);
+                        const ty = s.target.y || (gameArea.offsetHeight - parseFloat(s.target.style.bottom || 0) - 50);
                         
                         sx += (tx - sx) * 0.08; 
                         sy += (ty - sy) * 0.08;
@@ -1836,7 +1852,7 @@ function triggerJunSkill() {
         }
         
         if(activeEffects.bobaTime > 0 && bobas.length > 0) {
-            const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+            const px = playerObj.x + 30; const py = gameArea.offsetHeight - playerObj.y - 30;
             
             bobas.forEach(b => {
                 let bx = parseFloat(b.style.left) || px;
@@ -1868,7 +1884,7 @@ function triggerJunSkill() {
                     if(!b.target || b.target.destroyed || b.target.isDead) { b.state = 'return'; }
                     else {
                         const tx = b.target.x + 30;
-                        const ty = b.target.y || (window.innerHeight - parseFloat(b.target.style.bottom || 0) - 50);
+                        const ty = b.target.y || (gameArea.offsetHeight - parseFloat(b.target.style.bottom || 0) - 50);
                         
                         bx += (tx - bx) * 0.08;
                         by += (ty - by) * 0.08;
@@ -1899,7 +1915,7 @@ function triggerJunSkill() {
 
             if(Math.abs(f.tx - f.x) < 20) {
                 f.tx = randBetween(50, window.innerWidth-50);
-                f.ty = randBetween(50, window.innerHeight-50);
+                f.ty = randBetween(50, gameArea.offsetHeight-50);
             }
             
             let crashed = false;
@@ -1908,7 +1924,7 @@ function triggerJunSkill() {
             for(let i=obstacles.length-1; i>=0; i--) {
                 if(crashed) break;
                 const o = obstacles[i];
-                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - (parseFloat(o.style.height));
+                const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - (parseFloat(o.style.height));
                 const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                 
                 if(!o.destroyed && isColliding(fRect, oRect)) {
@@ -1945,8 +1961,8 @@ function triggerJunSkill() {
                 
                 let hit = false;
                 obstacles.forEach(o => {
-                    const oTop = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
-                    const oBottom = window.innerHeight - parseFloat(o.style.bottom || 0);
+                    const oTop = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oBottom = gameArea.offsetHeight - parseFloat(o.style.bottom || 0);
                     if(!hit && oTop < f.y+60 && oBottom > f.y-20 && !o.destroyed && o.x < window.innerWidth) {
                         o.destroyed = true;
                         spawnExplosionEffect(o.x, oTop);
@@ -1972,15 +1988,15 @@ function triggerJunSkill() {
             c.el.y += c.vy;
 
             if(c.el.x < 0 || c.el.x > window.innerWidth) c.vx *= -1;
-            if(c.el.y < 20 || c.el.y > window.innerHeight) c.vy *= -1;
+            if(c.el.y < 20 || c.el.y > gameArea.offsetHeight) c.vy *= -1;
 
             c.el.style.left = c.el.x + 'px';
             c.el.style.bottom = c.el.y + 'px';
             
-            const cRect = {x: c.el.x, y: window.innerHeight - c.el.y - 50, w: 50, h: 50};
+            const cRect = {x: c.el.x, y: gameArea.offsetHeight - c.el.y - 50, w: 50, h: 50};
             obstacles.forEach(o => {
                 if(!o.destroyed) {
-                    const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                     const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                     if(isColliding(cRect, oRect)) {
                         o.destroyed = true;
@@ -2004,7 +2020,7 @@ function triggerJunSkill() {
             if(c.fireTimer > 0.8) {
                 const m = document.createElement("div"); m.classList.add("player-missile");
                 m.style.left = (c.el.x + 50) + 'px'; 
-                m.style.top = (window.innerHeight - c.el.y - 20) + 'px';
+                m.style.top = (gameArea.offsetHeight - c.el.y - 20) + 'px';
                 gameArea.appendChild(m); playerMissiles.push(m);
                 c.fireTimer = 0;
             }
@@ -2030,13 +2046,13 @@ function triggerJunSkill() {
             const c = cakes[i];
             c.y += 300 * safeDelta;
             c.style.top = c.y + 'px';
-            if(c.y > window.innerHeight) { c.remove(); cakes.splice(i,1); continue; }
+            if(c.y > gameArea.offsetHeight) { c.remove(); cakes.splice(i,1); continue; }
             
             const cRect = {x: c.x, y: c.y, w: 60, h: 60};
             let hit = false;
             for(let j=obstacles.length-1; j>=0; j--) {
                 const o = obstacles[j];
-                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                 const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                 
                 if(!o.destroyed && isColliding(cRect, oRect)) {
@@ -2058,7 +2074,7 @@ function triggerJunSkill() {
                 n.className = 'music-note';
                 n.innerText = ['♪', '♫', '♬', '♩'][Math.floor(Math.random()*4)];
                 n.style.color = `hsl(${Math.random()*360}, 100%, 50%)`;
-                n.x = -30; n.y = randBetween(50, window.innerHeight-100);
+                n.x = -30; n.y = randBetween(50, gameArea.offsetHeight-100);
                 n.w = 40; n.h = 40;
                 n.style.left = n.x + 'px';
                 n.style.top = n.y + 'px';
@@ -2077,7 +2093,7 @@ function triggerJunSkill() {
             let hit = false;
             for(let j=obstacles.length-1; j>=0; j--) {
                 const o = obstacles[j];
-                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                 const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                 if(!o.destroyed && isColliding(nRect, oRect)) {
                     o.destroyed = true;
@@ -2113,7 +2129,7 @@ function triggerJunSkill() {
                 m.style.left = m.x + 'px';
                 m.style.top = m.y + 'px';
                 
-                if(m.x > window.innerWidth || m.x < -50 || m.y < -50 || m.y > window.innerHeight + 50) {
+                if(m.x > window.innerWidth || m.x < -50 || m.y < -50 || m.y > gameArea.offsetHeight + 50) {
                     m.remove();
                     jihyeMissiles.splice(i, 1);
                     continue;
@@ -2124,7 +2140,7 @@ function triggerJunSkill() {
                 
                 for(let j=obstacles.length-1; j>=0; j--) {
                     const o = obstacles[j];
-                    const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                    const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                     const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
                     
                     if(!o.destroyed && isColliding(mRect, oRect)) {
@@ -2149,9 +2165,9 @@ function triggerJunSkill() {
                  sandBg.style.backgroundPosition = `${sandBgX}px 0`;
              }
 
-             const pX = playerObj.x; const pY = window.innerHeight - playerObj.y - playerObj.h;
+             const pX = playerObj.x; const pY = gameArea.offsetHeight - playerObj.y - playerObj.h;
              obstacles.forEach(o => {
-                const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+                const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
                 const dist = Math.hypot(o.x - pX, oY - pY);
                 if(!o.destroyed && dist < 250) {
                     o.destroyed = true;
@@ -2204,7 +2220,7 @@ function triggerJunSkill() {
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
             if (activeEffects.magnet > 0) {
-                const px = playerObj.x + 30; const py = window.innerHeight - playerObj.y - 30;
+                const px = playerObj.x + 30; const py = gameArea.offsetHeight - playerObj.y - 30;
                 const ix = it.x + 24; const iy = it.y + 24;
                 const dx = px - ix; const dy = py - iy; const dist = Math.sqrt(dx*dx + dy*dy);
                 if(dist < 400) {
@@ -2219,7 +2235,7 @@ function triggerJunSkill() {
             if (it.x < -60) { it.remove(); items.splice(i, 1); continue; }
             
             const iRect = {x: it.x, y: it.y, w: 48, h: 48};
-            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
 
             if (isColliding(pRect, iRect)) {
                 activateItem(it.dataset.type); it.remove(); items.splice(i, 1);
@@ -2249,7 +2265,7 @@ function triggerJunSkill() {
               coin.y += coin.vy * dt * 2; 
           } 
           else {
-              const targetX = playerObj.x + 30; const targetY = window.innerHeight - playerObj.y - 30;
+              const targetX = playerObj.x + 30; const targetY = gameArea.offsetHeight - playerObj.y - 30;
               const dx = targetX - coin.x; const dy = targetY - coin.y;
 
               if (coin.isAutoCollect || !coin.isManual) {
@@ -2335,7 +2351,7 @@ function triggerJunSkill() {
 
   // [핵심 수정] window.innerWidth 대신 gameArea.offsetWidth 사용
   e.x = gameArea.offsetWidth + 50; 
-  e.y = randBetween(50, window.innerHeight - 150);
+  e.y = randBetween(50, gameArea.offsetHeight - 150);
 
   e.style.left = e.x + "px"; e.style.top = e.y + "px";
   gameArea.appendChild(e); enemies.push(e);
@@ -2465,7 +2481,7 @@ function triggerJunSkill() {
               if(e.isDead) { clearInterval(check); laser.remove(); return; }
 
               duration += 0.1; let laserY = parseFloat(laser.style.top);
-              if(Math.abs((window.innerHeight - playerObj.y) - laserY) < 30 && !invincible) damageLife();
+              if(Math.abs((gameArea.offsetHeight - playerObj.y) - laserY) < 30 && !invincible) damageLife();
               if(duration > 5.0) { 
                   clearInterval(check); 
                   laser.remove(); 
@@ -2489,7 +2505,7 @@ function triggerJunSkill() {
     // [핵심 수정] 아이템 생성 위치 보정
     item.x = gameArea.offsetWidth + 50; 
 
-    item.y = randBetween(100, window.innerHeight - 150);
+    item.y = randBetween(100, gameArea.offsetHeight - 150);
     item.style.left = item.x + "px"; item.style.top = item.y + "px";
     document.getElementById("gameArea").appendChild(item); items.push(item);
 }
@@ -2667,7 +2683,7 @@ function triggerJunSkill() {
       
       // 플레이어 위치 계산
       const pX = playerObj.x + 20; 
-      const pY = window.innerHeight - playerObj.y - 20;
+      const pY = gameArea.offsetHeight - playerObj.y - 20;
       const dx = pX - m.x; 
       const dy = pY - m.y;
       const dist = Math.hypot(dx, dy);
@@ -2707,7 +2723,7 @@ function triggerJunSkill() {
       } else {
           // 플레이어 조준 + 각도 오프셋 (부채꼴)
           const pX = playerObj.x + 20; 
-          const pY = window.innerHeight - playerObj.y - 20;
+          const pY = gameArea.offsetHeight - playerObj.y - 20;
           const dx = pX - startX; 
           const dy = pY - startY; 
           const baseAngle = Math.atan2(dy, dx);
@@ -2741,7 +2757,7 @@ function triggerJunSkill() {
         
         // 피격 판정 타이밍
         setTimeout(() => { 
-            const bossYPx = (100 - boss.y) / 100 * window.innerHeight;
+            const bossYPx = (100 - boss.y) / 100 * gameArea.offsetHeight;
             // 플레이어와 Y축이 겹치면 데미지
             if(playerObj.y > bossYPx - 100 && playerObj.y < bossYPx + 100) {
                 if(!invincible && activeEffects.invincible <= 0) damageLife(); 
@@ -2767,7 +2783,7 @@ function triggerJunSkill() {
     if (boss.hp <= 0) {
         bossContainer.style.transition = "top 1s ease-in"; 
         bossContainer.style.top = "120%"; 
-        spawnParticles(window.innerWidth-100, window.innerHeight-100, 'dust');
+        spawnParticles(window.innerWidth-100, gameArea.offsetHeight-100, 'dust');
         
         setTimeout(() => { 
             bossContainer.style.display = 'none'; 
@@ -2813,7 +2829,7 @@ function triggerJunSkill() {
     }
 
     if (playerObj.y < 0) playerObj.y = 0;
-    if (playerObj.y > window.innerHeight - 110) playerObj.y = window.innerHeight - 110;
+    if (playerObj.y > gameArea.offsetHeight - 110) playerObj.y = gameArea.offsetHeight - 110;
     player.style.bottom = playerObj.y + "px";
 
     const safeActive = (val) => (val && val > 0);
@@ -2832,7 +2848,7 @@ function triggerJunSkill() {
         let hitObs = false;
         for (let k = obstacles.length - 1; k >= 0; k--) {
              let o = obstacles[k];
-             const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+             const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
              const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
              if(!o.destroyed && isColliding(mRect, oRect)) {
                  o.destroyed = true; 
@@ -2903,7 +2919,7 @@ function triggerJunSkill() {
             p.style.left = p.x + "px"; p.style.top = p.y + "px";
         }
 
-        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > window.innerHeight + 100) { 
+        if (p.x < -100 || p.x > window.innerWidth + 100 || p.y < -100 || p.y > gameArea.offsetHeight + 100) { 
             p.remove(); projectiles.splice(i, 1); continue; 
         }
         
@@ -2915,7 +2931,7 @@ function triggerJunSkill() {
              boom.style.left = (p.x - 100) + "px"; boom.style.top = (p.y - 100) + "px";
              gameArea.appendChild(boom); setTimeout(() => boom.remove(), 500);
              
-             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+             const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
              const bRect = {x: p.x - 100, y: p.y - 100, w: 260, h: 260};
 
              if (isColliding(pRect, bRect)) {
@@ -2926,7 +2942,7 @@ function triggerJunSkill() {
 
         // 플레이어 피격 체크 (블랙홀은 위에서 처리)
         if (!p.isReflected && !p.isFading && !p.isBlackHole) {
-            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
             const mRect = {x: p.x, y: p.y, w: 30, h: 30};
             
             if (isColliding(pRect, mRect)) {
@@ -2953,7 +2969,7 @@ function triggerJunSkill() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         if (!safeActive(activeEffects.invincible) && !invincible) {
-            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
             const eRect = {x: e.x, y: e.y, w: (e.type>10?90:60), h: (e.type>10?90:60)};
             
             if (isColliding(pRect, eRect)) {
@@ -2975,18 +2991,18 @@ function triggerJunSkill() {
         o.style.left = o.x + "px";
         
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
-        const oY = window.innerHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
+        const oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
         const oRect = {x: o.x, y: oY, w: rw, h: parseFloat(o.style.height)};
         
         // 노엘 레이저
         if (activeEffects.noelLaser > 0 && !o.destroyed) {
             const beam = document.getElementById('noelBeam');
             if (beam) {
-                const bRect = {x: 170, y: window.innerHeight - playerObj.y - 120, w: window.innerWidth, h: 100};
+                const bRect = {x: 170, y: gameArea.offsetHeight - playerObj.y - 120, w: window.innerWidth, h: 100};
                 if (isColliding(bRect, oRect)) {
                     o.destroyed = true;
                     spawnExplosionEffect(o.x + 30, oY);
-                    spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(10, 31)));
+                    spawnFaithCoins(o.x, gameArea.offsetHeight - 150, Math.floor(randBetween(10, 31)));
                     o.remove(); obstacles.splice(i, 1);
                     showFloatText("💰 대박!");
                     continue;
@@ -2996,11 +3012,11 @@ function triggerJunSkill() {
         
         // 거대화 충돌
         if(activeEffects.giant > 0 && !o.destroyed) {
-             const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+             const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
              if (isColliding(pRect, oRect)) {
                  o.destroyed = true;
                  spawnExplosionEffect(o.x + 30, oY);
-                 spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(1, 6)), false, false);
+                 spawnFaithCoins(o.x, gameArea.offsetHeight - 150, Math.floor(randBetween(1, 6)), false, false);
                  o.remove(); obstacles.splice(i, 1);
                  showFloatText("🦶 밟았다!");
                  continue;
@@ -3011,7 +3027,7 @@ function triggerJunSkill() {
         if (isFeverTime && o.x < 180 && !o.destroyed) {
             o.destroyed = true; 
             spawnExplosionEffect(o.x + 30, oY);
-            spawnFaithCoins(o.x, window.innerHeight - 150, Math.floor(randBetween(2, 6)));
+            spawnFaithCoins(o.x, gameArea.offsetHeight - 150, Math.floor(randBetween(2, 6)));
             o.remove(); obstacles.splice(i, 1);
             showFloatText("💰 격파!");
             continue;
@@ -3031,25 +3047,25 @@ function triggerJunSkill() {
         
         // 지은/하은 스킬 충돌 체크
         if (currentSkin === 'jieun' && activeEffects.summon > 0 && !o.destroyed) {
-            const sRect = {x: playerObj.x - 20, y: window.innerHeight - playerObj.y - playerObj.h - 20, w: playerObj.w + 40, h: playerObj.h + 40};
+            const sRect = {x: playerObj.x - 20, y: gameArea.offsetHeight - playerObj.y - playerObj.h - 20, w: playerObj.w + 40, h: playerObj.h + 40};
             if (isColliding(sRect, oRect)) {
-                o.destroyed = true; spawnExplosionEffect(o.x + 30, oY); spawnFaithCoins(o.x, window.innerHeight - 150, 3, false, true);
+                o.destroyed = true; spawnExplosionEffect(o.x + 30, oY); spawnFaithCoins(o.x, gameArea.offsetHeight - 150, 3, false, true);
                 o.remove(); obstacles.splice(i, 1); showFloatText("💥 파괴!"); continue;
             }
         }
         if (currentSkin === 'haeun' && haeunShieldActive && !o.destroyed) {
-            const sRect = {x: playerObj.x - 10, y: window.innerHeight - playerObj.y - playerObj.h - 10, w: playerObj.w + 20, h: playerObj.h + 20};
+            const sRect = {x: playerObj.x - 10, y: gameArea.offsetHeight - playerObj.y - playerObj.h - 10, w: playerObj.w + 20, h: playerObj.h + 20};
             if (isColliding(sRect, oRect)) {
                 o.destroyed = true; haeunShieldActive = false; removeHaeunShield();
                 spawnExplosionEffect(o.x + 30, oY); let coins = Math.floor(randBetween(5, 11));
-                spawnFaithCoins(o.x, window.innerHeight - 150, coins, false, true);
+                spawnFaithCoins(o.x, gameArea.offsetHeight - 150, coins, false, true);
                 o.remove(); obstacles.splice(i, 1); showFloatText("🛡️ 방어 & 파괴!"); playSound('clear'); continue;
             }
         }
 
         // 일반 충돌 (플레이어 피격)
         if (!isFeverTime && !safeActive(activeEffects.invincible) && !invincible && !safeActive(activeEffects.summon) && !safeActive(activeEffects.turbo) && !(currentSkin === 'haeun' && haeunShieldActive)) {
-            const pRect = {x: playerObj.x, y: window.innerHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
+            const pRect = {x: playerObj.x, y: gameArea.offsetHeight - playerObj.y - playerObj.h, w: playerObj.w, h: playerObj.h};
             if (isColliding(pRect, oRect)) {
                 damageLife(); break;
             }
@@ -3085,7 +3101,7 @@ function triggerJunSkill() {
             b.style.left = b.x+"px";
             b.style.height = "35px";
 
-            let sh = window.innerHeight;
+            let sh = gameArea.offsetHeight;
             if(cnt===2) { if(k===0) b.style.bottom=randBetween(30, sh*0.35)+"px"; else b.style.bottom=randBetween(sh*0.55, sh*0.85)+"px"; }
             else { let r=Math.random(); if(r<0.2) b.style.bottom="0px"; else if(r<0.4) b.style.top="0px"; else b.style.bottom=randBetween(50, sh-120)+"px"; }
             gameArea.appendChild(b); obstacles.push(b);
@@ -3101,7 +3117,7 @@ function triggerJunSkill() {
         b.style.height=randi(90,220)+"px"; b.x=sx; b.style.left=sx+"px"; b.style.bottom="0";
         gameArea.appendChild(b); obstacles.push(b);
     } else {
-        let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, window.innerHeight-th-gap);
+        let th=randi(120,260); let gap=randi(160,220); let bh=Math.max(80, gameArea.offsetHeight-th-gap);
         const t = document.createElement("div"); t.classList.add("obstacle", "obs-cap", "obs-ceil", type);
         t.style.height=th+"px"; t.x=sx; t.style.left=sx+"px"; t.style.top="0";
         const b = document.createElement("div"); b.classList.add("obstacle", "obs-cap", "obs-ground", type);
