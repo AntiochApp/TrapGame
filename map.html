@@ -54,21 +54,42 @@
     z-index: 1000;
     pointer-events: none; /* UI 배경 터치 무시 */
   }
-  .ui-btn {
-    background: #5d4037; color: #fff;
-    border: 3px solid #3e2723;
-    padding: 8px 16px;
-    font-family: 'DungGeunMo', sans-serif;
-    font-size: 16px; cursor: pointer;
-    box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+
+  /* [수정] 픽셀 스타일 버튼 (menu.html 스타일 적용) */
+  .map-pixel-btn {
     pointer-events: auto; /* 버튼만 터치 가능 */
+    position: relative;
+    border: 3px solid #000; border-radius: 8px; 
+    color: #fff; cursor: pointer;
+    font-family: 'DungGeunMo', monospace;
+    font-size: 16px;
+    padding: 8px 16px;
+    transition: all 0.1s;
+    box-shadow: 
+      inset 3px 3px 0 rgba(255,255,255,0.4),
+      4px 4px 0 rgba(0,0,0,0.2),
+      4px 4px 0 2px #000;
+    top: 0; left: 0;
   }
-  .ui-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  .map-pixel-btn:active {
+    top: 4px; left: 4px;
+    box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2); 
+  }
+  .map-pixel-btn:hover { filter: brightness(1.1); }
+
+  /* 뒤로가기 버튼 색상 */
+  .btn-back {
+    background: #8d6e63;
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #5d4037, 4px 4px 0 2px #000;
+  }
   
-  /* [추가] 성주 현황판 버튼 스타일 */
+  /* 성주 현황판 버튼 색상 (눈에 띄는 금색/주황 계열) */
   .btn-owner-board {
-    background: #FFD700; color: #3e2723;
-    font-weight: bold; border-color: #FF6F00;
+    background: #ffb74d; 
+    color: #3e2723;
+    font-weight: bold;
+    box-shadow: inset 3px 3px 0 rgba(255,255,255,0.4), 4px 4px 0 #e65100, 4px 4px 0 2px #000;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
   }
 
   /* 성 위치 잡는 컨테이너 (클릭 영역 아님, 위치만 잡음) */
@@ -117,7 +138,7 @@
     image-rendering: pixelated;
     border: 2px solid #5d4037;
     border-radius: 4px;
-    background-color: #3e2723;
+    background-color: #3e2723; /* 투명 배경일 때 뒤에 깔리는 색 */
   }
 
   .castle-name { 
@@ -197,8 +218,8 @@
 <body oncontextmenu="return false" onselectstart="return false">
 
   <div class="top-ui">
-    <button class="ui-btn" onclick="location.href='menu.html'">← 메뉴</button>
-    <button class="ui-btn btn-owner-board" onclick="openOwnerBoard()">👑 성주 현황</button>
+    <button class="map-pixel-btn btn-back" onclick="goBackToMenu()">← 메뉴</button>
+    <button class="map-pixel-btn btn-owner-board" onclick="openOwnerBoard()">👑 성주 현황</button>
   </div>
 
   <div id="loading">
@@ -243,6 +264,20 @@
   // [추가] 서버에서 가져온 성 데이터를 저장할 변수
   let cachedCastleData = [];
 
+  // [수정] 메뉴로 돌아가기 함수 (부모 창의 모달 닫기)
+  function goBackToMenu() {
+    try {
+      if (window.parent && window.parent.closeMapModal) {
+        window.parent.closeMapModal();
+      } else {
+        // 단독 실행 시 fallback
+        window.location.href = 'menu.html';
+      }
+    } catch(e) {
+      window.location.href = 'menu.html';
+    }
+  }
+
   async function loadMapData() {
     try {
       const res = await fetch(API_URL, {
@@ -279,6 +314,7 @@
       let ownerName = "NPC 수호자";
       let ownerSkin = "C_boss" + c.id; 
       
+      // 유저가 점령한 경우
       if (info && info.ownerName) {
         ownerName = `👑 ${info.ownerName}`;
         ownerSkin = `skin_${info.skin}`;
@@ -293,13 +329,14 @@
       // 실제 클릭 가능한 카드 버튼
       const card = document.createElement("div");
       card.className = "castle-card";
-      card.onclick = () => enterCastle(c.id); // [수정] 클릭 시 권한 체크 함수 실행
+      card.onclick = () => enterCastle(c.id);
 
       const skinUrl = `${ownerSkin}.png`;
-      const fallbackUrl = "disciple.png";
+      // [수정] fallbackUrl 제거: 이미지가 겹쳐 보이지 않도록 수정함.
+      // 이제 skinUrl 하나만 로드하므로, 보스면 보스얼굴, 유저면 유저스킨만 뜸.
 
       card.innerHTML = `
-        <div class="lord-icon" style="background-image:url('${skinUrl}'), url('${fallbackUrl}')"></div>
+        <div class="lord-icon" style="background-image:url('${skinUrl}')"></div>
         <div class="castle-name">${c.name}</div>
         <div class="lord-name">${ownerName}</div>
       `;
@@ -309,7 +346,7 @@
     });
   }
 
-  // [수정] 입장 시 4000m 달성 여부 체크
+  // 입장 시 4000m 달성 여부 체크
   function enterCastle(id) {
     // 로컬 스토리지에서 저장된 데이터 가져오기
     const saveStr = localStorage.getItem("run_save");
@@ -318,8 +355,6 @@
     if (saveStr) {
       try {
         const saveData = JSON.parse(saveStr);
-        // 저장된 데이터 구조에 따라 키값 조정 (보통 highScore 또는 maxDistance 사용)
-        // 여기서는 안전하게 highScore가 없으면 0으로 처리
         bestDistance = saveData.highScore || 0; 
       } catch (e) {
         console.warn("데이터 파싱 실패", e);
@@ -335,7 +370,7 @@
     window.location.href = `Siege.html?castle=${id}`;
   }
 
-  // [추가] 성주 현황판 로직
+  // [수정] 성주 현황판 로직 (이미지 겹침 해결 적용)
   function openOwnerBoard() {
     const modal = document.getElementById("ownerBoardModal");
     const container = document.getElementById("ownerListContainer");
@@ -355,11 +390,11 @@
         }
         
         const skinUrl = `${ownerSkin}.png`;
-        const fallbackUrl = "disciple.png"; // 스킨 없을시 기본 이미지
+        // 여기서도 fallback url 제거
 
         html += `
           <div class="owner-list-item">
-             <div class="owner-list-icon" style="background-image:url('${skinUrl}'), url('${fallbackUrl}')"></div>
+             <div class="owner-list-icon" style="background-image:url('${skinUrl}')"></div>
              <div class="owner-list-info">
                <div class="owner-castle-title">${c.name}</div>
                <div class="owner-player-name" style="${styleClass}">${ownerName}</div>
