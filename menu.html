@@ -792,13 +792,27 @@
     document.getElementById("rankingModal").style.display = "flex";
   }
 
+  // ==========================================
+  // [수정된 성능 최적화] 랭킹 캐싱 로직
+  // ==========================================
+  
   async function loadRanking() {
     const listDiv = document.getElementById("rankingList");
+    
+    // 1. 이미 저장된(캐싱된) 랭킹 데이터가 있는지 확인
+    const cachedRank = sessionStorage.getItem("cached_ranking_data");
+    if (cachedRank) {
+        console.log("⚡ 랭킹: 캐시 데이터 사용");
+        renderRanking(JSON.parse(cachedRank)); // 저장된거 바로 보여줌 (로딩 0초)
+        return; // 서버 요청 안함
+    }
+
+    // 2. 캐시가 없으면 서버에 요청
     try {
       const res = await fetch(API_URL, { 
         method: "POST", 
-        headers: { "Content-Type": "text/plain" },
-        redirect: 'follow',
+        headers: { "Content-Type": "text/plain" }, 
+        redirect: 'follow', 
         body: JSON.stringify({ type: "getRanking" }) 
       });
       const txt = await res.text();
@@ -808,8 +822,19 @@
          return;
       }
 
-      const list = JSON.parse(txt);
+      // 3. 받아온 데이터를 화면에 그리고, 세션에 저장(캐싱)
+      sessionStorage.setItem("cached_ranking_data", txt);
+      renderRanking(JSON.parse(txt));
 
+    } catch (e) {
+      console.warn("Ranking Load Error:", e);
+      listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
+    }
+  }
+
+  // 랭킹 그리는 부분을 분리 (재사용 위해)
+  function renderRanking(list) {
+      const listDiv = document.getElementById("rankingList");
       let html = "";
       if (list.length === 0) {
         html = "<p>아직 등록된 랭킹이 없습니다.</p>";
@@ -833,11 +858,6 @@
         });
       }
       listDiv.innerHTML = html;
-
-    } catch (e) {
-      console.warn("Ranking Load Error:", e);
-      listDiv.innerHTML = "<p>랭킹 로드 실패 :(</p>";
-    }
   }
 
 
