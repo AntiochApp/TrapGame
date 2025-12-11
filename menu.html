@@ -454,8 +454,8 @@
         <span class="map-msg">🚧 4000m를 달성해야 전쟁에 참여할 수 있습니다! 열심히 달려서 자격을 증명하세요! 🚧 &nbsp;&nbsp;&nbsp;&nbsp; 🏰 점령전 진행중...</span>
       </div>
     </div>
-    </div>
-  <iframe id="mapIframe" src="" style="width:100%; height:100%; border:none; background:#2c2c2c;"></iframe>
+  </div>
+  <iframe id="mapIframe" style="width:100%; height:100%; border:none; background:#2c2c2c;" allow="autoplay; fullscreen"></iframe>
 </div>
 
 <script>
@@ -491,24 +491,35 @@
   const SIEGE_THRESHOLD = 4000;
 
   // 공성전 버튼 클릭 시 맵 모달 열기
+  function preloadMap() {
+    const iframe = document.getElementById("mapIframe");
+    // 이미 로드되어 있다면 패스
+    if (!iframe.src || iframe.src === "about:blank" || iframe.src.endsWith('undefined')) {
+        console.log("🗺️ 공성전 맵 미리 로딩 시작...");
+        iframe.src = "/TrapGame/map.html"; 
+    }
+  }
+
+  // 공성전 버튼 클릭 시 (이미 로딩된 화면을 보여줌 -> 즉시 진입)
   function openMapModal() {
     const modal = document.getElementById("mapViewModal");
-    const iframe = document.getElementById("mapIframe");
-    
-    // 맵 URL 로드
-    iframe.src = "/TrapGame/map.html";
+    // 혹시라도 로딩이 안되어있으면 지금이라도 로드
+    preloadMap(); 
     modal.style.display = "flex";
   }
 
-  // 맵 모달 닫기
+  // 맵 모달 닫기 (이제 iframe을 초기화하지 않고 숨기기만 함 -> 재진입 시 로딩 0초)
   function closeMapModal() {
     const modal = document.getElementById("mapViewModal");
-    const iframe = document.getElementById("mapIframe");
-    
     modal.style.display = "none";
-    iframe.src = ""; // 리소스 해제
+    
+    // 주의: 맵을 끄지 않고 숨기기만 하므로, 맵 안의 BGM이 계속 나올 수 있습니다.
+    // 만약 맵을 완전히 리셋하고 싶다면 아래 주석을 해제하세요. (대신 다시 들어갈 때 로딩 걸림)
+    // document.getElementById("mapIframe").src = "/TrapGame/map.html"; // 리로드 방식
   }
 
+  // 페이지 로드 후 1.5초 뒤에 맵 미리 받기 실행 (다른 API 요청 방해 안하게 딜레이)
+  setTimeout(preloadMap, 1500);
 
   // ==========================================
   // 출석체크 로직
