@@ -3292,18 +3292,45 @@ function triggerJunSkill() {
       rankingSaved=true; 
   }
 
-  async function confirmRanking() { 
-      const msg=document.getElementById("rankMsg").value.trim(); 
+  async function confirmRanking(e) {
+      // 이벤트 전파 방지 (혹시 모를 중복 클릭 방지)
+      if(e && e.stopPropagation) e.stopPropagation();
+
+      const btn = document.querySelector("#gameOverModal .action-btn:last-child");
+      const originalText = btn.innerText;
+      const msg = document.getElementById("rankMsg").value.trim();
+
+      // [수정] 로딩 표시
+      btn.innerText = "⏳ 등록 중...";
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+
       try{
           await fetch(API_URL,{
               method:"POST",
               headers: { "Content-Type": "text/plain" },
               redirect: 'follow',
-              body:JSON.stringify({type:"updateComment",id,message:msg})
+              body:JSON.stringify({type:"updateComment", id, message:msg})
           }); 
-          alert("등록완료"); window.location.href="/TrapGame/menu.html";
-      }catch(e){
-          alert("오류"); window.location.href="/TrapGame/menu.html";
+          
+          // [수정] 등록 완료 디자인 (alert 대신 게임 내 텍스트 활용)
+          btn.innerText = "✅ 등록 완료!";
+          
+          // 모달 잠깐 숨기고 이펙트 보여주기
+          document.getElementById("gameOverModal").style.display = "none";
+          showFloatText("🏆 순위 등록 완료!");
+          playSound('clear');
+
+          // 잠시 후 메뉴로 이동
+          setTimeout(() => {
+              window.location.href="/TrapGame/menu.html";
+          }, 1500);
+
+      } catch(e){
+          alert("서버 통신 오류가 발생했습니다.");
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.style.opacity = "1";
       } 
   }
     
