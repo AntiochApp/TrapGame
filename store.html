@@ -120,6 +120,11 @@
     transition: transform 0.1s;
   }
   .item:hover { transform: translateY(-2px); }
+
+  .shop-img-locked {
+    filter: brightness(0) opacity(0.6); /* 검은 그림자처럼 보이게 함 */
+    /* 만약 단순 흑백을 원하시면: filter: grayscale(100%); 을 사용하세요 */
+  }
   
   /* 스킨 전용 레이아웃 */
   .skin-item {
@@ -571,6 +576,10 @@ const SKIN_LIST = [
         if(skin.type === 'Hidden') return; 
         finalBtnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">스킨 구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
         statusDesc = `<span style="color:#999">구매 후 스킬 해금 가능</span>`;
+
+      // [수정] 미보유 상태이므로 그림자 클래스 적용
+        imgClass = "shop-img-locked";
+      
     } else {
         // [수정됨] 보유 중: 업그레이드 버튼과 장착 버튼을 분리해서 표시
         
@@ -605,15 +614,15 @@ const SKIN_LIST = [
     }
 
     const imgName = `skin_${skin.code}`;
-    container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, statusDesc, finalBtnHtml);
+    container.innerHTML += createSkinHTML(imgName, skin.name, skin.type, tagColor, statusDesc, finalBtnHtml, imgClass);
 }
 
-  function createSkinHTML(imgName, name, type, color, desc, btn) {
+  function createSkinHTML(imgName, name, type, color, desc, btn, imgClass = "") {
     const imgSrc = (imgName === 'disciple') ? 'disciple.png' : `${imgName}.png`;
     return `
       <div class="item skin-item">
         <div class="skin-img-box">
-           <img src="${imgSrc}" onerror="this.src='disciple.png'" alt="${name}">
+           <img src="${imgSrc}" class="${imgClass}" onerror="this.src='disciple.png'" alt="${name}">
         </div>
         <div class="skin-info">
           <h2>${name} <span class="skin-tag" style="background:${color}">${type}</span></h2>
