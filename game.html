@@ -154,7 +154,7 @@
     .obs-rock.obs-cap::after { background-color: #BDBDBD; border: 4px solid #424242; }
     .obs-long { width: 240px; height: 35px; background-color: #5D4037; background-image: linear-gradient(0deg, rgba(0,0,0,0.2) 50%, transparent 50%); border: 3px solid #3E2723; border-radius: 8px; box-shadow: 0 5px 5px rgba(0,0,0,0.3); }
     
-    /* [수정 10] 트랩 기둥 (Trap Pillar) */
+    /* [수정 3] 트랩 기둥 (Trap Pillar) - 높이/위치 로직은 JS에서 처리 */
     .obs-trap { filter: drop-shadow(0 0 5px red) sepia(50%) hue-rotate(-50deg); border: 2px solid red !important; }
 
     .obstacle-explosion { position: absolute; z-index: 85; width: 100px; height: 100px; background: radial-gradient(circle, #fff, orange, transparent); border-radius: 50%; animation: obsExplode 0.4s ease-out forwards; transform: translate(-50%, -50%); }
@@ -185,14 +185,13 @@
     .reflected-missile { background: #00ff00 !important; box-shadow: 0 0 15px #00ff00; }
     @keyframes spinMeteor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* [수정 5] 스나이퍼 조준선 */
     .sniper-line { position: absolute; height: 1px; background: red; z-index: 49; transform-origin: left center; opacity: 0.8; box-shadow: 0 0 5px red; }
 
     .particle { position: absolute; z-index: 90; pointer-events: none; border-radius: 50%; animation: particleFade 0.8s ease-out forwards; }
     @keyframes particleFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
 
     #hud { position: absolute; z-index: 900; top: 12px; left: 12px; color: #3a2513; font-size: 18px; font-weight: 700; background: var(--hud-bg); border-radius: 10px; padding: 8px 12px; border: 3px solid var(--hud-border); }
-    #pauseBtn, #abilityBtn, #subActionBtn, #missionToggleBtn, #dailyMissionBox, #buffArea, #junMiniGameUI, #bossWarning, .modal-bg, #loadingQuiz, #speedLines, #timeTunnelBg { position: absolute !important; }
+    #pauseBtn, #abilityBtn, #subActionBtn, #buffArea, #junMiniGameUI, #bossWarning, .modal-bg, #loadingQuiz, #speedLines, #timeTunnelBg { position: absolute !important; }
     #feverContainer { width: 150px; height: 12px; background: #333; border: 2px solid #3a2513; border-radius: 6px; margin-top: 5px; overflow: hidden; display: flex; }
     #feverFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.2s; }
     
@@ -204,32 +203,32 @@
     }
     #pauseBtn:active { transform: scale(0.9); }
 
-    /* [수정] 미션 버튼 (아이콘만 깔끔하게) */
-    #missionToggleBtn { 
-        position: fixed; z-index: 900; top: 70px; right: 20px; 
-        font-size: 35px; cursor: pointer; 
-        filter: drop-shadow(2px 2px 0px #fff) drop-shadow(0 0 5px rgba(0,0,0,0.5));
-        transition: transform 0.1s;
+    /* [수정 4] 버프 UI 위치: 오른쪽 맨 아래 */
+    #buffArea { 
+        position: absolute; z-index: 2147483647; 
+        bottom: 20px; right: 20px; 
+        display: flex; flex-direction: column-reverse; 
+        align-items: flex-end; gap: 8px; pointer-events: none; 
     }
-    #missionToggleBtn:active { transform: scale(0.9); }
-
-    #buffArea { position: absolute; z-index: 2147483647; bottom: 120px; right: 15px; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; pointer-events: none; }
     .buff-tag { background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 14px; border-radius: 8px; font-weight: 700; border-left: 5px solid; font-size: 14px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
     .buff-tag.passive-cd { opacity: 0.7; border-color: #aaa; }
 
-    #abilityBtn { position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); }
+    /* [수정 2] 스킬 버튼 중앙 맨 아래로 이동 */
+    #abilityBtn { 
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+        width: 80px; height: 80px; background: #ff5722; color: white; border-radius: 50%; border: 4px solid #fff; font-weight: bold; font-size: 20px; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); 
+    }
     #abilityBtn.cooldown { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; font-size: 24px; }
 
-    /* [수정 2] inline 이벤트 제거를 위해 HTML onclick 삭제됨 */
-    #subActionBtn { position: fixed; bottom: 150px; left: 20px; width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fff; color: white; font-weight: 900; font-size: 20px; text-align: center; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.1s, background-color 0.2s; }
+    /* [수정 2] 공격/방어 버튼 왼쪽 맨 아래로 이동 */
+    #subActionBtn { 
+        position: fixed; bottom: 20px; left: 20px; 
+        width: 100px; height: 100px; border-radius: 50%; border: 4px solid #fff; color: white; font-weight: 900; font-size: 20px; text-align: center; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.6); transition: transform 0.1s, background-color 0.2s; 
+    }
     #subActionBtn:active { transform: scale(0.9); }
     #subActionBtn.cooldown { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
     .btn-attack { background-color: #D32F2F !important; }
     .btn-defence { background-color: #1976D2 !important; }
-
-    /* [수정 11] 기본적으로 숨김 처리 */
-    #dailyMissionBox { display: none; position: fixed; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 13px; z-index: 800; pointer-events: none; border: 2px solid #3a2513; }
-    .mission-done { color: #4caf50; text-decoration: line-through; }
 
     #bossContainer { position: absolute; right: -200px; top: 50%; width: 120px; height: 120px; z-index: 55; display: none; transition: right 1s ease-out; }
     #bossBody { width: 100%; height: 100%; background: url('boss.png') no-repeat center/contain; image-rendering: pixelated; filter: drop-shadow(0 0 10px red); animation: bossFloat 2s ease-in-out infinite; }
@@ -270,7 +269,6 @@
     }
     #loadingQuiz { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; color: #fff; font-size: 22px; font-weight: 700; z-index: 20001; }
 
-    /* [수정 6, 7] Lamb.png -> Lam.png */
     .lamb-unit { position: absolute; width: 60px; height: 60px; background: url('Lam.png') no-repeat center/contain; z-index: 51; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3)); }
     .lamb-msg { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #fff; border: 3px solid #3a2513; padding: 6px 12px; border-radius: 15px; font-size: 14px; font-weight: 800; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); color: #3a2513; }
     .lamb-msg::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 8px 0; border-style: solid; border-color: #3a2513 transparent; display: block; width: 0; }
@@ -290,8 +288,8 @@
         <div style="font-size:28px; font-weight:800; margin-bottom:18px;">게임 방법</div>
         <div style="text-align:left; font-size:15px; line-height:1.6;">
           • <b>점프:</b> 화면 터치 / Space<br>
-          • <b>스킬:</b> A키 / SKILL 버튼<br>
-          • <b>공격/방어:</b> S키 / Attack 버튼 (200m+)<br><br>
+          • <b>스킬:</b> A키 / SKILL 버튼 (중앙 하단)<br>
+          • <b>공격/방어:</b> S키 / Attack 버튼 (좌측 하단)<br><br>
           [게임안내]<br>
           ⚔️ <b>200m까지는 초보자 구간입니다<br>
           🛡️ <b>200m 이후부터 적들이 등장합니다<br>
@@ -347,11 +345,7 @@
     </div>
       
     <div id="pauseBtn" ontouchstart="togglePause(event)" onclick="togglePause(event)">⏸️</div>
-    <div id="missionToggleBtn" ontouchstart="toggleMissionBox(event)" onclick="toggleMissionBox(event)">📋</div>
-  
     <div id="abilityBtn" ontouchstart="useAbility(event)" onclick="useAbility(event)">SKILL</div>
-    <div id="dailyMissionBox"></div>
-      
     <div id="subActionBtn"></div>
 
     <div id="buffArea"></div> 
@@ -449,7 +443,6 @@
   let name = localStorage.getItem("run_name") || "Tester";
   let saveData = JSON.parse(localStorage.getItem("run_save") || "{}");
 
-  // [수정 1] 미사일 데미지 및 장애물 내구도 설정
   let missileLevel = saveData.missileLevel || 0;
   let playerDamage = 1 + missileLevel; 
 
@@ -461,11 +454,7 @@
     
   const collectionBuff = hasFullCollection();
 
-  let daily = JSON.parse(localStorage.getItem("dailyMission") || "{}");
-  function initDailyMission() { return { date: new Date().toDateString(), run200: false, quiz3: 0, faith20: 0, completed: false, version: '3.0' }; }
-  if (!daily.date || daily.date !== new Date().toDateString() || daily.version !== '3.0') {
-    daily = initDailyMission(); localStorage.setItem("dailyMission", JSON.stringify(daily));
-  }
+  // [수정 1] 일일 미션 변수 및 함수 제거
 
   let life = 10 + (saveData.extraLife || 0);
   let maxLife = 10 + (saveData.extraLife || 0);
@@ -531,7 +520,6 @@
   let speedLines = document.getElementById("speedLines");
   let timeTunnelBg = document.getElementById("timeTunnelBg");
 
-  // [수정 0] 플레이어 시작 위치를 50px로 고정
   let playerObj = { x: 50, y: 40, w: 40, h: 50 }; 
   let velocity = 0; 
   let gravity = -0.12; let jumpPower = Math.max(3, 4.2 - agility * 0.05);
@@ -549,9 +537,8 @@
     
   let obstacleTimer = 0; let nextObstacleTime = 2.0;
   let enemySpawnTimer = 0;
-  let itemTimer = 0; let nextItemTime = 15; // [수정 7] 아이템 쿨타임 증가 (8->15)
+  let itemTimer = 0; let nextItemTime = 15;
   let abilityCD = 0;
-  let missionUpdateTimer = 0;
     
   let jeonchanTimer = 0;
   let haeunLifeTimer = 0;
@@ -620,7 +607,6 @@
 
   function randBetween(min, max) { return Math.random() * (max - min) + min; }
 
-  // [수정 2] Defence 버튼 이벤트 리스너 분리 등록
   function setupActionButtons() {
       const btn = document.getElementById('subActionBtn');
       // 기존 인라인 이벤트 제거 후 등록
@@ -794,14 +780,14 @@
 
   document.addEventListener("touchstart", (e) => {
       if(junMiniGameActive) { junWarpTap(e); return; }
-      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn') || e.target.closest('.warp-btn') || e.target.closest('#missionToggleBtn')) return;
+      if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn') || e.target.closest('.warp-btn')) return;
       if (!running) return;
       e.preventDefault(); jump();
   }, {passive: false});
 
   document.addEventListener("mousedown", (e) => {
        if(junMiniGameActive) { junWarpTap(e); return; }
-       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn') || e.target.closest('.warp-btn') || e.target.closest('#missionToggleBtn')) return;
+       if(e.target.closest('.choice-btn') || e.target.closest('#abilityBtn') || e.target.closest('#subActionBtn') || e.target.closest('#pauseBtn') || e.target.closest('.warp-btn')) return;
        if (!running) return;
        jump();
   });
@@ -835,21 +821,7 @@ window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
       document.getElementById('pauseModal').style.display = 'flex';
   }
 
-  // [수정 11] 미션 창 토글 함수
-  function toggleMissionBox(e) {
-      if(e) { 
-          e.preventDefault(); 
-          e.stopPropagation(); 
-      }
-      
-      const box = document.getElementById('dailyMissionBox');
-      if (box.style.display === 'none' || box.style.display === '') {
-          updateDailyMissionUI();
-          box.style.display = 'block';
-      } else {
-          box.style.display = 'none';
-      }
-  }
+  // [수정 1] 일일미션 토글 함수 삭제
 
   function resumeGame() {
       document.getElementById('pauseModal').style.display = 'none';
@@ -1545,36 +1517,7 @@ function triggerJunSkill() {
     else { abilityBtn.classList.remove('cooldown'); abilityBtn.innerHTML = "SKILL"; }
   }
 
-  let lastMissionHTML = "";
-  function updateDailyMissionUI() {
-    const box = document.getElementById('dailyMissionBox');
-    if (daily.completed || isBossBattle) { box.style.display = 'none'; return; }
-    
-    // [수정 11] 일일미션은 버튼을 눌렀을 때만 보임 (토글)
-    
-    const m1 = daily.run200 ? 'mission-done' : ''; const m2 = daily.quiz3 >= 3 ? 'mission-done' : ''; const m3 = daily.faith20 >= 20 ? 'mission-done' : '';
-    const newHTML = `
-      <div style="margin-bottom:5px; font-weight:bold; border-bottom:1px solid #555; padding-bottom:3px;">📅 일일 미션</div>
-      <div class="mission-item ${m1}">🏃 200m 달리기</div>
-      <div class="mission-item ${m2}">🧠 퀴즈 3회 (${daily.quiz3}/3)</div>
-      <div class="mission-item ${m3}">✝ Faith 20 (${Math.min(daily.faith20, 20)}/20)</div>
-    `;
-    if(newHTML !== lastMissionHTML) { box.innerHTML = newHTML; lastMissionHTML = newHTML; }
-  }
-
-  function checkMissions() {
-    if (daily.completed) return;
-    if(distance < 5) return; 
-    let changed = false;
-    if (!daily.run200 && distance >= 200) { daily.run200 = true; changed = true; }
-    if (daily.run200 && daily.quiz3 >= 3 && daily.faith20 >= 20) {
-        daily.completed = true; faith += 200;
-        saveData.faith = faith; document.getElementById("faithText").innerText = faith;
-        showFloatText("🎉 일일 미션 완료! (+200 Faith)"); playSound('clear');
-        saveProgress(); changed = true; updateDailyMissionUI();
-    }
-    if(changed) { localStorage.setItem("dailyMission", JSON.stringify(daily)); updateDailyMissionUI(); }
-  }
+  // [수정 1] 일일 미션 UI 업데이트 함수 삭제 및 체크 함수 삭제
 
   function gameLoop(now) {
     if (!running) return;
@@ -1583,10 +1526,7 @@ function triggerJunSkill() {
 
     try {
         updateBuffUI(safeDelta);
-        checkMissions();
-        
-        missionUpdateTimer += safeDelta;
-        if(missionUpdateTimer > 1.0) { updateDailyMissionUI(); missionUpdateTimer = 0; }
+        // [수정 1] 미션 체크 로직 삭제
         
         if(coinCombo > 0) {
             coinComboTimer += safeDelta;
@@ -2262,7 +2202,7 @@ function triggerJunSkill() {
         updateFaithCoinsLogic(safeDelta);
         
         itemTimer += safeDelta;
-        if (itemTimer >= nextItemTime && !isJunTimeTravel) { spawnItem(); itemTimer = 0; nextItemTime = 15 + Math.random() * 5; } // [수정 7] 쿨타임 증가
+        if (itemTimer >= nextItemTime && !isJunTimeTravel) { spawnItem(); itemTimer = 0; nextItemTime = 15 + Math.random() * 5; }
 
         for (let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
@@ -2330,7 +2270,7 @@ function triggerJunSkill() {
                   let gain = 1;
                   if(collectionBuff && Math.random() < 0.1) gain = 2;
 
-                  faith += gain; daily.faith20 += gain; 
+                  faith += gain; 
                   document.getElementById("faithText").innerText = faith;
                   playSound('item'); 
                   
@@ -2386,7 +2326,7 @@ function triggerJunSkill() {
     if (type >= 11 && type <= 15) {
         e.style.backgroundImage = `url('B_Enemy0${type - 10}.png')`;
         e.style.width = "90px"; e.style.height = "90px";
-        e.hp = 15 + (type - 11) * 3; // [수정 5] HP 상향 (15~)
+        e.hp = 15 + (type - 11) * 3; 
     } else {
         e.style.backgroundImage = `url('enemy${type}.png')`; 
         e.style.width = "60px"; e.style.height = "60px";
@@ -2398,7 +2338,6 @@ function triggerJunSkill() {
 
     e.x = gameArea.offsetWidth + 50; 
     
-    // [수정] B_Enemy03(폭격기)은 상단 스폰
     if (type === 13) e.y = 60; 
     else e.y = randBetween(50, gameArea.offsetHeight - 150);
 
@@ -2406,7 +2345,6 @@ function triggerJunSkill() {
     gameArea.appendChild(e); enemies.push(e);
   }
 
-  // [수정 4, 5] 중형 적 패턴 로직 (가로 이동 방지 & 특수 패턴)
   function updateEnemies(dt) {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i]; e.timer += dt;
@@ -2614,8 +2552,8 @@ function triggerJunSkill() {
     else if(type === 'faith') { 
         let gain = 10;
         if(collectionBuff) gain = 11;
-        faith += gain; daily.faith20 += gain; 
-        updateDailyMissionUI(); showFloatText(`📘 Faith +${gain}`); 
+        faith += gain;
+        showFloatText(`📘 Faith +${gain}`); 
     }
     document.getElementById("faithText").innerText = faith;
   }
@@ -2623,7 +2561,6 @@ function triggerJunSkill() {
   function startBossBattle() {
     isBossBattle = true; bossLevel++; 
     
-    // [수정 6] 보스 위치/속도 강제 초기화 (제자리 멈춤 버그 해결)
     boss.y = 50;
     boss.vy = 0.5;
     bossContainer.style.top = "50%";
@@ -2667,7 +2604,6 @@ function triggerJunSkill() {
     bossBody.classList.remove('boss-rage'); 
     
     setTimeout(() => { bossContainer.style.right = '20px'; }, 100);
-    document.getElementById('dailyMissionBox').style.display = 'none'; 
     saveProgress();
   }
 
@@ -2868,12 +2804,8 @@ function triggerJunSkill() {
             invincible = false; 
             activeEffects.invincible = 0; 
             
-            // 미션 박스 표시 (토글 상태에 따라 다름, 일단 아이콘만 보임)
-            document.getElementById('missionToggleBtn').style.display = 'flex';
-            
             const reward = 100 + (bossLevel * 20);
-            faith += reward; daily.faith20 += reward; 
-            updateDailyMissionUI();
+            faith += reward;
             
             showFloatText(`🎉 보스 처치! (+${reward} Faith)`); 
             playSound('clear');
@@ -2920,10 +2852,9 @@ function triggerJunSkill() {
         let hitObs = false;
         for (let k = obstacles.length - 1; k >= 0; k--) {
              let o = obstacles[k];
-             // [수정 9] 천장 장애물 충돌 박스 보정
              let oY;
              if (o.classList.contains('obs-ceil')) {
-                 oY = parseFloat(o.style.top) || 0; // 천장 기준
+                 oY = parseFloat(o.style.top) || 0;
              } else {
                  oY = gameArea.offsetHeight - parseFloat(o.style.bottom || 0) - parseFloat(o.style.height);
              }
@@ -2931,14 +2862,13 @@ function triggerJunSkill() {
              const oRect = {x: o.x, y: oY, w: 60, h: parseFloat(o.style.height)};
              
              if(!o.destroyed && isColliding(mRect, oRect)) {
-                 // [수정 1] 미사일 데미지 및 HP 처리
                  o.hp = (o.hp || 11) - playerDamage;
                  if (o.hp <= 0) {
                      o.destroyed = true; 
                      spawnExplosionEffect(o.x, oY);
                      o.remove(); obstacles.splice(k, 1);
                  } else {
-                     spawnParticles(o.x, oY, 'spark'); // 데미지 이펙트
+                     spawnParticles(o.x, oY, 'spark');
                  }
                  
                  m.remove(); playerMissiles.splice(i, 1);
@@ -2953,7 +2883,7 @@ function triggerJunSkill() {
             const eRect = {x: e.x, y: e.y, w: (e.type>10?90:60), h: (e.type>10?90:60)};
             
             if (isColliding(mRect, eRect)) {
-                e.hp -= playerDamage; // [수정] 업그레이드 데미지 적용
+                e.hp -= playerDamage;
                 m.remove(); playerMissiles.splice(i, 1);
                 const ex = document.createElement('div'); ex.className = 'explosion-area';
                 ex.style.left = eRect.x + 'px'; ex.style.top = eRect.y + 'px'; ex.style.width='60px'; ex.style.height='60px';
@@ -2996,7 +2926,6 @@ function triggerJunSkill() {
             }
         } else {
             p.x += p.vx * delta; 
-            // [수정] 중력 폭탄 (Bomber)
             if (p.isBomb) {
                 p.vy += 800 * delta; // 중력 가속도
             }
@@ -3067,7 +2996,7 @@ function triggerJunSkill() {
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
-        // [수정 10] 트랩 기둥 고속 이동
+        
         let moveSpeed = gameSpeed;
         if (o.classList.contains('obs-trap')) moveSpeed *= 2.0;
         
@@ -3076,7 +3005,6 @@ function triggerJunSkill() {
         
         let rw = 60; if(o.classList.contains('obs-long')) rw = 240;
         
-        // [수정 9] 충돌 박스 보정
         let oY;
         if (o.classList.contains('obs-ceil')) {
              oY = parseFloat(o.style.top) || 0;
@@ -3125,9 +3053,9 @@ function triggerJunSkill() {
             o.remove(); obstacles.splice(i, 1); obstacleSurviveCount++;
             if(!isFeverTime) feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
             if (obstacleSurviveCount >= 5) {
-                combo++; faith++; daily.faith20++; saveData.faith = faith; document.getElementById("faithText").innerText = faith;
+                combo++; faith++; document.getElementById("faithText").innerText = faith;
                 const ce = document.getElementById("comboEffect"); ce.style.display = "block"; ce.innerText = `COMBO +${combo}!`; setTimeout(() => ce.style.display = "none", 1000);
-                obstacleSurviveCount = 0; saveProgress(); updateDailyMissionUI();
+                obstacleSurviveCount = 0; saveProgress();
             }
             continue;
         }
@@ -3155,7 +3083,7 @@ function triggerJunSkill() {
                 damageLife(); break;
             }
         }
-        if(currentSkin === 'stephanie' && o.x < 50 && !o.passed) { faith++; daily.faith20++; document.getElementById("faithText").innerText = faith; o.passed = true; }
+        if(currentSkin === 'stephanie' && o.x < 50 && !o.passed) { faith++; document.getElementById("faithText").innerText = faith; o.passed = true; }
     }
   }
 
@@ -3166,16 +3094,30 @@ function triggerJunSkill() {
     const randi = (min,max)=>Math.floor(Math.random()*(max-min))+min;
     const gameWidth = gameArea.offsetWidth; 
 
-    // [수정 1] 장애물 기본 HP 설정
     const OBS_HP = 11;
 
-    // [수정 10] 트랩 기둥 확률적 생성
+    // [수정 3] 트랩 기둥: 높이 증가(화면 중간 넘게), 위/아래 랜덤
     if (distance > 300 && Math.random() < 0.15) {
         const b = document.createElement("div"); 
-        b.classList.add("obstacle", "obs-cap", "obs-ground", "obs-log", "obs-trap");
-        b.style.height = randi(150, 250) + "px"; 
-        b.x = gameWidth + 80; b.style.left = b.x + "px"; b.style.bottom = "0";
+        b.classList.add("obstacle", "obs-cap", "obs-trap");
+        
+        // 높이를 화면의 60% ~ 85% 정도로 설정
+        const h = randi(gameArea.offsetHeight * 0.6, gameArea.offsetHeight * 0.85);
+        b.style.height = h + "px"; 
+        
+        b.x = gameWidth + 80; 
+        b.style.left = b.x + "px"; 
         b.hp = OBS_HP;
+
+        // 위 또는 아래 랜덤 등장
+        if (Math.random() < 0.5) {
+            b.classList.add("obs-ground");
+            b.style.bottom = "0";
+        } else {
+            b.classList.add("obs-ceil");
+            b.style.top = "0";
+        }
+
         gameArea.appendChild(b);
         obstacles.push(b);
         return;
@@ -3265,7 +3207,11 @@ function triggerJunSkill() {
     }
 
     life--; document.getElementById("lifeText").innerText=life;
-    invincible=true; player.style.opacity="0.4"; setTimeout(()=>{invincible=false; player.style.opacity="1";},800);
+    // [수정 5] 피격 시 무적 2초 (버프 UI에는 뜨지 않음)
+    invincible=true; 
+    player.style.opacity="0.4"; 
+    setTimeout(()=>{invincible=false; player.style.opacity="1";}, 2000);
+    
     playSound('hit');
     if(life<=0) gameOver();
   }
@@ -3277,7 +3223,6 @@ function triggerJunSkill() {
       lastTime=performance.now(); 
       if(sounds['bgm']) sounds['bgm'].play().catch(e=>console.log("BGM Error:", e));
       requestAnimationFrame(gameLoop); 
-      updateDailyMissionUI(); 
   }
     
   async function saveProgress() { 
@@ -3310,14 +3255,12 @@ function triggerJunSkill() {
   }
 
   async function confirmRanking(e) {
-      // 이벤트 전파 방지 (혹시 모를 중복 클릭 방지)
       if(e && e.stopPropagation) e.stopPropagation();
 
       const btn = document.querySelector("#gameOverModal .action-btn:last-child");
       const originalText = btn.innerText;
       const msg = document.getElementById("rankMsg").value.trim();
 
-      // [수정] 로딩 표시
       btn.innerText = "⏳ 등록 중...";
       btn.disabled = true;
       btn.style.opacity = "0.7";
@@ -3330,15 +3273,12 @@ function triggerJunSkill() {
               body:JSON.stringify({type:"updateComment", id, message:msg})
           }); 
           
-          // [수정] 등록 완료 디자인 (alert 대신 게임 내 텍스트 활용)
           btn.innerText = "✅ 등록 완료!";
           
-          // 모달 잠깐 숨기고 이펙트 보여주기
           document.getElementById("gameOverModal").style.display = "none";
           showFloatText("🏆 순위 등록 완료!");
           playSound('clear');
 
-          // 잠시 후 메뉴로 이동
           setTimeout(() => {
               window.location.href="/TrapGame/menu.html";
           }, 1500);
@@ -3380,37 +3320,32 @@ function triggerJunSkill() {
     document.getElementById("quizModal").style.display = "none";
     
     if (sel === window.correctAnswer) {
-      // [수정 8] 정답 시: 거리 30m 추가
       const ef = document.getElementById("correctEffect");
       ef.innerText = "🚀 +30m 전진!";
-      ef.style.color = "#00ffcc"; // 긍정적 색상
+      ef.style.color = "#00ffcc"; 
       ef.style.display = "block"; 
       setTimeout(() => (ef.style.display = "none"), 800);
       
-      distance += 30; // 실제 거리 추가
+      distance += 30; 
       document.getElementById("distanceText").innerText = Math.floor(distance) + "m";
       showFloatText("🚀 워프 성공!");
       
-      daily.quiz3++; 
-      localStorage.setItem("dailyMission", JSON.stringify(daily)); 
       saveProgress();
       
     } else { 
-      // [수정 8] 오답 시: 신앙심 -30 (0 미만으로 내려가지 않음)
       const ef = document.getElementById("correctEffect");
       ef.innerText = "📉 신앙심 -30";
-      ef.style.color = "#ff0000"; // 부정적 색상
+      ef.style.color = "#ff0000"; 
       ef.style.display = "block";
       setTimeout(() => (ef.style.display = "none"), 800);
 
-      faith = Math.max(0, faith - 30); // 0 밑으로 안 내려가게 방어
+      faith = Math.max(0, faith - 30); 
       document.getElementById("faithText").innerText = faith;
       saveData.faith = faith;
       showFloatText("💔 오답입니다...");
       saveProgress();
     }
     
-    // 퀴즈가 끝나면 게임 재개 (오답이어도 게임오버가 아님)
     if (life > 0) { 
         running = true; 
         lastTime = performance.now(); 
