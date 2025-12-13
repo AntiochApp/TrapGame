@@ -2322,7 +2322,7 @@ function triggerJunSkill() {
   function spawnEnemy(type) {
     const e = document.createElement("div"); e.classList.add("enemy");
 
-    // 이미지 매핑
+    // 이미지 및 크기 설정
     if (type >= 11 && type <= 15) {
         e.style.backgroundImage = `url('B_Enemy0${type - 10}.png')`;
         e.style.width = "90px"; e.style.height = "90px";
@@ -2334,12 +2334,26 @@ function triggerJunSkill() {
     }
 
     e.style.backgroundColor = 'transparent'; 
-    e.type = type; e.timer = 0; e.state = 'enter'; 
-
+    e.type = type; 
+    e.timer = 0; 
+    
+    // [중요] 상태 관리용 변수 추가
+    e.state = 'enter'; // 초기 상태: 등장
+    
+    // 시작 위치 (화면 바깥 오른쪽)
     e.x = gameArea.offsetWidth + 50; 
     
+    // [중요] 머물러야 할 목표 X 좌표 (화면 오른쪽 100~250px 안쪽 랜덤)
+    e.targetX = gameArea.offsetWidth - randBetween(100, 250);
+
+    // Y 좌표 설정
     if (type === 13) e.y = 60; 
     else e.y = randBetween(50, gameArea.offsetHeight - 150);
+    
+    // [중요] 기준 Y 좌표 (위아래 움직임의 중심점)
+    e.baseY = e.y;
+    e.oscillationSpeed = randBetween(300, 600); // 위아래 움직임 속도 랜덤
+    e.oscillationRange = randBetween(50, 100);  // 위아래 움직임 폭 랜덤
 
     e.style.left = e.x + "px"; e.style.top = e.y + "px";
     gameArea.appendChild(e); enemies.push(e);
@@ -2349,6 +2363,7 @@ function triggerJunSkill() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i]; e.timer += dt;
 
+        // 레이저/스나이퍼 등 UI 위치 동기화
         if(e.laserWarning) { e.laserWarning.style.width = e.x + "px"; e.laserWarning.style.top = (e.y + 45) + "px"; }
         if(e.laserBeam) { e.laserBeam.style.width = e.x + "px"; e.laserBeam.style.top = (e.y + 15) + "px"; }
         if(e.sniperLine) { 
@@ -2357,118 +2372,166 @@ function triggerJunSkill() {
             e.sniperLine.style.top = (e.y + 45) + "px";
         }
 
+        // 스킬 처치 로직
         if (activeEffects.noelLaser > 0 && e.x < gameArea.offsetWidth) {
             destroyEnemy(e, i); continue;
         }
-
         if (isFeverTime) {
            if (!e.feverTimer) e.feverTimer = 0;
            if (e.x < gameArea.offsetWidth) e.feverTimer += dt;
            if (e.feverTimer > 1.0) { destroyEnemy(e, i); continue; }
         }
 
-        if(e.state === 'enter') {
-            e.x -= 150 * dt;
-            const targetX = gameArea.offsetWidth - 120; // 우측 대기 지점
-            if (e.x < targetX) { 
-                e.x = targetX;
-                e.state = 'attack'; 
-                e.timer = 0; 
-                e.moveY = 0;
-            }
-        } else if (e.state === 'attack') {
-            const pY = gameArea.offsetHeight - playerObj.y - 50; // 플레이어 중심 Y
+        // ====================================================
+        // [수정된 적 AI 동작 로직]
+        // ====================================================
 
-            // 일반 적 (왼쪽으로 지나감)
-            if (e.type <= 10) {
-                if (e.type === 1) { 
-                    if (e.timer < 2.0) e.y += Math.sin(e.timer * 5) * 2; 
-                    else e.x -= 300 * dt; 
-                }
-                else if (e.type >= 2 && e.type <= 5) {
-                    e.y += Math.sin(Date.now() / 400) * 1.5;
-                    e.x -= 200 * dt;
-                }
-                // 발사 로직
-                if (e.type === 2 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
-                else if (e.type === 3 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
-                else if (e.type === 4 && e.timer > 1.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
-                else if (e.type === 5 && e.timer > 1.0 && !e.isFiring) { fireEnemyLaser(e); }
-            }
-            
-            // [Elite Mob] 중형 적 패턴 (화면 우측 고정)
-            else {
-                // Type 11: 추적자 (Tracker)
-                if (e.type === 11) {
-                    e.y += (pY - e.y) * 2.0 * dt; // 부드러운 추적
-                    if(e.timer > 1.5) { spawnEnemyProjectile(e.x, e.y+45, 'single', e); e.timer = 0; }
-                }
-                // Type 12: 스나이퍼 (Pattern A)
-                else if (e.type === 12) {
-                    if (!e.subState) e.subState = 'move';
-                    
-                    if (e.subState === 'move') {
-                        e.y += Math.sin(Date.now() / 300) * 2;
-                        if(e.timer > 2.0) { e.subState = 'lock'; e.timer = 0; }
-                    } else if (e.subState === 'lock') {
-                        // 조준선 표시
-                        if(!e.sniperLine) {
-                            const line = document.createElement('div');
-                            line.className = 'sniper-line';
-                            gameArea.appendChild(line);
-                            e.sniperLine = line;
-                        }
-                        if(e.timer > 0.8) {
-                            // 발사
-                            const p = createProj(e.x, e.y+45, -900, 0, e); // 초고속
-                            p.style.backgroundColor = "purple";
-                            e.sniperLine.remove(); e.sniperLine = null;
-                            e.subState = 'move'; e.timer = 0;
-                        }
-                    }
-                }
-                // Type 13: 폭격기 (Pattern B)
-                else if (e.type === 13) {
-                    // 상단 고정, 좌우 살짝 이동
-                    e.x = (gameArea.offsetWidth - 120) + Math.sin(Date.now()/500) * 30;
-                    if (e.timer > 2.0) {
-                        const p = createProj(e.x + 30, e.y+80, 0, 0, e);
-                        p.vx = -100; // 약간 왼쪽으로
-                        p.vy = 400; // 아래로 떨어짐 (중력 가속도 시뮬)
-                        p.isBomb = true; // 구분을 위해 플래그
-                        e.timer = 0;
-                    }
-                }
-                // Type 14: 기관포병 (Gatling)
-                else if (e.type === 14) {
-                    e.y += Math.sin(Date.now()/150) * 5; // 빠른 진동
-                    if(e.timer > 2.0) {
-                        spawnEnemyProjectile(e.x, e.y+45, 'fan', e);
-                        setTimeout(()=>spawnEnemyProjectile(e.x, e.y+45, 'fan', e), 200);
-                        setTimeout(()=>spawnEnemyProjectile(e.x, e.y+45, 'fan', e), 400);
-                        e.timer = 0;
-                    }
-                }
-                // Type 15: 커맨더 (Commander)
-                else if (e.type === 15) {
-                    e.y += Math.cos(Date.now()/1000) * 1; 
-                    if(e.timer > 3.0) {
-                        spawnEnemyProjectile(e.x, e.y+45, 'explode', e);
-                        e.timer = 0;
-                    }
-                }
+        // 1. 등장 (Enter): 화면 밖에서 목표 지점(targetX)까지 이동
+        if(e.state === 'enter') {
+            e.x -= 200 * dt; // 등장 속도
+            // 목표 지점에 도달하면 'idle' 상태로 전환
+            if (e.x <= e.targetX) {
+                e.x = e.targetX;
+                e.state = 'idle';
+                e.timer = 0;
             }
         }
         
+        // 2. 전투 대기 (Idle): 위아래로 움직이며 공격
+        else if (e.state === 'idle') {
+            // [세로 이동] 기준점(baseY)을 중심으로 위아래 사인파 이동
+            // Type 13(폭격기)나 Type 11(추적자)은 고유 패턴 유지, 나머지는 위아래 무빙
+            if (e.type !== 11 && e.type !== 13) {
+                e.y = e.baseY + Math.sin(Date.now() / e.oscillationSpeed) * e.oscillationRange;
+                
+                // 화면 밖으로 나가지 않게 보정
+                if(e.y < 20) e.y = 20;
+                if(e.y > gameArea.offsetHeight - 80) e.y = gameArea.offsetHeight - 80;
+            }
+
+            // [공격 패턴]
+            // Type 1: 몸통박치기 (일정 시간마다 돌진)
+            if (e.type === 1) {
+                if (e.timer > 3.0) { // 3초마다 돌진 시도
+                    e.state = 'dash_warn'; // 경고 상태로 전환
+                    e.timer = 0;
+                }
+            }
+            // Type 2~5: 원거리 공격 (제자리에서 쏨)
+            else if (e.type <= 10) {
+                 if (e.type === 2 && e.timer > 2.0) { spawnEnemyProjectile(e.x, e.y + 30, 'single', e); e.timer = 0; }
+                 else if (e.type === 3 && e.timer > 2.0) { spawnEnemyProjectile(e.x, e.y + 30, 'fan', e); e.timer = 0; }
+                 else if (e.type === 4 && e.timer > 2.0) { spawnEnemyProjectile(e.x, e.y + 30, 'explode', e); e.timer = 0; }
+                 else if (e.type === 5 && e.timer > 3.0 && !e.isFiring) { fireEnemyLaser(e); e.timer = 0; }
+            }
+            // Elite Mobs (Type 11~) 기존 로직 유지
+            else {
+                handleEliteLogic(e, dt);
+            }
+        }
+
+        // 3. [Type 1 전용] 돌진 경고 (뒤로 살짝 뺌)
+        else if (e.state === 'dash_warn') {
+            e.x += 100 * dt; // 뒤로 움찔
+            if (e.timer > 0.5) {
+                e.state = 'dashing';
+                e.timer = 0;
+                playSound('jump'); // 돌진 효과음(점프음 재활용)
+            }
+        }
+
+        // 4. [Type 1 전용] 돌진 (왼쪽으로 빠르게)
+        else if (e.state === 'dashing') {
+            e.x -= 800 * dt; // 매우 빠르게 돌진
+            
+            // 화면 왼쪽 끝 근처(50px)까지 오거나 1.5초 지나면 복귀
+            if (e.x < 50 || e.timer > 1.5) {
+                e.state = 'return';
+                e.timer = 0;
+            }
+        }
+
+        // 5. [Type 1 전용] 복귀 (원래 자리로 돌아감)
+        else if (e.state === 'return') {
+            const dx = e.targetX - e.x;
+            const dy = e.baseY - e.y;
+            
+            e.x += dx * 0.05; // 부드러운 감속 이동 (Lerp)
+            e.y += dy * 0.05;
+
+            // 거의 도착했으면 다시 idle
+            if (Math.abs(dx) < 10) {
+                e.state = 'idle';
+                e.timer = 0;
+            }
+        }
+
+        // 좌표 적용
         e.style.left = e.x + "px"; e.style.top = e.y + "px";
         
-        if (e.type <= 10 && e.x < -100) { 
+        // 버그 방지: 혹시라도 너무 멀리 벗어나면 삭제
+        if (e.x < -300) { 
             e.isDead = true; 
             if(e.laserWarning) e.laserWarning.remove();
             if(e.laserBeam) e.laserBeam.remove();
             e.remove(); enemies.splice(i, 1); 
         }
     }
+  }
+
+  // 중형 적(Elite) 패턴 처리용 보조 함수
+  function handleEliteLogic(e, dt) {
+        const pY = gameArea.offsetHeight - playerObj.y - 50; 
+
+        // Type 11: 추적자 (Y축만 플레이어 따라다님)
+        if (e.type === 11) {
+            e.y += (pY - e.y) * 2.0 * dt; 
+            if(e.timer > 1.5) { spawnEnemyProjectile(e.x, e.y+45, 'single', e); e.timer = 0; }
+        }
+        // Type 12: 스나이퍼
+        else if (e.type === 12) {
+             e.y = e.baseY + Math.sin(Date.now() / 300) * 30; // 제자리 무빙
+             if (!e.subState) e.subState = 'move';
+             if (e.subState === 'move') {
+                 if(e.timer > 2.0) { e.subState = 'lock'; e.timer = 0; }
+             } else if (e.subState === 'lock') {
+                 if(!e.sniperLine) {
+                     const line = document.createElement('div'); line.className = 'sniper-line';
+                     gameArea.appendChild(line); e.sniperLine = line;
+                 }
+                 if(e.timer > 0.8) {
+                     const p = createProj(e.x, e.y+45, -900, 0, e); p.style.backgroundColor = "purple";
+                     if(e.sniperLine){ e.sniperLine.remove(); e.sniperLine = null; }
+                     e.subState = 'move'; e.timer = 0;
+                 }
+             }
+        }
+        // Type 13: 폭격기 (상단에서 좌우 이동)
+        else if (e.type === 13) {
+             e.x = e.targetX + Math.sin(Date.now()/500) * 50; 
+             if (e.timer > 2.0) {
+                 const p = createProj(e.x + 30, e.y+80, -100, 400, e); p.isBomb = true;
+                 e.timer = 0;
+             }
+        }
+        // Type 14: 기관포
+        else if (e.type === 14) {
+             e.y = e.baseY + Math.sin(Date.now()/150) * 5; 
+             if(e.timer > 2.0) {
+                 spawnEnemyProjectile(e.x, e.y+45, 'fan', e);
+                 setTimeout(()=>spawnEnemyProjectile(e.x, e.y+45, 'fan', e), 200);
+                 setTimeout(()=>spawnEnemyProjectile(e.x, e.y+45, 'fan', e), 400);
+                 e.timer = 0;
+             }
+        }
+        // Type 15: 커맨더
+        else if (e.type === 15) {
+             e.y = e.baseY + Math.cos(Date.now()/1000) * 20; 
+             if(e.timer > 3.0) {
+                 spawnEnemyProjectile(e.x, e.y+45, 'explode', e);
+                 e.timer = 0;
+             }
+        }
   }
 
   function destroyEnemy(e, index) {
