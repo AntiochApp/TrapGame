@@ -278,6 +278,99 @@
     .angel-wing-effect { position: absolute; width: 150px; height: 150px; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; font-size: 100px; z-index: 100; text-shadow: 0 0 20px gold, 0 0 40px white; animation: wingRise 2s ease-out forwards; pointer-events: none; }
     .angel-wing-effect::after { content: '🪽'; }
     @keyframes wingRise { 0% { opacity: 0; transform: translate(-50%, -20%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 80% { opacity: 1; transform: translate(-50%, -80%) scale(1.3); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1.5); } }
+  
+  /* [패치] 히든 캐릭터 전용 이펙트 스타일 */
+    .light-sword {
+        position: absolute; width: 30px; height: 100px;
+        background: url('skin_Hidden_Skin1_2.png') no-repeat center/contain;
+        z-index: 88; pointer-events: none;
+        filter: drop-shadow(0 0 15px gold);
+        animation: swordFall 0.4s linear forwards;
+    }
+    @keyframes swordFall { from { transform: translateY(-100px); } to { transform: translateY(100vh); } }
+
+    .angel-heal-unit {
+        position: absolute; width: 120px; height: 120px;
+        background: url('skin_Hidden_Skin1_3.png') no-repeat center/contain;
+        z-index: 95; pointer-events: none;
+        animation: angelFade 3s ease-out forwards;
+        filter: drop-shadow(0 0 20px white);
+    }
+    @keyframes angelFade { 
+        0% { opacity: 0; transform: translate(-50%, -20%); } 
+        20% { opacity: 1; transform: translate(-50%, -50%); } 
+        80% { opacity: 1; transform: translate(-50%, -60%); } 
+        100% { opacity: 0; transform: translate(-50%, -80%); } 
+    }
+
+    .aeran-flower-bg {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: url('skin_Hidden_Skin2_2.png') repeat-x;
+        background-size: auto 100%;
+        z-index: 4; opacity: 0; transition: opacity 1s; pointer-events: none;
+        animation: bgLoop 20s linear infinite;
+    }
+    @keyframes bgLoop { from { background-position: 0 0; } to { background-position: -2000px 0; } }
+
+    .flower-missile {
+        position: absolute; width: 40px; height: 40px;
+        background-image: url('Flower.png'); 
+        background-size: contain; z-index: 85; pointer-events: none;
+        animation: flowerFall 2.5s linear infinite;
+    }
+    @keyframes flowerFall { 
+        0% { transform: translateY(-50px) rotate(0deg); } 
+        100% { transform: translateY(100vh) rotate(360deg); } 
+    }
+
+    .aeran-halo {
+        position: absolute; width: 150px; height: 150px;
+        background: url('skin_Hidden_Skin2_3.png') no-repeat center/contain;
+        z-index: 49; pointer-events: none;
+        left: 50%; top: 50%; transform: translate(-50%, -50%);
+        animation: haloExpand 2s ease-out forwards;
+        mix-blend-mode: screen;
+    }
+    @keyframes haloExpand { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 50% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+
+    .jongrak-kid {
+        position: absolute; width: 50px; height: 50px;
+        background-size: contain; background-repeat: no-repeat;
+        z-index: 55; filter: drop-shadow(0 0 5px white);
+        transition: left 0.5s, top 0.5s;
+    }
+    .heart-missile {
+        position: absolute; font-size: 24px;
+        z-index: 60; animation: spinHeart 1s infinite linear;
+    }
+    @keyframes spinHeart { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .jongrak-light {
+        position: absolute; width: 180px; height: 180px;
+        background: url('skin_Hidden_Skin3_2.png') no-repeat center/contain;
+        z-index: 48; pointer-events: none;
+        left: 50%; top: 50%; transform: translate(-50%, -50%);
+        animation: lightBurst 2s ease-out forwards;
+    }
+    @keyframes lightBurst { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 50% { opacity: 1; filter: brightness(2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); } }
+
+    .revive-quake { animation: quake 0.5s infinite; }
+    @keyframes quake { 0% { transform: translate(0,0); } 25% { transform: translate(-10px, 10px); } 50% { transform: translate(10px, -10px); } 75% { transform: translate(-10px, -10px); } 100% { transform: translate(0,0); } }
+    
+    .holy-resurrection {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: white; z-index: 9999; pointer-events: none;
+        opacity: 0; transition: opacity 1s;
+        display: flex; justify-content: center; align-items: center;
+        flex-direction: column;
+    }
+    .resurrection-text {
+        font-size: 40px; font-weight: 900; color: #333;
+        text-shadow: 0 0 20px gold; margin-bottom: 20px;
+        animation: textPop 2s ease-out forwards; text-align: center;
+    }
+    @keyframes textPop { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    
   </style>
 </head>
 
@@ -473,7 +566,15 @@
       'noel': 2, 'jeonchan': 2, 'jaeguk': 1, 'hahwi': 2, 'jihye': 2, 
       'jun': 2, 'stephanie': 2, 'yejun': 1, 'ganghui': 2, 'jieun': 1
   };
-
+    
+  let hiddenTransformActive = false; // 변신 활성화 여부
+  let hiddenAttackCooldown = 0;      // 이목사 공격 쿨타임
+  let hiddenHealTimer = 0;           // 3종 공통 힐링 타이머
+  let hiddenReviveUsed = false;      // 3종 공통 부활 사용 여부
+  let aeranFlowerTimer = 0;          // 박전도사 꽃 타이머
+  let jongrakKids = [];              // 권사님 소환수
+  let jongrakKidFireTimer = 0;       // 권사님 소환수 공격 타이머
+    
   const SKIN_DATA = {
     default: { type: "none" }, 
     noel: { type: "Active", cd: 60 },  
@@ -488,7 +589,13 @@
     ganghui: { type: "Active", cd: 60 },
     jieun: { type: "Active", cd: 60 }
   };
-    
+
+   SKIN_DATA['Hidden_Skin1'] = { type: "Active", cd: 10 }; // 이목사
+   SKIN_DATA['Hidden_Skin2'] = { type: "Active", cd: 10 }; // 박전도사
+   SKIN_DATA['Hidden_Skin3'] = { type: "Active", cd: 10 }; // 권사님
+
+  const HIDDEN_SKIN_CODES = ["Hidden_Skin1", "Hidden_Skin2", "Hidden_Skin3"];
+      
   const PASSIVE_COOLDOWNS = {
       'jeonchan': 15, 'jieun': 40, 'haeun': 25, 'jihye': 25, 'jun': 30,
       'noel': 30, 'hahwi': 30, 'yejun': 50, 'stephanie': 30, 'ganghui': 10
@@ -507,6 +614,9 @@
   const gameArea = document.getElementById("gameArea");
   const player = document.getElementById("player");
   const bg1 = document.getElementById("bgLayer1"); const bg2 = document.getElementById("bgLayer2"); const bg3 = document.getElementById("bgLayer3");
+  const aeranBg = document.createElement('div');
+  aeranBg.className = 'aeran-flower-bg';
+  gameArea.appendChild(aeranBg);
 
   if (currentSkin !== 'default') player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
   else player.style.backgroundImage = `url('disciple.png')`;
@@ -836,6 +946,19 @@ window.addEventListener('touchmove', e => updateInputY(e.touches[0].clientY));
 
   function handleSubAction() {
       if (!running) return;
+      
+      // [패치] 이목사 변신 상태일 때 특수 공격
+      if (currentSkin === 'Hidden_Skin1' && hiddenTransformActive) {
+          if (hiddenAttackCooldown <= 0) {
+              if (faith >= 10) {
+                  triggerJaegwanSword();
+              } else {
+                  showFloatText("신앙심 부족! (10)");
+              }
+          }
+          return;
+      }
+
       if (isBossBattle) useShield();
       else if (distance >= 200) playerShoot();
   }
@@ -1326,36 +1449,30 @@ function triggerJunSkill() {
 
   function useAbility(e) {
     if(e) e.stopPropagation();
-    if(!running || abilityCD > 0) return;
-    let reqLvl = activeSkillLevel[currentSkin] || 1;
-    if (skinLvl < reqLvl) {
-        showFloatText("🔒 스킬 미개방 (Lv." + reqLvl + ")");
+    if(!running) return;
+
+    // [패치] 히든 스킨 변신 토글 로직
+    if (HIDDEN_SKIN_CODES.includes(currentSkin)) {
+        if (abilityCD > 0 && !hiddenTransformActive) {
+             showFloatText("⏳ 쿨타임 중");
+             return;
+        }
+        toggleHiddenTransform();
         return;
     }
-    const s = SKIN_DATA[currentSkin];
+
+    if(abilityCD > 0) return;
+    let reqLvl = activeSkillLevel[currentSkin] || 1;
+    if (skinLvl < reqLvl) { showFloatText("🔒 스킬 미개방 (Lv." + reqLvl + ")"); return; }
     
-    if(currentSkin === 'noel') {
-      showFloatText("🌊 에너지 파!");
-      activeEffects.noelLaser = 10; 
-      const beam = document.createElement('div');
-      beam.id = 'noelBeam'; beam.className = 'noel-beam';
-      gameArea.appendChild(beam);
-      gameArea.classList.add('shake-screen');
-      playSound('clear'); 
-    } 
+    const s = SKIN_DATA[currentSkin];
+    // 기존 스킨 로직들
+    if(currentSkin === 'noel') { activeEffects.noelLaser = 10; showFloatText("🌊 에너지 파!"); playSound('clear'); } 
     else if(currentSkin === 'jaeguk') { triggerJaegukBobas(); }
     else if(currentSkin === 'hahwi') { triggerHahwiSkill(); }
     else if(currentSkin === 'jihye') { triggerJihyeSkill(); }
     else if(currentSkin === 'jun') { triggerJunSkill(); }
-    else if(currentSkin === 'yejun') { 
-        activeEffects.fly = 20; 
-        targetY = playerObj.y; 
-        
-        const wings = document.createElement('div');
-        wings.className = 'yejun-wing';
-        player.appendChild(wings);
-        showFloatText("✈️ 무중력 제어"); 
-    } 
+    else if(currentSkin === 'yejun') { activeEffects.fly = 20; targetY = playerObj.y; const w = document.createElement('div'); w.className = 'yejun-wing'; player.appendChild(w); showFloatText("✈️ 무중력 제어"); } 
     else if(currentSkin === 'jieun') { triggerJieunMusicWave(); }
     else if(currentSkin === 'jeonchan') { triggerJeonchanHammer(); }
     else if(currentSkin === 'ganghui') { triggerGanghuiGundam(); }
@@ -1363,12 +1480,13 @@ function triggerJunSkill() {
 
     abilityCD = s.cd;
   }
-
+    
   function updateBuffUI(delta) {
     const buffContainer = document.getElementById("buffArea"); 
     let html = "";
     if(collectionBuff) html += `<div class="buff-tag" style="border-color:#e040fb; order:999;">✨ 컬렉션 보너스 (Faith +10%)</div>`;
 
+    // 1. 피버 타임 로직
     if (!isFeverTime) {
         document.getElementById("feverFill").style.width = feverGauge + "%";
         if(feverGauge >= MAX_FEVER) startFeverTime();
@@ -1378,61 +1496,63 @@ function triggerJunSkill() {
         if(feverGauge <= 0) endFeverTime();
     }
 
+    // 2. [패치] 히든 스킨 3종 전용 로직 (패시브 힐링 + 변신 관리)
+    if (HIDDEN_SKIN_CODES.includes(currentSkin) && running) {
+        hiddenHealTimer += delta;
+        if (hiddenHealTimer >= 40.0) {
+            triggerHiddenHeal();
+            hiddenHealTimer = 0;
+        }
+        if (hiddenTransformActive) {
+            consumeFaithPerSec(5, delta); 
+            
+            if (currentSkin === 'Hidden_Skin1') {
+                if(hiddenAttackCooldown > 0) hiddenAttackCooldown -= delta;
+                updateSubActionBtnForHidden1();
+            } else if (currentSkin === 'Hidden_Skin2') {
+                spawnAeranFlowers(delta);
+            } else if (currentSkin === 'Hidden_Skin3') {
+                updateJongrakSquad(delta);
+            }
+        }
+    }
+
+    // 3. 활성화된 버프(아이템/스킬) 표시 로직
     for(let k in activeEffects) {
         if(activeEffects[k] > 0) {
             activeEffects[k] -= delta;
             
-            if(k === 'summon' && currentSkin === 'jieun') {
-                if(activeEffects[k] <= 0) deactivateJieunBuff();
-            }
-            if(k === 'noelLaser') {
-                if(activeEffects[k] <= 0) {
-                    const beam = document.getElementById('noelBeam');
-                    if(beam) beam.remove();
-                    gameArea.classList.remove('shake-screen');
-                }
+            // 버프 종료 시 처리
+            if(k === 'summon' && currentSkin === 'jieun' && activeEffects[k] <= 0) deactivateJieunBuff();
+            if(k === 'noelLaser' && activeEffects[k] <= 0) {
+                const beam = document.getElementById('noelBeam');
+                if(beam) beam.remove();
+                gameArea.classList.remove('shake-screen');
             }
             if(k === 'sandstorm' && activeEffects[k] <= 0) {
                 document.getElementById('sandstormOverlay').style.opacity = '0';
-                gameArea.classList.remove('sandstorm-mode');
-                gameArea.classList.remove('sand-bg');
+                gameArea.classList.remove('sandstorm-mode'); gameArea.classList.remove('sand-bg');
             }
             if(k === 'jihyeSquad' && activeEffects[k] <= 0) endJihyeSkill();
             if(k === 'bobaTime' && activeEffects[k] <= 0) { bobas.forEach(b => b.remove()); bobas = []; activeEffects.invincible = 0; }
-            
             if(k === 'gundam' && activeEffects[k] <= 0) { 
                 player.style.backgroundImage = `url('skin_ganghui.png')`; 
                 if(gundamAura) { gundamAura.remove(); gundamAura = null; }
-                
-                const endAura = document.createElement('div');
-                endAura.className = 'gundam-aura';
-                endAura.style.animation = "obsExplode 0.5s ease-out forwards"; 
-                endAura.style.left = (playerObj.x + 30) + 'px';
-                endAura.style.top = (gameArea.offsetHeight - playerObj.y - 30) + 'px';
-                gameArea.appendChild(endAura);
-                setTimeout(() => endAura.remove(), 500);
             }
-
             if(k === 'fly' && currentSkin === 'yejun' && activeEffects[k] <= 0) {
-                const w = player.querySelector('.yejun-wing');
-                if(w) w.remove();
+                const w = player.querySelector('.yejun-wing'); if(w) w.remove();
             }
             if(k === 'cakeWorld' && activeEffects[k] <= 0) {
-                document.getElementById('cakeBg').style.opacity = '0';
-                cakes.forEach(c => c.remove()); cakes = [];
+                document.getElementById('cakeBg').style.opacity = '0'; cakes.forEach(c => c.remove()); cakes = [];
             }
             if(k === 'musicWave' && activeEffects[k] <= 0) {
-                musicWaveActive = false;
-                document.getElementById('jieunWaveBg').style.opacity = '0';
-                musicNotes.forEach(n => n.remove()); musicNotes = [];
+                musicWaveActive = false; document.getElementById('jieunWaveBg').style.opacity = '0'; musicNotes.forEach(n => n.remove()); musicNotes = [];
             }
-            
             if(k === 'giant' && activeEffects[k] <= 0) {
-                player.style.transform = "scale(1)";
-                const aura = player.querySelector('.noel-aura');
-                if(aura) aura.remove();
+                player.style.transform = "scale(1)"; const aura = player.querySelector('.noel-aura'); if(aura) aura.remove();
             }
 
+            // 버프 태그 생성
             if(activeEffects[k] > 0) {
                 let color = "#fff"; let icon = ""; let label = k;
                 if(k === 'invincible') { color = "#ffd700"; icon = "🛡️"; label = "무적"; }
@@ -1454,6 +1574,7 @@ function triggerJunSkill() {
         } else { activeEffects[k] = 0; }
     }
     
+    // 4. [복구됨] 기존 일반 스킨 패시브 쿨타임 표시 UI
     const passiveSkins = ['jeonchan', 'noel', 'haeun', 'hahwi', 'jihye', 'jun', 'stephanie', 'ganghui', 'jieun', 'yejun'];
     if(SKIN_DATA[currentSkin].type === "Passive" || passiveSkins.includes(currentSkin)) {
         let limit = PASSIVE_COOLDOWNS[currentSkin] || 30;
@@ -1485,10 +1606,17 @@ function triggerJunSkill() {
         }
     }
 
+    // 5. 최종 HTML 적용
     buffContainer.innerHTML = html;
 
+    // 6. 쉴드 및 버튼 상태 업데이트
     if(shieldCooldown > 0) { shieldCooldown -= delta; if(shieldCooldown <= 0) subActionBtn.classList.remove('cooldown'); }
-    updateAbilityBtn(delta); updateSubActionButtonUI();
+    updateAbilityBtn(delta); 
+    
+    // [패치] 히든1번 변신 상태가 아닐 때만 일반 버튼 업데이트
+    if (!(currentSkin === 'Hidden_Skin1' && hiddenTransformActive)) {
+        updateSubActionButtonUI();
+    }
   }
 
   function startFeverTime() {
@@ -3239,42 +3367,31 @@ function triggerJunSkill() {
 }
 
   function damageLife() {
-    if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
-      if (skinLvl >= 2) {
-        jaegukRevivedOnce = true;
-        life = maxLife;
-        document.getElementById("lifeText").innerText = life;
-        
-        const wing = document.createElement('div');
-        wing.className = 'angel-wing-effect';
-        gameArea.appendChild(wing);
-        setTimeout(() => wing.remove(), 2000);
-        
-        showFloatText("🪽 부활!");
-        playSound('item');
-        activeEffects.invincible = 3; 
+    // [패치] 히든 스킨 3종 공통 부활 로직
+    if (HIDDEN_SKIN_CODES.includes(currentSkin) && life <= 1 && !hiddenReviveUsed) {
+        triggerHiddenRevive();
         return;
     }
+
+    if(life <= 1 && currentSkin === 'jaeguk' && !jaegukRevivedOnce) {
+      if (skinLvl >= 2) {
+        jaegukRevivedOnce = true; life = maxLife; document.getElementById("lifeText").innerText = life;
+        const w = document.createElement('div'); w.className = 'angel-wing-effect'; gameArea.appendChild(w); setTimeout(()=>w.remove(), 2000);
+        showFloatText("🪽 부활!"); playSound('item'); activeEffects.invincible = 3; return;
       }
+    }
 
     if(activeEffects.revive > 0) { life=3; document.getElementById("lifeText").innerText=life; activeEffects.revive=0; activeEffects.invincible=3; showFloatText("👼 부활!"); return; }
     if(activeEffects.turbo>0 && !isFeverTime) return; 
     if(activeEffects.invincible>0 || invincible || !running) return;
     
     if(currentSkin === 'haeun' && haeunShieldActive) {
-        haeunShieldActive = false;
-        removeHaeunShield();
-        showFloatText("🛡️ 방어 성공!");
-        playSound('parry');
-        return;
+        haeunShieldActive = false; removeHaeunShield(); showFloatText("🛡️ 방어 성공!"); playSound('parry'); return;
     }
 
     life--; document.getElementById("lifeText").innerText=life;
-    // [수정 5] 피격 시 무적 2초 (버프 UI에는 뜨지 않음)
-    invincible=true; 
-    player.style.opacity="0.4"; 
+    invincible=true; player.style.opacity="0.4"; 
     setTimeout(()=>{invincible=false; player.style.opacity="1";}, 2000);
-    
     playSound('hit');
     if(life<=0) gameOver();
   }
@@ -3417,6 +3534,270 @@ function triggerJunSkill() {
   }
   
   let lastT=0; document.addEventListener("touchend",e=>{const n=Date.now();if(n-lastT<300)e.preventDefault();lastT=n;},{passive:false});
+
+    // ==========================================
+  // [패치] 히든 캐릭터 기능 구현부
+  // ==========================================
+
+  function toggleHiddenTransform() {
+      hiddenTransformActive = !hiddenTransformActive;
+
+      if (hiddenTransformActive) {
+          // 변신 ON
+          showFloatText("✨ TRANSFORMATION!");
+          playSound('clear');
+          const flash = document.getElementById('flashEffect');
+          flash.style.opacity = '1'; setTimeout(() => flash.style.opacity = '0', 300);
+
+          if (currentSkin === 'Hidden_Skin1') {
+              player.style.backgroundImage = `url('skin_Hidden_Skin1_1.png')`;
+              showFloatText("⚔️ 전신갑주 장착!");
+              subActionBtn.style.display = 'flex';
+              subActionBtn.className = 'btn-attack';
+              subActionBtn.style.background = "gold";
+              subActionBtn.style.color = "black";
+              subActionBtn.style.border = "4px solid #fff";
+          }
+          else if (currentSkin === 'Hidden_Skin2') {
+              player.style.backgroundImage = `url('skin_Hidden_Skin2_1.png')`;
+              document.querySelector('.aeran-flower-bg').style.opacity = '1';
+              showFloatText("🌸 말씀은 사랑!");
+          }
+          else if (currentSkin === 'Hidden_Skin3') {
+              player.style.backgroundImage = `url('skin_Hidden_Skin3_1.png')`;
+              spawnJongrakSquad();
+              showFloatText("🎲 전설의 시작!");
+          }
+      } else {
+          // 변신 OFF
+          showFloatText("변신 해제");
+          player.style.backgroundImage = `url('skin_${currentSkin}.png')`;
+          abilityCD = 10; // 쿨타임 10초
+
+          if (currentSkin === 'Hidden_Skin1') {
+              subActionBtn.style.background = ""; 
+              subActionBtn.style.color = "";
+              updateSubActionButtonUI();
+          }
+          else if (currentSkin === 'Hidden_Skin2') {
+              document.querySelector('.aeran-flower-bg').style.opacity = '0';
+          }
+          else if (currentSkin === 'Hidden_Skin3') {
+              clearJongrakSquad();
+          }
+      }
+  }
+
+  function consumeFaithPerSec(amount, dt) {
+      // 1초당 amount만큼 감소 (확률적으로 처리하여 정수 감소 표현)
+      if (faith > 0) {
+          if(Math.random() < amount * dt) {
+             faith--; 
+             document.getElementById("faithText").innerText = faith;
+          }
+          if (faith <= 0) toggleHiddenTransform(); 
+      } else {
+          toggleHiddenTransform();
+      }
+  }
+
+  function updateSubActionBtnForHidden1() {
+      if (hiddenAttackCooldown > 0) {
+          subActionBtn.classList.add('cooldown');
+          subActionBtn.innerText = Math.ceil(hiddenAttackCooldown);
+      } else {
+          subActionBtn.classList.remove('cooldown');
+          subActionBtn.innerText = "HOLY SWORD";
+      }
+  }
+
+  function triggerJaegwanSword() {
+      faith -= 10; 
+      document.getElementById("faithText").innerText = faith;
+      hiddenAttackCooldown = 2.0; 
+      showFloatText("🗡️ 빛의 검!");
+      playSound('item');
+
+      for(let i=0; i<8; i++) {
+          const sword = document.createElement('div');
+          sword.className = 'light-sword';
+          sword.style.left = randBetween(0, gameArea.offsetWidth) + 'px';
+          sword.style.top = '-100px';
+          gameArea.appendChild(sword);
+          
+          setTimeout(() => {
+              checkSwordCollision(sword);
+              setTimeout(() => sword.remove(), 200); 
+          }, 400);
+      }
+  }
+
+  function checkSwordCollision(swordEl) {
+      const sx = parseFloat(swordEl.style.left);
+      const range = 60; 
+      obstacles.forEach(o => {
+          if (!o.destroyed && Math.abs(o.x - sx) < range) {
+              o.destroyed = true; spawnExplosionEffect(o.x, gameArea.offsetHeight - 100); o.remove();
+          }
+      });
+      enemies.forEach(e => {
+          if (!e.isDead && Math.abs(e.x - sx) < range) {
+              e.isDead = true; spawnExplosionEffect(e.x, e.y); e.remove();
+          }
+      });
+  }
+
+  function spawnAeranFlowers(dt) {
+      aeranFlowerTimer += dt;
+      if (aeranFlowerTimer > 0.2) { 
+          const f = document.createElement('div');
+          f.className = 'flower-missile';
+          f.style.left = randBetween(0, gameArea.offsetWidth) + 'px';
+          f.style.top = '-50px';
+          gameArea.appendChild(f);
+          
+          let fallInterval = setInterval(() => {
+              let top = parseFloat(f.style.top);
+              top += 10; f.style.top = top + 'px';
+              
+              let hit = false;
+              const fRect = f.getBoundingClientRect();
+              
+              obstacles.forEach(o => {
+                  if(!o.destroyed && !hit) {
+                      const oRect = o.getBoundingClientRect();
+                      if(!(fRect.right < oRect.left || fRect.left > oRect.right || fRect.bottom < oRect.top || fRect.top > oRect.bottom)) {
+                          o.destroyed = true; o.remove(); hit = true;
+                      }
+                  }
+              });
+              if(!hit) {
+                  enemies.forEach(e => {
+                      if(!e.isDead && !hit) {
+                          const eRect = e.getBoundingClientRect();
+                          if(!(fRect.right < eRect.left || fRect.left > eRect.right || fRect.bottom < eRect.top || fRect.top > eRect.bottom)) {
+                              e.isDead = true; e.remove(); hit = true;
+                          }
+                      }
+                  });
+              }
+
+              if (hit || top > gameArea.offsetHeight) {
+                  clearInterval(fallInterval);
+                  f.remove();
+                  if(hit) spawnExplosionEffect(parseFloat(f.style.left), top);
+              }
+          }, 30);
+          aeranFlowerTimer = 0;
+      }
+  }
+
+  function spawnJongrakSquad() {
+      const skins = ['ganghui', 'jaeguk', 'jeonchan', 'jieun', 'jihye', 'jun', 'noel', 'stephanie', 'yejun', 'haeun', 'hahwi'];
+      for(let i=0; i<5; i++) {
+          const kid = document.createElement('div');
+          kid.className = 'jongrak-kid';
+          const rSkin = skins[Math.floor(Math.random() * skins.length)];
+          kid.style.backgroundImage = `url('skin_${rSkin}.png')`;
+          kid.x = playerObj.x + randBetween(-50, 50);
+          kid.y = playerObj.y + randBetween(50, 150);
+          kid.vx = randBetween(-2, 2); kid.vy = randBetween(-2, 2);
+          gameArea.appendChild(kid);
+          jongrakKids.push(kid);
+      }
+  }
+
+  function clearJongrakSquad() {
+      jongrakKids.forEach(k => {
+          spawnParticles(parseFloat(k.style.left), parseFloat(k.style.top), 'dust'); k.remove();
+      });
+      jongrakKids = [];
+  }
+
+  function updateJongrakSquad(dt) {
+      jongrakKidFireTimer += dt;
+      let fire = false;
+      if (jongrakKidFireTimer > 0.5) { fire = true; jongrakKidFireTimer = 0; }
+
+      jongrakKids.forEach(k => {
+          k.x += k.vx; k.y += k.vy;
+          if(k.x < playerObj.x - 100 || k.x > playerObj.x + 100) k.vx *= -1;
+          if(k.y < playerObj.y + 50 || k.y > playerObj.y + 200) k.vy *= -1;
+          k.style.left = k.x + 'px'; k.style.bottom = k.y + 'px';
+
+          if (fire) {
+              const heart = document.createElement('div');
+              heart.className = 'heart-missile';
+              heart.innerText = ['❤️','🧡','💛','💚','💙','💜'][Math.floor(Math.random()*6)];
+              heart.style.left = k.x + 'px'; heart.style.bottom = k.y + 'px';
+              gameArea.appendChild(heart);
+              
+              let hx = k.x; let hy = k.y;
+              let hInterval = setInterval(() => {
+                  hx += 10; heart.style.left = hx + 'px';
+                  let hit = false;
+                  obstacles.forEach(o => {
+                      if (!o.destroyed && !hit && Math.abs(o.x - hx) < 30) {
+                          o.destroyed = true; o.remove(); hit = true;
+                      }
+                  });
+                  enemies.forEach(e => {
+                      if (!e.isDead && !hit && Math.abs(e.x - hx) < 30) {
+                          e.isDead = true; e.remove(); hit = true;
+                      }
+                  });
+                  if (hit || hx > gameArea.offsetWidth) {
+                      clearInterval(hInterval); heart.remove();
+                      if(hit) spawnExplosionEffect(hx, gameArea.offsetHeight - hy);
+                  }
+              }, 20);
+          }
+      });
+  }
+
+  function triggerHiddenHeal() {
+      if (life < maxLife) {
+          life = Math.min(life + 5, maxLife + 10);
+          document.getElementById("lifeText").innerText = life;
+          showFloatText("💖 +5 Holy Heal");
+          playSound('item');
+      }
+      if (currentSkin === 'Hidden_Skin1') {
+          const angel = document.createElement('div'); angel.className = 'angel-heal-unit';
+          angel.style.left = (playerObj.x + 20) + 'px'; angel.style.top = (gameArea.offsetHeight - playerObj.y - 120) + 'px';
+          gameArea.appendChild(angel); setTimeout(() => angel.remove(), 3000);
+      }
+      else if (currentSkin === 'Hidden_Skin2') {
+          const halo = document.createElement('div'); halo.className = 'aeran-halo';
+          gameArea.appendChild(halo); setTimeout(() => halo.remove(), 2000);
+      }
+      else if (currentSkin === 'Hidden_Skin3') {
+          const light = document.createElement('div'); light.className = 'jongrak-light';
+          gameArea.appendChild(light); setTimeout(() => light.remove(), 2000);
+      }
+  }
+
+  function triggerHiddenRevive() {
+      hiddenReviveUsed = true;
+      life = maxLife; document.getElementById("lifeText").innerText = life;
+      gameArea.classList.add('revive-quake');
+      
+      const layer = document.createElement('div');
+      layer.className = 'holy-resurrection';
+      layer.innerHTML = `<div class="resurrection-text">예수의 능력이<br>나를 일으킨다!</div>`;
+      document.body.appendChild(layer);
+      setTimeout(() => layer.style.opacity = '1', 10);
+      
+      player.style.filter = "brightness(10) drop-shadow(0 0 20px white)";
+      activeEffects.invincible = 5; playSound('clear');
+
+      setTimeout(() => {
+          layer.style.opacity = '0'; gameArea.classList.remove('revive-quake');
+          player.style.filter = "none";
+          setTimeout(() => layer.remove(), 1000);
+      }, 3000);
+  }
+    
 </script>
 </body>
 </html>
