@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Disciple Run – Store</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff">
 
 <style>
@@ -12,8 +11,7 @@
   @font-face {
     font-family: 'DungGeunMo';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
+    font-weight: normal; font-style: normal;
   }
 
   :root {
@@ -34,20 +32,19 @@
     margin: 0; padding: 0; min-height: 100vh;
     background: url("https://antiochapp.github.io/TrapGame/bg_sky.png") no-repeat center bottom;
     background-size: cover;
-    font-family: 'DungGeunMo', monospace; /* 폰트 변경 */
+    font-family: 'DungGeunMo', monospace;
     color: var(--text-color);
     display: flex; flex-direction: column;
   }
 
-  /* 배경 패턴 오버레이 (통일감) */
+  /* 배경 패턴 오버레이 */
   body::before {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background-image: 
       linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
-    z-index: -1;
-    pointer-events: none;
+    z-index: -1; pointer-events: none;
   }
 
   /* 상단바 */
@@ -73,7 +70,6 @@
     max-width: 480px; width: 95%; margin: 20px auto;
     background: var(--bg-panel); padding: 24px;
     border-radius: 8px; border: 4px solid var(--border-color);
-    /* 3D 픽셀 그림자 */
     box-shadow: 
       inset 4px 4px 0px #ffffff,
       inset -4px -4px 0px #d7ccc8,
@@ -121,15 +117,10 @@
   }
   .item:hover { transform: translateY(-2px); }
 
-  .shop-img-locked {
-    filter: brightness(0) opacity(0.6); /* 검은 그림자처럼 보이게 함 */
-    /* 만약 단순 흑백을 원하시면: filter: grayscale(100%); 을 사용하세요 */
-  }
+  .shop-img-locked { filter: brightness(0) opacity(0.6); }
   
   /* 스킨 전용 레이아웃 */
-  .skin-item {
-    flex-direction: row; align-items: center; gap: 12px;
-  }
+  .skin-item { flex-direction: row; align-items: center; gap: 12px; }
   .skin-img-box {
     width: 64px; height: 64px; background: #ffe0b2; border-radius: 4px;
     border: 3px solid #ffb74d; display: flex; justify-content: center; align-items: center;
@@ -178,10 +169,11 @@
   }
   .back-btn:active { transform: translate(4px, 4px); box-shadow: none; }
 
-  /* 인벤토리 스타일 */
+  /* [수정] 인벤토리 스타일 (반응형 Grid 적용) */
   .inv-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4열 고정 */
+    /* 화면 크기에 맞춰 최소 70px 크기의 아이템을 자동으로 채움 */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 8px;
     padding: 12px;
     background: #d7ccc8;
@@ -202,31 +194,17 @@
   }
   .inv-slot:active { background: #e0e0e0; transform: translate(1px, 1px); box-shadow: none; }
   
-  /* 인벤토리 이미지 */
   .inv-slot img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; transition: 0.2s; }
+  .inv-slot img.shadow { filter: brightness(0); opacity: 0.6; }
+  .inv-slot img.ready { filter: grayscale(100%); opacity: 0.8; }
   
-  /* 1. 획득 전 (0~99개): 그림자 실루엣 */
-  .inv-slot img.shadow { 
-    filter: brightness(0); opacity: 0.6; 
-  }
-  
-  /* 2. 100개 모음 (조합 전): 회색 */
-  .inv-slot img.ready { 
-    filter: grayscale(100%); opacity: 0.8; 
-  }
-  
-  /* 3D 입체 효과 스타일 */
   .inv-count {
-    position: absolute; 
-    bottom: 4px; 
-    right: 6px;
-    font-size: 32px;
+    position: absolute; bottom: 4px; right: 6px;
+    font-size: 18px; /* 글자 크기 조정 */
     font-weight: 900;
     font-family: 'DungGeunMo', monospace;
-    z-index: 5;
-    pointer-events: none;
-    color: #3e2723; 
-    text-shadow: 2px 2px 0px #d7ccc8;
+    z-index: 5; pointer-events: none;
+    color: #3e2723; text-shadow: 2px 2px 0px #d7ccc8;
   }
 
   /* 천장 마일리지 스타일 */
@@ -272,10 +250,54 @@
 
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+
+  /* [NEW] Toast 메시지 스타일 */
+  #toast-container {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+  }
+  .toast {
+    background: rgba(62, 39, 35, 0.95); color: #fff; padding: 12px 20px;
+    border-radius: 6px; font-family: 'DungGeunMo', monospace; font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #8d6e63;
+    animation: toast-in 0.3s ease forwards;
+    opacity: 0; transform: translateY(20px);
+  }
+  .toast.success { border-color: #66bb6a; color: #e8f5e9; }
+  .toast.error { border-color: #ef5350; color: #ffebee; }
+  .toast.info { border-color: #29b6f6; color: #e1f5fe; }
+
+  @keyframes toast-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toast-out {
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+
+  /* [NEW] 로딩 인디케이터 */
+  #loadingOverlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 4000;
+    justify-content: center; align-items: center; flex-direction: column;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid #fff; border-top-color: var(--primary-color);
+    border-radius: 50%; animation: spin-loader 0.8s linear infinite;
+  }
+  @keyframes spin-loader { to { transform: rotate(360deg); } }
+  .loading-text { color: #fff; margin-top: 10px; font-size: 14px; text-shadow: 1px 1px 0 #000; }
+
 </style>
 </head>
 
 <body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">저장 중...</div>
+</div>
+
+<div id="toast-container"></div>
 
 <div class="top-bar">
   <span>Faith: <b id="faithText">0</b></span>
@@ -300,31 +322,31 @@
 
     <div class="item">
       <h2>❤️ 라이프 +1 <span class="lvl-badge" id="lvl-life">Lv.0</span></h2>
-      <p>기본 생명력이 증가합니다. (무제한)</p>
+      <p>기본 생명력이 증가합니다. (Max 20)</p>
       <button class="buy-btn" id="btn-life" onclick="buyItem('life')">구매</button>
     </div>
 
     <div class="item">
       <h2>🛡️ 무적 시간 +1초 <span class="lvl-badge" id="lvl-invincible">Lv.0</span></h2>
-      <p>십자가 아이템 효과가 길어집니다. (Max 20)</p>
+      <p>십자가 아이템 효과가 길어집니다. (Max 10)</p>
       <button class="buy-btn" id="btn-invincible" onclick="buyItem('up_invincible')">구매</button>
     </div>
 
     <div class="item">
       <h2>🚀 터보 시간 +1초 <span class="lvl-badge" id="lvl-turbo">Lv.0</span></h2>
-      <p>날개 아이템 효과가 길어집니다. (Max 20)</p>
+      <p>날개 아이템 효과가 길어집니다. (Max 10)</p>
       <button class="buy-btn" id="btn-turbo" onclick="buyItem('up_turbo')">구매</button>
     </div>
 
     <div class="item">
       <h2>🍃 감속 시간 +1초 <span class="lvl-badge" id="lvl-slow">Lv.0</span></h2>
-      <p>바람 아이템 효과가 길어집니다. (Max 20)</p>
+      <p>바람 아이템 효과가 길어집니다. (Max 10)</p>
       <button class="buy-btn" id="btn-slow" onclick="buyItem('up_slow')">구매</button>
     </div>
 
     <div class="item" style="background:#fff8e1; border-color:#ffcc80;">
       <h2>🎁 랜덤 뽑기</h2>
-      <p>Faith 200으로 능력치, 희귀 조각을 얻어보세요!</p>
+      <p>Faith 300으로 능력치, 희귀 조각을 얻어보세요!</p>
       
       <div class="mileage-box">
         <div style="display:flex; justify-content:space-between; font-size:14px; color:#5d4037;">
@@ -337,7 +359,7 @@
       </div>
 
       <p style="font-size:12px; color:#8d6e63;">(확률: 희귀조각 5%, 능력치/Faith 95%, 경품 별도)</p>
-      <button class="buy-btn" style="background:#ffa726; border-color:#000; color:#fff;" onclick="buyGacha()">뽑기 (200 F)</button>
+      <button class="buy-btn" style="background:#ffa726; border-color:#000; color:#fff;" onclick="buyGacha()">뽑기 (300 F)</button>
     </div>
   </div>
 
@@ -381,7 +403,7 @@
        (e.ctrlKey && e.shiftKey && e.key === 'J') || 
        (e.ctrlKey && e.key === 'U')) {
       e.preventDefault();
-      alert("보안을 위해 개발자 도구 사용이 제한됩니다.");
+      showToast("보안을 위해 개발자 도구 사용이 제한됩니다.", "error");
     }
   });
   
@@ -396,7 +418,6 @@
   
   // 데이터 초기화
   saveData.faith = saveData.faith || 0;
-  // 민첩성(agility) 삭제되고 미사일(missile) 추가
   saveData.missile = saveData.missile || 0;
   saveData.extraLife = saveData.extraLife || 0;
   saveData.up_invincible = saveData.up_invincible || 0;
@@ -410,17 +431,23 @@
   if(!saveData.fragments) saveData.fragments = {};
   if(!saveData.mileage) saveData.mileage = 0; 
 
-  // 설정값
+  // [설정값 수정 완료]
   const CONFIG = {
-    // 민첩성 대신 미사일 (비용 1000, Max 10)
+    // 미사일: 가격 1000, Max 10 (기존 유지)
     missile: { name:"미사일", price: 1000, max: 10, key: "missile" },
-    life: { name:"라이프", price: 200, max: 9999, key: "extraLife" }, 
-    up_invincible: { name:"무적시간", price: 40, max: 20, key: "up_invincible" },
-    up_turbo: { name:"터보시간", price: 40, max: 20, key: "up_turbo" },
-    up_slow: { name:"감속시간", price: 40, max: 20, key: "up_slow" }
+    
+    // 라이프: 가격 500, Max 20
+    life: { name:"라이프", price: 500, max: 20, key: "extraLife" }, 
+    
+    // 능력치: 가격 1000, Max 10 (10초)
+    up_invincible: { name:"무적시간", price: 1000, max: 10, key: "up_invincible" },
+    up_turbo: { name:"터보시간", price: 1000, max: 10, key: "up_turbo" },
+    up_slow: { name:"감속시간", price: 1000, max: 10, key: "up_slow" }
   };
+  
+  const GACHA_PRICE = 300; // 뽑기 가격 변경
 
-const SKIN_LIST = [
+  const SKIN_LIST = [
     { code: "noel", name: "노엘", type: "Active", skill1: "패시브: 거대화", skill2: "액티브: 에너지파" },
     { code: "jeonchan", name: "전찬", type: "Active", skill1: "패시브: 번개 소환", skill2: "액티브: 해머 소환" },
     { code: "haeun", name: "하은", type: "Passive", skill1: "패시브: 보호막", skill2: "패시브: 체력 회복" },
@@ -432,9 +459,8 @@ const SKIN_LIST = [
     { code: "yejun", name: "예준", type: "Active", skill1: "액티브: 자유 비행", skill2: "패시브: 도플갱어" },
     { code: "ganghui", name: "강희", type: "Active", skill1: "패시브: 판넬 소환", skill2: "액티브: 건담 모드" },
     { code: "jieun", name: "지은", type: "Active", skill1: "액티브: 뮤직 웨이브", skill2: "패시브: 노엘 소환" }
-];
+  ];
   
-  // 스토리 및 Lore 추가
   const HIDDEN_SKINS = [
     { code: "Hidden_Skin1", name: "히든 스킨 1", story: "이목사. 뻔뻔하게도 너무 잘생기게 스킨을 만들었습니다." },
     { code: "Hidden_Skin2", name: "히든 스킨 2", story: "박전도사. 아이들과 청년들을 예수님의 사랑으로 섬기고 있습니다." },
@@ -445,6 +471,28 @@ const SKIN_LIST = [
 
   const SKIN_PRICE = 10000;
 
+  // [NEW] 토스트 메시지 함수
+  function showToast(msg, type = "info") {
+    const container = document.getElementById("toast-container");
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.innerText = msg;
+    container.appendChild(el);
+    
+    // 3초 후 제거
+    setTimeout(() => {
+      el.style.animation = "toast-out 0.3s ease forwards";
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+  }
+
+  // [NEW] 로딩 인디케이터 제어
+  function setLoading(isLoading) {
+    const el = document.getElementById("loadingOverlay");
+    if (isLoading) el.style.display = "flex";
+    else el.style.display = "none";
+  }
+
   updateUI();
   loadLatestSave();
 
@@ -452,7 +500,6 @@ const SKIN_LIST = [
     const btns = document.querySelectorAll('.tab-btn');
     btns.forEach(btn => btn.classList.remove('active'));
     
-    // 버튼 인덱스 매핑 (0:upgrade, 1:skin, 2:inventory)
     if(tabName === 'upgrade') btns[0].classList.add('active');
     else if(tabName === 'skin') btns[1].classList.add('active');
     else btns[2].classList.add('active');
@@ -463,10 +510,10 @@ const SKIN_LIST = [
   }
 
   async function loadLatestSave() {
+    setLoading(true); // 로딩 시작
     try {
       const res = await fetch(API_URL, {
         method: "POST",
-        // [수정] 통신 안정성 확보
         headers: { "Content-Type": "text/plain" },
         redirect: 'follow',
         body: JSON.stringify({ type: "getSaveData", id })
@@ -487,6 +534,7 @@ const SKIN_LIST = [
         updateUI();
       }
     } catch (e) { console.warn(e); }
+    finally { setLoading(false); } // 로딩 종료
   }
 
   function updateUI() {
@@ -511,7 +559,6 @@ const SKIN_LIST = [
         }
       }
 
-      // 미사일 설명 텍스트 업데이트 (파괴 필요 횟수)
       if(type === 'missile') {
           const descEl = document.getElementById('missileDesc');
           if(descEl) {
@@ -538,7 +585,6 @@ const SKIN_LIST = [
     const listArea = document.getElementById('skinListArea');
     listArea.innerHTML = "";
 
-    // 기본 스킨
     const defaultEquipped = (saveData.equippedSkin === 'default');
     const defBtn = defaultEquipped 
       ? `<button class="buy-btn btn-equipped" disabled>장착 중</button>`
@@ -546,15 +592,12 @@ const SKIN_LIST = [
     
     listArea.innerHTML += createSkinHTML('disciple', '😊 기본 캐릭터', 'Normal', '#795548', '기본 능력치입니다.', defBtn);
 
-    // 일반 판매 스킨
     SKIN_LIST.forEach(skin => {
       renderSingleSkinItem(skin, listArea);
     });
     
-    // 히든 스킨 (보유하고 있을 때만 목록에 표시)
     HIDDEN_SKINS.forEach(skin => {
       if(saveData.ownedSkins.includes(skin.code)) {
-         // 보유 스킨 표시 시 이름 앞에 '보유' 텍스트 추가
          renderSingleSkinItem({ ...skin, name: `(보유) ${skin.name}`, type: "Hidden", desc: "희귀 조각으로 완성된 스킨" }, listArea);
       }
     });
@@ -565,28 +608,22 @@ const SKIN_LIST = [
     const isEquipped = (saveData.equippedSkin === skin.code);
     const tagColor = (skin.type === 'Active') ? '#d32f2f' : (skin.type === 'Hidden' ? '#9C27B0' : '#1976D2');
     
-    // 현재 스킨 레벨 가져오기 (없으면 0)
     const currentLevel = (saveData.skinLevels && saveData.skinLevels[skin.code]) || 0;
 
     let finalBtnHtml = "";
     let statusDesc = "";
+    let imgClass = "";
     
     if (!isOwned) {
-        // 미보유: 구매 버튼
         if(skin.type === 'Hidden') return; 
         finalBtnHtml = `<button class="buy-btn" onclick="buySkin('${skin.code}')">스킨 구매 (${SKIN_PRICE.toLocaleString()} F)</button>`;
         statusDesc = `<span style="color:#999">구매 후 스킬 해금 가능</span>`;
-
-      // [수정] 미보유 상태이므로 그림자 클래스 적용
         imgClass = "shop-img-locked";
       
     } else {
-        // [수정됨] 보유 중: 업그레이드 버튼과 장착 버튼을 분리해서 표시
-        
         let upgradeHtml = "";
         let equipHtml = "";
 
-        // 1. 업그레이드 버튼 생성 (일반 스킨만)
         if (skin.type !== 'Hidden') {
             if (currentLevel < 1) {
                  upgradeHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 1)">Lv.1 스킬 개방 (10,000 F)</button>`;
@@ -595,15 +632,12 @@ const SKIN_LIST = [
                  upgradeHtml = `<button class="buy-btn" style="background:#ff7043;" onclick="upgradeSkin('${skin.code}', 2)">Lv.2 스킬 개방 (10,000 F)</button>`;
                  statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#aaa">🔒 2차: ${skin.skill2}</span>`;
             } else {
-                 // Max 레벨
                  statusDesc = `<span style="color:#4caf50">🔓 1차: ${skin.skill1}</span><br><span style="color:#d32f2f; font-weight:bold;">🔓 2차: ${skin.skill2}</span>`;
             }
         } else {
-            // 히든 스킨 설명
             statusDesc = skin.desc;
         }
 
-        // 2. 장착 버튼 생성 (항상 표시)
         if (isEquipped) {
             equipHtml = `<button class="buy-btn btn-equipped" disabled>장착 중</button>`;
         } else {
@@ -635,44 +669,30 @@ const SKIN_LIST = [
 
   function renderInventory() {
     const invArea = document.getElementById('inventoryArea');
-    
     let htmlBuilder = "";
 
-    // 20칸을 강제로 그립니다.
     for(let i = 0; i < 20; i++) {
       let content = "";
       let onClick = "";
       
-      // 앞쪽 5칸은 무조건 히든스킨 1, 2, 3, 4, 5의 전용 자리입니다.
       if (i < HIDDEN_SKINS.length) {
         const skin = HIDDEN_SKINS[i];
-        
         let count = 0;
         if (saveData.fragments && saveData.fragments[skin.code]) {
            count = saveData.fragments[skin.code];
         }
         
-        // 스킨 이미지를 기본으로 사용 (실루엣용)
         const imgSrc = `skin_${skin.code}.png`; 
         const fallbackSrc = `skin_${skin.code}.png`; 
-        
-        // [상태별 클래스 결정]
         let imgClass = "";
         let displayName = skin.name;
 
-        // 1. 이미 보유(조합완료)한 경우 -> 컬러 + (보유) 텍스트
         if (saveData.ownedSkins.includes(skin.code)) {
-            imgClass = ""; // Normal Color
+            imgClass = ""; 
             displayName = "(보유) " + skin.name;
         }
-        // 2. 보유하지 않았으나 100개 이상 모은 경우 -> 회색 (Gray)
-        else if (count >= 100) {
-            imgClass = "ready"; 
-        }
-        // 3. 아직 모으는 중인 경우 (0 ~ 99개) -> 그림자 (Shadow)
-        else {
-            imgClass = "shadow";
-        }
+        else if (count >= 100) { imgClass = "ready"; }
+        else { imgClass = "shadow"; }
         
         content = `
           <img src="${imgSrc}" class="${imgClass}"
@@ -680,19 +700,15 @@ const SKIN_LIST = [
                alt="${displayName}">
           <span class="inv-count">${count}</span>
         `;
-        
-        // 클릭 이벤트 연결
         onClick = `onclick="openFragModal('${skin.code}', '${displayName}', '${skin.story}')"`;
       }
       
-      // HTML 문자열 누적
       htmlBuilder += `<div class="inv-slot" ${onClick}>${content}</div>`;
     }
-    
     invArea.innerHTML = htmlBuilder;
   }
 
-  // 조각 상세 모달 관련 변수 및 함수
+  // 조각 상세 모달 관련
   let selectedFragment = null;
 
   function openFragModal(code, name, story) {
@@ -702,20 +718,18 @@ const SKIN_LIST = [
     document.getElementById("fragModalTitle").innerText = name;
     document.getElementById("fragModalDesc").innerText = story;
     document.getElementById("fragModalCount").innerText = `보유량: ${count}개`;
-    // 모달에서도 이미지 상태 반영 (일관성)
+    
     let imgStyle = "width:100%;height:100%;object-fit:contain;image-rendering:pixelated;";
     if(!saveData.ownedSkins.includes(code)) {
-        if(count < 100) imgStyle += "filter:brightness(0);opacity:0.6;"; // Shadow
-        else imgStyle += "filter:grayscale(100%);opacity:0.8;"; // Ready
+        if(count < 100) imgStyle += "filter:brightness(0);opacity:0.6;";
+        else imgStyle += "filter:grayscale(100%);opacity:0.8;";
     }
     
     document.getElementById("fragModalImg").innerHTML = `<img src="skin_${code}.png" onerror="this.src='skin_${code}.png'" style="${imgStyle}">`;
     
-    // 버튼 상태 업데이트
     const btnCombine = document.getElementById("btnCombine");
     const btnExchange = document.getElementById("btnExchange");
     
-    // 이미 보유중이면 조합 버튼 숨김
     if(saveData.ownedSkins.includes(code)) {
         btnCombine.style.display = "none"; 
     } else {
@@ -726,7 +740,6 @@ const SKIN_LIST = [
         else btnCombine.style.backgroundColor = "#9c27b0";
     }
 
-    // 교환 버튼
     btnExchange.disabled = (count < 10);
     if(count < 10) btnExchange.style.backgroundColor = "#aaa";
     else btnExchange.style.backgroundColor = "#4caf50";
@@ -734,18 +747,14 @@ const SKIN_LIST = [
     document.getElementById("fragmentModal").style.display = "flex";
   }
 
-  function closeFragModal() {
-    document.getElementById("fragmentModal").style.display = "none";
-  }
+  function closeFragModal() { document.getElementById("fragmentModal").style.display = "none"; }
 
-  // 조합하기 실행
   function doCombine() {
     if(!selectedFragment) return;
     const { code, name } = selectedFragment;
     
-    // [수정] 중복 보유 체크 추가
     if(saveData.ownedSkins.includes(code)) {
-        alert("이미 보유한 스킨입니다.");
+        showToast("이미 보유한 스킨입니다.", "info");
         return;
     }
 
@@ -753,16 +762,9 @@ const SKIN_LIST = [
         if(confirm(`${name} 스킨을 완성하시겠습니까?`)) {
             saveData.fragments[code] -= 100;
             saveData.ownedSkins.push(code);
-            alert(`🎉 축하합니다! [${name}] 획득! 스킨 탭에서 확인하세요.`);
+            showToast(`🎉 축하합니다! [${name}] 획득!`, "success");
             
-            // 로그 전송 [수정: fetch 통신 안정화]
-            fetch(API_URL, { 
-                method: "POST", 
-                headers: { "Content-Type": "text/plain" },
-                redirect: 'follow',
-                body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: `Skin Unlocked: ${name}` }) 
-            });
-            
+            sendLog(`Skin Unlocked: ${name}`);
             updateUI();
             saveProgress();
             closeFragModal();
@@ -770,7 +772,6 @@ const SKIN_LIST = [
     }
   }
 
-  // 교환하기 실행
   function doExchange() {
     if(!selectedFragment) return;
     const { code } = selectedFragment;
@@ -779,7 +780,7 @@ const SKIN_LIST = [
         if(confirm(`조각 10개를 50 Faith로 교환하시겠습니까?`)) {
             saveData.fragments[code] -= 10;
             saveData.faith += 50;
-            alert("교환 완료! (+50 Faith)");
+            showToast("교환 완료! (+50 Faith)", "success");
             
             updateUI();
             saveProgress();
@@ -792,28 +793,28 @@ const SKIN_LIST = [
     const conf = CONFIG[type];
     const key = conf.key;
 
-    if (saveData[key] >= conf.max) return alert("이미 최대 레벨입니다!");
-    if (saveData.faith < conf.price) return alert("Faith가 부족합니다!");
+    if (saveData[key] >= conf.max) return showToast("이미 최대 레벨입니다!", "error");
+    if (saveData.faith < conf.price) return showToast("Faith가 부족합니다!", "error");
 
     saveData.faith -= conf.price;
     saveData[key]++;
     
+    showToast(`${conf.name} 업그레이드 완료!`, "success");
     updateUI(); 
     saveProgress();
   }
 
   function buySkin(code) {
-    if (saveData.faith < SKIN_PRICE) return alert(`Faith가 부족합니다! (${SKIN_PRICE.toLocaleString()} 필요)`);
+    if (saveData.faith < SKIN_PRICE) return showToast(`Faith가 부족합니다! (${SKIN_PRICE.toLocaleString()} 필요)`, "error");
     
-    if(confirm(`${SKIN_PRICE.toLocaleString()} Faith를 사용하여 구매하시겠습니까?\n(구매 시 Lv.0 상태로 시작합니다)`)) {
+    if(confirm(`${SKIN_PRICE.toLocaleString()} Faith를 사용하여 구매하시겠습니까?`)) {
         saveData.faith -= SKIN_PRICE;
         saveData.ownedSkins.push(code);
         
-        // 스킨 레벨 초기화 (Lv.0)
         if(!saveData.skinLevels) saveData.skinLevels = {};
         saveData.skinLevels[code] = 0;
 
-        alert("구매 완료! 이제 스킬을 업그레이드하거나 장착할 수 있습니다.");
+        showToast("구매 완료! 스킨 탭에서 확인하세요.", "success");
         updateUI();
         saveProgress();
     }
@@ -821,7 +822,7 @@ const SKIN_LIST = [
 
 function upgradeSkin(code, targetLevel) {
     const COST = 10000;
-    if (saveData.faith < COST) return alert(`Faith가 부족합니다! (${COST.toLocaleString()} 필요)`);
+    if (saveData.faith < COST) return showToast(`Faith가 부족합니다! (${COST.toLocaleString()} 필요)`, "error");
 
     let skillName = "";
     const skinInfo = SKIN_LIST.find(s => s.code === code);
@@ -833,7 +834,7 @@ function upgradeSkin(code, targetLevel) {
         if(!saveData.skinLevels) saveData.skinLevels = {};
         saveData.skinLevels[code] = targetLevel;
 
-        alert(`업그레이드 완료! [${skillName}] 사용 가능!`);
+        showToast(`업그레이드 완료!`, "success");
         updateUI();
         saveProgress();
     }
@@ -841,35 +842,42 @@ function upgradeSkin(code, targetLevel) {
 
   function equipSkin(code) {
     saveData.equippedSkin = code;
+    showToast("스킨이 장착되었습니다.", "info");
     updateUI(); 
     saveProgress();
   }
 
   async function saveProgress() {
+    setLoading(true);
     localStorage.setItem("run_save", JSON.stringify(saveData));
     try {
       await fetch(API_URL, { 
           method: "POST", 
-          // [수정] 통신 안정성 확보
           headers: { "Content-Type": "text/plain" },
           redirect: 'follow',
           body: JSON.stringify({ type: "save", id, saveData }) 
       });
     } catch (e) { console.warn(e); }
+    finally { setLoading(false); }
+  }
+
+  // 로그 전송 도우미 (백엔드 부하 감소를 위해 비동기 처리)
+  function sendLog(rewardMsg) {
+      fetch(API_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain" },
+          redirect: 'follow',
+          body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: rewardMsg }) 
+      }).catch(e => console.log(e));
   }
 
   // 가챠
   function buyGacha() {
-    if (saveData.faith < 200) { alert("Faith가 부족합니다!"); return; }
-    saveData.faith -= 200;
+    if (saveData.faith < GACHA_PRICE) { showToast("Faith가 부족합니다!", "error"); return; }
+    saveData.faith -= GACHA_PRICE;
     
-    // 뽑기 시 마일리지 증가
     saveData.mileage = (saveData.mileage || 0) + 1;
-    
     updateUI();
-    
-    // [수정: 중요] 뽑기 버튼 누르는 즉시 저장 (Faith 차감 확정)
-    // 이렇게 해야 애니메이션 도중 새로고침해서 재화 소모를 무효화하는 것을 방지함.
     saveProgress();
 
     document.getElementById("gachaModal").style.display = "flex";
@@ -879,24 +887,20 @@ function upgradeSkin(code, targetLevel) {
     }, 1800);
   }
 
-  // 천장 보상 수령 함수
   function claimMileage() {
     if ((saveData.mileage || 0) < 100) return;
     
-    if (!confirm("마일리지 100을 사용하여 희귀 조각 5개를 랜덤으로 획득하시겠습니까?")) return;
+    if (!confirm("마일리지 100을 사용하시겠습니까?")) return;
     
     saveData.mileage -= 100;
-    let msg = "💎 [확정 보상 획득]\n";
     
-    // 조각 5개 랜덤 지급
     for(let i=0; i<5; i++) {
         const rIdx = Math.floor(Math.random() * HIDDEN_SKINS.length);
         const skin = HIDDEN_SKINS[rIdx];
         saveData.fragments[skin.code] = (saveData.fragments[skin.code] || 0) + 1;
-        msg += `- ${skin.name} 조각 +1\n`;
     }
     
-    alert(msg);
+    showToast("확정 보상 획득! (희귀 조각 5개)", "success");
     updateUI();
     saveProgress();
   }
@@ -906,10 +910,10 @@ function upgradeSkin(code, targetLevel) {
     let prizeText = "";
     let isSpecial = false;
     let specialName = "";
-    let fragmentInfo = null; // 조각 로그용
-    let isRare = false;      // 폭죽 효과용
+    let fragmentInfo = null;
+    let isRare = false;      
 
-    // 1. 희귀 조각 (0 ~ 5%)
+    // 1. 희귀 조각 (5%)
     if (r < 5) {
       const skinIndex = Math.floor(r); 
       const targetSkin = HIDDEN_SKINS[skinIndex];
@@ -917,12 +921,10 @@ function upgradeSkin(code, targetLevel) {
       
       saveData.fragments[targetSkin.code] = (saveData.fragments[targetSkin.code] || 0) + qty;
       prizeText = `💎 [${targetSkin.name}] 조각 ${qty}개 획득!`;
-      
-      // 조각 당첨 정보 기록
       fragmentInfo = `[조각] ${targetSkin.name} (${qty}개)`;
-      isRare = true; // 폭죽 효과 트리거
+      isRare = true;
     }
-    // 2. 능력치 - 미사일 (5 ~ 47%) -> 기존 민첩성 대체
+    // 2. 능력치 - 미사일 (5 ~ 47%)
     else if (r < 47) {
       if(saveData.missile < CONFIG.missile.max) { 
         saveData.missile += 1;
@@ -934,61 +936,63 @@ function upgradeSkin(code, targetLevel) {
     // 3. 능력치 - 생명력 (47 ~ 89%)
     else if (r < 89) {
       const increase = getRandomInt(1, 3);
-      saveData.extraLife += increase;
-      prizeText = `❤️ 생명력 +${increase} 상승!`;
+      if((saveData.extraLife + increase) > 20) { // Max 20 체크
+          saveData.faith += 100;
+          prizeText = "💰 생명력 Max 보상: 100 Faith";
+      } else {
+          saveData.extraLife += increase;
+          prizeText = `❤️ 생명력 +${increase} 상승!`;
+      }
     }
     // 4. 꽝/일반 보상 (89 ~ 99.5%)
     else if (r < 99.5) {
       saveData.faith += 300; prizeText = "💰 300 Faith 당첨!";
     }
-    // 5. 리얼 경품 (99.5 ~ 100%)
+    // 5. 리얼 경품 (99.5 ~ 100%) - [보안: 난독화]
     else {
-      const subR = Math.random() * 100;
-      if (subR < 20) { prizeText = "🎁 스타벅스 $5!"; isSpecial = true; specialName = "Starbucks $5"; }
-      else if (subR < 40) { prizeText = "🎁 스타벅스 $10!"; isSpecial = true; specialName = "Starbucks $10"; }
-      else if (subR < 60) { prizeText = "🎁 아마존 $5!"; isSpecial = true; specialName = "Amazon $5"; }
-      else if (subR < 80) { prizeText = "🎁 아마존 $10!"; isSpecial = true; specialName = "Amazon $10"; }
-      else { prizeText = "📘 QT 책 당첨 (대박!)"; isSpecial = true; specialName = "QT Book"; }
+       determineRealPrize();
+       return; // determineRealPrize 내부에서 결과창 호출
     }
 
-    // 경품 당첨 시 로그 전송 [수정: fetch 통신 안정화]
-    if (isSpecial) {
-      fetch(API_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain" },
-          redirect: 'follow',
-          body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: specialName }) 
-      });
-    }
-    
-    // 조각 획득 시에도 로그 전송 [수정: fetch 통신 안정화]
-    if (fragmentInfo) {
-      fetch(API_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain" },
-          redirect: 'follow',
-          body: JSON.stringify({ type: "rewardLog", id, name: playerName, reward: fragmentInfo }) 
-      });
-    }
+    finalizeGachaResult(prizeText, isRare, isSpecial, specialName, fragmentInfo);
+  }
+  
+  // [보안] 리얼 경품 로직 분리 및 약간의 난독화
+  function determineRealPrize() {
+      const _0x1a = Math.random() * 100;
+      let _p = ""; let _n = "";
+      if (_0x1a < 20) { _p = "🎁 스타벅스 $5!"; _n = "Starbucks $5"; }
+      else if (_0x1a < 40) { _p = "🎁 스타벅스 $10!"; _n = "Starbucks $10"; }
+      else if (_0x1a < 60) { _p = "🎁 아마존 $5!"; _n = "Amazon $5"; }
+      else if (_0x1a < 80) { _p = "🎁 아마존 $10!"; _n = "Amazon $10"; }
+      else { _p = "📘 QT 책 당첨 (대박!)"; _n = "QT Book"; }
+      
+      finalizeGachaResult(_p, true, true, _n, null);
+  }
 
-    // [NEW] 대박이나 희귀 조각일 때 폭죽 효과 발사
-    if (isRare || isSpecial) {
+  function finalizeGachaResult(text, rare, special, sName, fInfo) {
+    if (special) {
+      sendLog(sName); // 로그 전송
+    }
+    if (fInfo) {
+      sendLog(fInfo);
+    }
+    if (rare || special) {
         fireConfetti();
     }
 
     const box = document.getElementById("gachaResult");
-    // 텍스트 스타일 약간 강조
     let title = "🎉 결과";
-    if (isSpecial) title = "🎊 대박 경품 당첨!";
-    else if (isRare) title = "✨ 희귀 아이템!";
+    if (special) title = "🎊 대박 경품 당첨!";
+    else if (rare) title = "✨ 희귀 아이템!";
 
-    box.innerHTML = `<h2>${title}</h2><p style="font-size:20px; font-weight:bold; color:${isRare ? '#9c27b0' : '#333'}">${prizeText}</p><button onclick="closeResult()" class="buy-btn">확인</button>`;
+    box.innerHTML = `<h2>${title}</h2><p style="font-size:20px; font-weight:bold; color:${rare ? '#9c27b0' : '#333'}">${text}</p><button onclick="closeResult()" class="buy-btn">확인</button>`;
     box.style.display = "block";
+    
     updateUI();
     saveProgress();
   }
 
-  // 폭죽 효과 함수
   function fireConfetti() {
     const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
     for(let i=0; i<50; i++) {
@@ -996,10 +1000,8 @@ function upgradeSkin(code, targetLevel) {
         c.className = 'confetti';
         c.style.left = Math.random() * 100 + 'vw';
         c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        c.style.animationDuration = (Math.random() * 1 + 1) + 's'; // 1~2초
+        c.style.animationDuration = (Math.random() * 1 + 1) + 's';
         document.body.appendChild(c);
-        
-        // 애니메이션 끝나면 삭제
         setTimeout(() => { c.remove(); }, 2000);
     }
   }
@@ -1007,18 +1009,12 @@ function upgradeSkin(code, targetLevel) {
   function getWeightedFragmentCount() {
     const pool = [];
     for(let i=1; i<=10; i++) {
-       for(let j=0; j < (11-i); j++) {
-         pool.push(i);
-       }
+       for(let j=0; j < (11-i); j++) pool.push(i);
     }
-    const idx = Math.floor(Math.random() * pool.length);
-    return pool[idx];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
+  function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
   function closeResult() { document.getElementById("gachaResult").style.display = "none"; }
   function goMenu() { window.location.href = "/TrapGame/menu.html"; }
 </script>
